@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, FileText, Gavel, HandshakeIcon, ScrollText,
@@ -470,7 +471,12 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
   const isClosed = c.status === "closed";
 
   return (
-    <div className="space-y-6 animate-slide-in-right">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, x: 32 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
       {/* Back + header */}
       <div>
         <Link href="/cases" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
@@ -668,6 +674,6 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
