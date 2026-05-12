@@ -201,7 +201,7 @@ function AddProceedingForm({ caseId, onDone }: { caseId: string; onDone: () => v
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     const fd = new FormData(e.currentTarget);
@@ -265,7 +265,7 @@ function CloseCaseForm({ caseId, onDone }: { caseId: string; onDone: () => void 
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState("prosecution_completed");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     const fd = new FormData(e.currentTarget);

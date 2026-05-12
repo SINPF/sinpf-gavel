@@ -209,7 +209,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   const isLastTab = activeTab === TABS.length - 1;
 
   const onSubmit = async (data: CaseFormValues) => {
-    if (!canSave) return;
+    if (!tab2Valid) return;
     setError(null);
     try {
       const formData = new FormData();
