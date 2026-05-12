@@ -478,15 +478,18 @@ function DocumentsSection({ caseId, status, documents }: { caseId: string; statu
   );
 }
 
-// ─── Record Payment Form ──────────────────────────────────────────────────────
+// ─── Record Payment Modal ─────────────────────────────────────────────────────
 
-function RecordPaymentForm({ caseId, types, onDone }: { caseId: string; types: string[]; onDone: () => void }) {
-  const router = useRouter();
+const TYPE_LABELS: Record<string, string> = {
+  unpaid_contributions: "Unpaid Contributions",
+  unpaid_surcharges:    "Unpaid Surcharges",
+  wages_record:         "Wages Record",
+};
+
+function RecordPaymentModal({ caseId, types, onDone }: { caseId: string; types: string[]; onDone: () => void }) {
+  const router   = useRouter();
   const [loading, setLoading] = useState(false);
-
-  const hasContributions = types.includes("unpaid_contributions");
-  const hasSurcharges    = types.includes("unpaid_surcharges");
-  const hasWages         = types.includes("wages_record");
+  const singleType = types.length === 1 ? types[0] : null;
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -499,73 +502,114 @@ function RecordPaymentForm({ caseId, types, onDone }: { caseId: string; types: s
     router.refresh();
   };
 
-  const lbl = "block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1";
-  const inp = "w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500/40 transition-all";
+  const lbl = "block text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-1.5";
+  const inp = "w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div>
-        <label className={lbl}>Date *</label>
-        <input
-          type="date"
-          name="paymentDate"
-          required
-          className={inp}
-          defaultValue={new Date().toISOString().split("T")[0]}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        {hasContributions && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+        onClick={onDone}
+      />
+      <motion.div
+        className="relative bg-background rounded-2xl border border-border shadow-2xl w-full max-w-md"
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
+          <h2 className="text-base font-bold text-foreground">Record Payment</h2>
+          <button type="button" onClick={onDone} className="p-1.5 rounded-lg hover:bg-muted transition-all">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className={lbl}>Contributions</label>
-            <input type="number" name="contributionsPaid" min="0" step="0.01" defaultValue="0" className={inp} />
+            <label className={lbl}>Case Type</label>
+            {singleType ? (
+              <>
+                <input type="hidden" name="caseType" value={singleType} />
+                <div className={`${inp} bg-muted/50 text-muted-foreground cursor-default select-none`}>
+                  {TYPE_LABELS[singleType]}
+                </div>
+              </>
+            ) : (
+              <select name="caseType" required title="Case Type" className={inp}>
+                {types.map((t) => (
+                  <option key={t} value={t}>{TYPE_LABELS[t] ?? t}</option>
+                ))}
+              </select>
+            )}
           </div>
-        )}
-        {hasSurcharges && (
+
           <div>
-            <label className={lbl}>Surcharges</label>
-            <input type="number" name="surchargesPaid" min="0" step="0.01" defaultValue="0" className={inp} />
+            <label className={lbl}>Amount *</label>
+            <input
+              type="number"
+              name="amount"
+              required
+              title="Amount"
+              min="0.01"
+              step="0.01"
+              placeholder="0.00"
+              className={inp}
+            />
           </div>
-        )}
-        {hasWages && (
+
           <div>
-            <label className={lbl}>Wages</label>
-            <input type="number" name="wagesPaid" min="0" step="0.01" defaultValue="0" className={inp} />
+            <label className={lbl}>Payment Date *</label>
+            <input
+              type="date"
+              name="paymentDate"
+              required
+              title="Payment Date"
+              defaultValue={new Date().toISOString().split("T")[0]}
+              className={inp}
+            />
           </div>
-        )}
-      </div>
-      <div>
-        <label className={lbl}>Reference</label>
-        <input type="text" name="reference" placeholder="Bank / receipt ref…" className={inp} />
-      </div>
-      <div>
-        <label className={lbl}>Notes</label>
-        <input type="text" name="notes" placeholder="Optional notes…" className={inp} />
-      </div>
-      <div className="flex gap-2 pt-1">
-        <button
-          type="button"
-          onClick={onDone}
-          className="flex-1 py-2 rounded-xl border border-white/10 text-slate-400 text-sm font-semibold hover:border-white/20 hover:text-slate-200 transition-all"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex-1 py-2 rounded-xl bg-sky-500 text-white text-sm font-bold hover:bg-sky-400 disabled:opacity-50 transition-all active:scale-95"
-        >
-          {loading ? "Saving…" : "Save Payment"}
-        </button>
-      </div>
-    </form>
+
+          <div>
+            <label className={lbl}>Reference</label>
+            <input type="text" name="reference" placeholder="Bank / receipt ref…" className={inp} />
+          </div>
+
+          <div>
+            <label className={lbl}>Notes</label>
+            <textarea name="notes" rows={2} placeholder="Optional notes…" className={`${inp} resize-none`} />
+          </div>
+
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onDone}
+              className="flex-1 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-2.5 rounded-xl bg-brand-blue text-white text-sm font-bold hover:bg-brand-blue/90 disabled:opacity-50 transition-all active:scale-95"
+            >
+              {loading ? "Saving…" : "Save Payment"}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
   );
 }
 
 // ─── Financial Card ───────────────────────────────────────────────────────────
 
 function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
-  const [showForm, setShowForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const paidContributions = c.payments.reduce((sum, p) => sum + Number(p.contributionsPaid), 0);
   const paidSurcharges    = c.payments.reduce((sum, p) => sum + Number(p.surchargesPaid), 0);
@@ -585,8 +629,9 @@ function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
   ];
 
   return (
+    <>
     <div
-      className="rounded-2xl overflow-hidden relative sticky top-4"
+      className="rounded-2xl overflow-hidden sticky top-4"
       style={{ background: "linear-gradient(145deg, #1e3d5f 0%, #162d48 60%, #0f1e30 100%)" }}
     >
       <div
@@ -649,32 +694,13 @@ function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
         {/* Record payment */}
         {!isClosed && (
           <div className="border-t border-white/8 pt-3">
-            <AnimatePresence mode="wait">
-              {showForm ? (
-                <motion.div
-                  key="form"
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <RecordPaymentForm caseId={c.id} types={c.types} onDone={() => setShowForm(false)} />
-                </motion.div>
-              ) : (
-                <motion.button
-                  key="btn"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.1 }}
-                  type="button"
-                  onClick={() => setShowForm(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-slate-300 text-sm font-semibold hover:bg-white/5 hover:border-white/15 transition-all active:scale-95"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Record Payment
-                </motion.button>
-              )}
-            </AnimatePresence>
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-slate-300 text-sm font-semibold hover:bg-white/5 hover:border-white/15 transition-all active:scale-95"
+            >
+              <Plus className="w-3.5 h-3.5" /> Record Payment
+            </button>
           </div>
         )}
 
@@ -687,13 +713,17 @@ function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
             <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
               {c.payments.map((p) => {
                 const amount = Number(p.contributionsPaid) + Number(p.surchargesPaid) + Number(p.wagesPaid);
+                const typeLabel =
+                  Number(p.contributionsPaid) > 0 ? "Contributions" :
+                  Number(p.surchargesPaid)    > 0 ? "Surcharges" :
+                  Number(p.wagesPaid)         > 0 ? "Wages Record" : null;
                 return (
                   <div key={p.id} className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-[11px] text-slate-300">{p.paymentDate}</p>
-                      {p.reference && (
-                        <p className="text-[10px] text-slate-600 truncate">{p.reference}</p>
-                      )}
+                      <p className="text-[10px] text-slate-500">
+                        {typeLabel}{p.reference ? ` · ${p.reference}` : ""}
+                      </p>
                     </div>
                     <span className="text-[11px] font-bold tabular-nums text-emerald-400 shrink-0">
                       {fmt(amount)}
@@ -706,6 +736,13 @@ function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
         )}
       </div>
     </div>
+
+    <AnimatePresence>
+      {showModal && (
+        <RecordPaymentModal caseId={c.id} types={c.types} onDone={() => setShowModal(false)} />
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 
