@@ -150,8 +150,8 @@ export default function LoginPage() {
               type="button"
               onClick={handleMicrosoftSignIn}
               disabled={isLoading || isMsLoading}
-              className="w-full h-11 flex items-center justify-center gap-3 rounded-xl bg-[#1e1e1e]
-                text-white text-sm font-semibold hover:bg-[#2d2d2d] active:scale-[0.99]
+              className="w-full h-11 flex items-center justify-center gap-3 rounded-xl bg-slate-700
+                text-white text-sm font-semibold hover:bg-slate-600 active:scale-[0.99]
                 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
             >
               {isMsLoading ? (
