@@ -3,12 +3,12 @@
 import { useState, useRef } from "react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowLeft, FileText, Gavel, HandshakeIcon, ScrollText,
   CheckCircle2, Clock, ChevronRight, Plus, X, Upload,
   Download, FileSpreadsheet, Loader2,
 } from "lucide-react";
-import Link from "next/link";
 import type { CaseDetail, CaseAttachment } from "@/db/types";
 import { updateCaseStage, type CaseStage } from "@/app/actions/update-case-stage";
 import { addCaseProceeding } from "@/app/actions/add-case-proceeding";
@@ -466,6 +466,7 @@ function DocumentsSection({ caseId, status, documents }: { caseId: string; statu
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDetail }) {
+  const router = useRouter();
   const [showProceedingForm, setShowProceedingForm] = useState(false);
   const [showCloseForm, setShowCloseForm] = useState(false);
   const isClosed = c.status === "closed";
