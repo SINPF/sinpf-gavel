@@ -25,5 +25,17 @@ export async function uploadFile(objectKey: string, file: File): Promise<string>
 }
 
 export async function getPresignedUrl(objectKey: string, expirySeconds = 3600): Promise<string> {
-  return minioClient.presignedGetObject(BUCKET, objectKey, expirySeconds);
+  const url = await minioClient.presignedGetObject(BUCKET, objectKey, expirySeconds);
+
+  // In containerised deployments the SDK signs against the internal endpoint
+  // (e.g. http://minio:9000). Rewrite to the public-facing URL so browsers
+  // can reach it through the nginx proxy.
+  const publicUrl = process.env.MINIO_PUBLIC_URL;
+  if (publicUrl) {
+    const scheme   = process.env.MINIO_USE_SSL === "true" ? "https" : "http";
+    const internal = `${scheme}://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}`;
+    return url.replace(internal, publicUrl.replace(/\/$/, ""));
+  }
+
+  return url;
 }

@@ -1,0 +1,84 @@
+services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB:       ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO object storage ─────────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER:     ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    networks:
+      - internal
+
+  # ── Gavel web app ────────────────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV:            production
+      DATABASE_URL:        postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      BETTER_AUTH_SECRET:  ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL:     ${BETTER_AUTH_URL}
+      RESEND_API_KEY:      ${RESEND_API_KEY}
+      # Internal MinIO connection (server-side SDK)
+      MINIO_ENDPOINT:      minio
+      MINIO_PORT:          "9000"
+      MINIO_ACCESS_KEY:    ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY:    ${MINIO_SECRET_KEY}
+      MINIO_BUCKET:        ${MINIO_BUCKET}
+      MINIO_USE_SSL:       "false"
+      # Public URL for pre-signed download links served through the proxy.
+      # Set to http(s)://your-server/storage in production.
+      MINIO_PUBLIC_URL:    ${MINIO_PUBLIC_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    networks:
+      - internal
+
+  # ── Nginx reverse proxy ──────────────────────────────────────────────────────
+  proxy:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+      - minio
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
