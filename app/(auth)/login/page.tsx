@@ -79,7 +79,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-slate-500 text-sm mb-8">
-            Welcome back. Sign in to access case files.
+            Welcome back. Sign in to Gavel.
           </p>
 
           {error && (
