@@ -1,6 +1,6 @@
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-brand-ink flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-brand-ink relative overflow-hidden">
       {/* Grid texture */}
       <div
         className="absolute inset-0 opacity-[0.07]"
@@ -16,7 +16,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="absolute -top-32 left-1/4 w-96 h-96 rounded-full bg-brand-blue/20 blur-[130px] pointer-events-none" />
       <div className="absolute -bottom-32 right-1/4 w-64 h-64 rounded-full bg-brand-yellow/10 blur-[100px] pointer-events-none" />
 
-      <div className="relative z-10 w-full flex justify-center">
+      <div className="relative z-10">
         {children}
       </div>
     </div>

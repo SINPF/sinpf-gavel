@@ -31,14 +31,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl shadow-black/30 overflow-hidden">
+    <div className="min-h-screen flex flex-col overflow-hidden">
       {/* Yellow top bar */}
-      <div className="h-1.5 bg-brand-yellow" />
+      <div className="h-1.5 bg-brand-yellow shrink-0" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
 
         {/* Left — video panel */}
-        <div className="relative hidden lg:block min-h-130">
+        <div className="relative hidden lg:flex">
           <video
             autoPlay
             muted
@@ -67,7 +67,7 @@ export default function LoginPage() {
         </div>
 
         {/* Right — form panel */}
-        <div className="p-10 flex flex-col justify-center">
+        <div className="bg-white flex flex-col justify-center px-10 py-12">
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <div className="relative h-14 w-44">
@@ -92,7 +92,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5 max-w-sm mx-auto w-full">
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="email"

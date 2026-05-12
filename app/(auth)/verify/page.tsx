@@ -181,16 +181,18 @@ function VerifyForm() {
 
 export default function VerifyPage() {
   return (
-    <div className="w-full max-w-md">
-      <Suspense
-        fallback={
-          <div className="bg-white rounded-2xl shadow-2xl shadow-black/30 p-10 flex justify-center items-center min-h-72">
-            <span className="w-6 h-6 border-2 border-slate-200 border-t-brand-blue rounded-full animate-spin" />
-          </div>
-        }
-      >
-        <VerifyForm />
-      </Suspense>
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <Suspense
+          fallback={
+            <div className="bg-white rounded-2xl shadow-2xl shadow-black/30 p-10 flex justify-center items-center min-h-72">
+              <span className="w-6 h-6 border-2 border-slate-200 border-t-brand-blue rounded-full animate-spin" />
+            </div>
+          }
+        >
+          <VerifyForm />
+        </Suspense>
+      </div>
     </div>
   );
 }
