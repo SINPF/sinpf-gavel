@@ -45,24 +45,46 @@ const ACTIVITY_LABELS: Record<string, string> = {
 
 // ─── Stage Stepper ────────────────────────────────────────────────────────────
 
-function StageStepper({ status }: { status: string }) {
+function StageStepper({ status, caseId }: { status: string; caseId?: string }) {
+  const [loadingStage, setLoadingStage] = useState<string | null>(null);
+  const router = useRouter();
   const currentIdx = STAGE_ORDER.indexOf(status as CaseStage);
+  const isClosed = status === "closed";
+
+  const handleClick = async (key: CaseStage) => {
+    if (!caseId || key === status || key === "closed" || isClosed || loadingStage) return;
+    setLoadingStage(key);
+    await updateCaseStage(caseId, key);
+    setLoadingStage(null);
+    router.refresh();
+  };
+
   return (
     <div className="flex items-center gap-0">
       {STAGES.map(({ key, label, icon }, i) => {
-        const isDone    = i < currentIdx;
-        const isActive  = i === currentIdx;
-        const isLast    = i === STAGES.length - 1;
+        const isDone      = i < currentIdx;
+        const isActive    = i === currentIdx;
+        const isLast      = i === STAGES.length - 1;
+        const isLoading   = loadingStage === key;
+        const isClickable = caseId && key !== status && key !== "closed" && !isClosed && !loadingStage;
         return (
           <div key={key} className="flex items-center">
             <div className="flex flex-col items-center gap-1.5">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
-                isDone   ? "bg-emerald-500 border-emerald-500 text-white" :
-                isActive ? "bg-brand-blue border-brand-blue text-white shadow-md shadow-brand-blue/30" :
-                           "bg-background border-border text-muted-foreground"
-              }`}>
-                {isDone ? <CheckCircle2 className="w-4 h-4" /> : icon}
-              </div>
+              <button
+                type="button"
+                onClick={() => handleClick(key)}
+                disabled={!isClickable}
+                title={isClickable ? `Move to ${label}` : undefined}
+                className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
+                  isDone   ? "bg-emerald-500 border-emerald-500 text-white" :
+                  isActive ? "bg-brand-blue border-brand-blue text-white shadow-md shadow-brand-blue/30" :
+                             "bg-background border-border text-muted-foreground"
+                } ${isClickable ? "cursor-pointer hover:scale-110 hover:shadow-lg" : "cursor-default"}`}
+              >
+                {isLoading
+                  ? <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                  : isDone ? <CheckCircle2 className="w-4 h-4" /> : icon}
+              </button>
               <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
                 isActive ? "text-brand-blue" : isDone ? "text-emerald-600" : "text-muted-foreground"
               }`}>
@@ -336,7 +358,7 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
 
       {/* Stage stepper */}
       <div className="p-6 rounded-2xl border border-border bg-background overflow-x-auto">
-        <StageStepper status={c.status} />
+        <StageStepper status={c.status} caseId={c.id} />
       </div>
 
       {/* Close case form */}
