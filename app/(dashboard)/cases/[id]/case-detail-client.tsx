@@ -501,6 +501,11 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-xl font-bold text-foreground">{c.employerName}</h1>
                 <Badge status={c.status as BadgeStatus} />
+                {c.types.map((t) => (
+                  <span key={t} className="px-2.5 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue text-[11px] font-bold">
+                    {t.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
+                  </span>
+                ))}
               </div>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap text-sm text-muted-foreground">
                 <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded-md">{c.employerCode}</span>
@@ -616,19 +621,6 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
                 </div>
 
                 <div className="space-y-4">
-                  {c.types.length > 0 && (
-                    <div className="p-5 rounded-2xl border border-border bg-background">
-                      <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Case Types</p>
-                      <div className="flex flex-wrap gap-2">
-                        {c.types.map((t) => (
-                          <span key={t} className="px-3 py-1 rounded-full bg-brand-blue/10 text-brand-blue text-xs font-bold">
-                            {t.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {c.closure && (
                     <div className="p-5 rounded-2xl border border-border bg-background">
                       <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Closure</p>
