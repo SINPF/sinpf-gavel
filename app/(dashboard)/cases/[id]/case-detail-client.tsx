@@ -470,7 +470,7 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
   const isClosed = c.status === "closed";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-in-right">
       {/* Back + header */}
       <div>
         <Link href="/cases" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">

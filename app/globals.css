@@ -72,6 +72,22 @@
   --radius-3xl: 2rem;
 }
 
+/* ─── Custom animations ─────────────────────────────────────────────── */
+@theme {
+  --animate-slide-in-right: slide-in-right 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* Font stacks reference Next.js injected vars, so they need @theme inline */
 @theme inline {
   --font-sans:    var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
