@@ -33,7 +33,7 @@
 /* ─── Tailwind v4 Theme (Light only) ───────────────────────────────── */
 @theme {
   /* Semantic colors – direct hex values to avoid CSS variable chain issues */
-  --color-background:           #f8fafc;
+  --color-background:           #ffffff;
   --color-foreground:           #1e293b;
 
   --color-primary:              #1279BD;
