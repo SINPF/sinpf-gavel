@@ -76,7 +76,7 @@ export function DataTable<T extends Record<string, unknown>>({
               <tr
                 key={String(row[keyField])}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={`border-b border-border last:border-0 hover:bg-muted/20 transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
+                className={`group border-b border-border last:border-0 hover:bg-muted/20 transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
               >
                 {columns.map((col, i) => (
                   <td

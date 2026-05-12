@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/ui/DataTable";
 import { Badge, type BadgeStatus } from "@/components/ui/Badge";
 import type { Column } from "@/components/ui/DataTable";
-import { IconChevronRight } from "@tabler/icons-react";
+import { ChevronRight } from "lucide-react";
 import type { CaseWithAssignee } from "@/db/types";
 
 type CaseRow = CaseWithAssignee & Record<string, unknown>;
@@ -122,7 +122,7 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
       align: "right",
       render: () => (
         <div className="flex items-center justify-end">
-          <IconChevronRight className="w-4 h-4 text-muted-foreground/40" />
+          <ChevronRight className="w-4 h-4 rotate-0 text-muted-foreground/40 group-hover:text-brand-blue group-hover:translate-x-0.5 transition-[color,transform] duration-150" />
         </div>
       ),
     },
