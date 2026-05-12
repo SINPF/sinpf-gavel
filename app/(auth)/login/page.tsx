@@ -32,9 +32,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col overflow-hidden">
-      {/* Yellow top bar */}
-      <div className="h-1.5 bg-brand-yellow shrink-0" />
-
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
 
         {/* Left — video panel */}
