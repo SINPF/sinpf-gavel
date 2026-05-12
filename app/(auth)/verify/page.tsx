@@ -122,6 +122,8 @@ function VerifyForm() {
                 inputMode="numeric"
                 maxLength={1}
                 value={digit}
+                title={`Digit ${i + 1} of ${OTP_LENGTH}`}
+                placeholder="·"
                 onChange={(e) => handleChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 onPaste={handlePaste}
