@@ -142,6 +142,7 @@ function StageActions({ caseId, status }: { caseId: string; status: string }) {
       {actions.map(({ label, stage, optional }) => (
         <button
           key={stage}
+          type="button"
           disabled={loading}
           onClick={() => advance(stage)}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 ${
@@ -155,6 +156,7 @@ function StageActions({ caseId, status }: { caseId: string; status: string }) {
         </button>
       ))}
       <button
+        type="button"
         onClick={() => setShowNote(!showNote)}
         className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
       >
@@ -170,6 +172,7 @@ function StageActions({ caseId, status }: { caseId: string; status: string }) {
             className="flex-1 px-4 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue"
           />
           <button
+            type="button"
             disabled={!note.trim() || loading}
             onClick={async () => {
               setLoading(true);
@@ -181,7 +184,7 @@ function StageActions({ caseId, status }: { caseId: string; status: string }) {
           >
             Save
           </button>
-          <button onClick={() => setShowNote(false)} className="p-2 rounded-xl hover:bg-muted transition-all">
+          <button type="button" title="Dismiss" onClick={() => setShowNote(false)} className="p-2 rounded-xl hover:bg-muted transition-all">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
@@ -215,7 +218,7 @@ function AddProceedingForm({ caseId, onDone }: { caseId: string; onDone: () => v
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelCls}>Proceeding Type</label>
-          <select name="proceedingType" required className={inputCls}>
+          <select name="proceedingType" required title="Proceeding Type" className={inputCls}>
             {["trial","hearing","mention","consent_order","default_judgment","enforcement","discontinued"].map((v) => (
               <option key={v} value={v}>{v.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</option>
             ))}
@@ -223,18 +226,18 @@ function AddProceedingForm({ caseId, onDone }: { caseId: string; onDone: () => v
         </div>
         <div>
           <label className={labelCls}>Court</label>
-          <select name="court" required className={inputCls}>
+          <select name="court" required title="Court" className={inputCls}>
             <option value="high_court">High Court</option>
             <option value="magistrates_court">Magistrates Court</option>
           </select>
         </div>
         <div>
           <label className={labelCls}>Hearing Date</label>
-          <input type="date" name="hearingDate" className={inputCls} />
+          <input type="date" name="hearingDate" title="Hearing Date" className={inputCls} />
         </div>
         <div>
           <label className={labelCls}>Next Date</label>
-          <input type="date" name="nextDate" className={inputCls} />
+          <input type="date" name="nextDate" title="Next Date" className={inputCls} />
         </div>
       </div>
       <div>
@@ -280,7 +283,7 @@ function CloseCaseForm({ caseId, onDone }: { caseId: string; onDone: () => void 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelCls}>Closure Type</label>
-          <select name="closureType" required className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
+          <select name="closureType" required title="Closure Type" className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
             <option value="prosecution_completed">Prosecution Completed</option>
             <option value="settlement_completed">Settlement Completed</option>
             <option value="other">Other</option>
@@ -289,7 +292,7 @@ function CloseCaseForm({ caseId, onDone }: { caseId: string; onDone: () => void 
         {type === "other" && (
           <div>
             <label className={labelCls}>Reason</label>
-            <select name="closureReason" className={inputCls}>
+            <select name="closureReason" title="Closure Reason" className={inputCls}>
               <option value="statute_barred">Statute Barred</option>
               <option value="incomplete_for_prosecution">Incomplete for Prosecution</option>
               <option value="employer_complied">Employer Complied</option>
@@ -347,6 +350,7 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
           </div>
           {!isClosed && (
             <button
+              type="button"
               onClick={() => setShowCloseForm(!showCloseForm)}
               className="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-all"
             >
@@ -436,6 +440,7 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
               <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Court Proceedings</p>
               {!isClosed && c.status === "prosecution" && (
                 <button
+                  type="button"
                   onClick={() => setShowProceedingForm(!showProceedingForm)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-blue/10 text-brand-blue text-xs font-bold hover:bg-brand-blue/20 transition-all"
                 >
