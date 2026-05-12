@@ -13,6 +13,15 @@ export const auth = betterAuth({
     provider: "pg",
     schema: { user, session, account, verification },
   }),
+  socialProviders: {
+    microsoft: {
+      clientId:     process.env.MICROSOFT_CLIENT_ID!,
+      clientSecret: process.env.MICROSOFT_CLIENT_SECRET!,
+      // Lock to SINPF's Azure AD tenant so only org accounts can sign in.
+      // Find this in Azure Portal → Entra ID → Overview → Tenant ID.
+      tenantId:     process.env.MICROSOFT_TENANT_ID,
+    },
+  },
   plugins: [
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) {
