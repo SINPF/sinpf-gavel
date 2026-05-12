@@ -32,7 +32,7 @@ const STAGE_ORDER = STAGES.map((s) => s.key);
 
 const VALID_TRANSITIONS: Record<string, CaseStage[]> = {
   registered:    ["assessment"],
-  assessment:    ["demand_issued", "negotiation", "prosecution"],
+  assessment:    ["demand_issued", "prosecution"],
   demand_issued: ["negotiation", "prosecution"],
   negotiation:   ["prosecution"],
   prosecution:   [],
@@ -138,9 +138,8 @@ function StageActions({ caseId, status }: { caseId: string; status: string }) {
   const NEXT_ACTIONS: Record<string, { label: string; stage: CaseStage; optional?: boolean }[]> = {
     registered:    [{ label: "Begin Assessment", stage: "assessment" }],
     assessment:    [
-      { label: "Issue Demand Letter", stage: "demand_issued", optional: true },
-      { label: "Enter Negotiation",   stage: "negotiation",   optional: true },
-      { label: "File for Prosecution",stage: "prosecution" },
+      { label: "Issue Demand Letter",  stage: "demand_issued", optional: true },
+      { label: "File for Prosecution", stage: "prosecution" },
     ],
     demand_issued: [
       { label: "Enter Negotiation",    stage: "negotiation",  optional: true },
