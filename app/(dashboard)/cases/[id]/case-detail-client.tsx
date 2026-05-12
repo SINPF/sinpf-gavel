@@ -30,6 +30,15 @@ const STAGES: { key: CaseStage; label: string; icon: React.ReactNode }[] = [
 
 const STAGE_ORDER = STAGES.map((s) => s.key);
 
+const VALID_TRANSITIONS: Record<string, CaseStage[]> = {
+  registered:    ["assessment"],
+  assessment:    ["demand_issued", "negotiation", "prosecution"],
+  demand_issued: ["negotiation", "prosecution"],
+  negotiation:   ["prosecution"],
+  prosecution:   [],
+  closed:        [],
+};
+
 const ACTIVITY_LABELS: Record<string, string> = {
   stage_changed:           "Stage Changed",
   assessment_completed:    "Assessment Completed",
@@ -52,11 +61,12 @@ const ACTIVITY_LABELS: Record<string, string> = {
 function StageStepper({ status, caseId }: { status: string; caseId?: string }) {
   const [loadingStage, setLoadingStage] = useState<string | null>(null);
   const router = useRouter();
-  const currentIdx = STAGE_ORDER.indexOf(status as CaseStage);
-  const isClosed = status === "closed";
+  const currentIdx  = STAGE_ORDER.indexOf(status as CaseStage);
+  const isClosed    = status === "closed";
+  const validNext   = VALID_TRANSITIONS[status] ?? [];
 
   const handleClick = async (key: CaseStage) => {
-    if (!caseId || key === status || key === "closed" || isClosed || loadingStage) return;
+    if (!caseId || !validNext.includes(key) || loadingStage) return;
     setLoadingStage(key);
     await updateCaseStage(caseId, key);
     setLoadingStage(null);
@@ -70,33 +80,38 @@ function StageStepper({ status, caseId }: { status: string; caseId?: string }) {
         const isActive    = i === currentIdx;
         const isLast      = i === STAGES.length - 1;
         const isLoading   = loadingStage === key;
-        const isClickable = caseId && key !== status && key !== "closed" && !isClosed && !loadingStage;
+        const isReachable = !!caseId && !isClosed && !loadingStage && validNext.includes(key);
+
         return (
           <div key={key} className="flex items-center">
             <div className="flex flex-col items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => handleClick(key)}
-                disabled={!isClickable}
-                title={isClickable ? `Move to ${label}` : undefined}
+                disabled={!isReachable}
+                title={isReachable ? `Move to ${label}` : undefined}
                 className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
-                  isDone   ? "bg-emerald-500 border-emerald-500 text-white" :
-                  isActive ? "bg-brand-blue border-brand-blue text-white shadow-md shadow-brand-blue/30" :
-                             "bg-background border-border text-muted-foreground"
-                } ${isClickable ? "cursor-pointer hover:scale-110 hover:shadow-lg" : "cursor-default"}`}
+                  isDone      ? "bg-emerald-500 border-emerald-500 text-white cursor-default" :
+                  isActive    ? "bg-brand-blue border-brand-blue text-white shadow-md shadow-brand-blue/30 cursor-default" :
+                  isReachable ? "bg-background border-brand-blue/50 text-brand-blue/70 cursor-pointer hover:bg-brand-blue/5 hover:border-brand-blue hover:scale-110 hover:shadow-lg" :
+                                "bg-background border-border/50 text-muted-foreground/30 cursor-default"
+                }`}
               >
                 {isLoading
                   ? <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
                   : isDone ? <CheckCircle2 className="w-4 h-4" /> : icon}
               </button>
               <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
-                isActive ? "text-brand-blue" : isDone ? "text-emerald-600" : "text-muted-foreground"
+                isActive    ? "text-brand-blue" :
+                isDone      ? "text-emerald-600" :
+                isReachable ? "text-brand-blue/60" :
+                              "text-muted-foreground/30"
               }`}>
                 {label}
               </span>
             </div>
             {!isLast && (
-              <div className={`w-12 h-0.5 mb-5 mx-1 ${i < currentIdx ? "bg-emerald-500" : "bg-border"}`} />
+              <div className={`w-12 h-0.5 mb-5 mx-1 ${i < currentIdx ? "bg-emerald-500" : "bg-border/50"}`} />
             )}
           </div>
         );
