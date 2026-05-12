@@ -88,7 +88,7 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
       align: "right",
       render: (v) => (
         <span className="text-sm font-semibold text-foreground tabular-nums">
-          {Number(v).toLocaleString("en-SB", { style: "currency", currency: "SBD" })}
+          {Number(v).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
         </span>
       ),
     },

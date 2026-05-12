@@ -139,7 +139,7 @@ function GrandTotalBanner({ total }: { total: number }) {
           <p className="text-xs text-slate-500 mt-0.5">Auto-calculated · SBD</p>
         </div>
         <span className="text-3xl font-black text-white tracking-tight tabular-nums">
-          {total.toLocaleString("en-SB", {
+          {total.toLocaleString("en-AU", {
             style: "currency",
             currency: "SBD",
             minimumFractionDigits: 2,

@@ -537,14 +537,14 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
               <div key={String(label)} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{label}</span>
                 <span className="font-semibold tabular-nums">
-                  {Number(val).toLocaleString("en-SB", { style: "currency", currency: "SBD" })}
+                  {Number(val).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
                 </span>
               </div>
             ))}
             <div className="pt-3 border-t border-border flex justify-between">
               <span className="text-sm font-bold">Grand Total</span>
               <span className="text-sm font-black text-brand-blue tabular-nums">
-                {Number(c.grandTotalClaim).toLocaleString("en-SB", { style: "currency", currency: "SBD" })}
+                {Number(c.grandTotalClaim).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
               </span>
             </div>
           </div>
@@ -647,7 +647,10 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
                             {ACTIVITY_LABELS[a.activityType] ?? a.activityType}
                           </span>
                           <span className="text-[10px] text-muted-foreground">
-                            {new Date(a.createdAt).toLocaleString()}
+                            {new Date(a.createdAt).toLocaleString("en-GB", {
+                              day: "numeric", month: "short", year: "numeric",
+                              hour: "2-digit", minute: "2-digit",
+                            })}
                           </span>
                         </div>
                         {a.notes && <p className="text-sm text-muted-foreground mt-0.5">{a.notes}</p>}
