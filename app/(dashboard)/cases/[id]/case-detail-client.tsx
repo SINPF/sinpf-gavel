@@ -16,6 +16,7 @@ import { addCaseProceeding } from "@/app/actions/add-case-proceeding";
 import { closeCase } from "@/app/actions/close-case";
 import { addCaseActivity } from "@/app/actions/add-case-activity";
 import { uploadCaseDocument } from "@/app/actions/upload-case-document";
+import { recordPayment } from "@/app/actions/record-payment";
 
 // ─── Stage config ─────────────────────────────────────────────────────────────
 
@@ -54,6 +55,7 @@ const ACTIVITY_LABELS: Record<string, string> = {
   case_closed:             "Case Closed",
   document_added:          "Document Added",
   note_added:              "Note Added",
+  payment_recorded:        "Payment Recorded",
 };
 
 // ─── Stage Stepper ────────────────────────────────────────────────────────────
@@ -476,6 +478,237 @@ function DocumentsSection({ caseId, status, documents }: { caseId: string; statu
   );
 }
 
+// ─── Record Payment Form ──────────────────────────────────────────────────────
+
+function RecordPaymentForm({ caseId, types, onDone }: { caseId: string; types: string[]; onDone: () => void }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const hasContributions = types.includes("unpaid_contributions");
+  const hasSurcharges    = types.includes("unpaid_surcharges");
+  const hasWages         = types.includes("wages_record");
+
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    const fd = new FormData(e.currentTarget);
+    fd.append("caseId", caseId);
+    await recordPayment(fd);
+    setLoading(false);
+    onDone();
+    router.refresh();
+  };
+
+  const lbl = "block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1";
+  const inp = "w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500/40 transition-all";
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div>
+        <label className={lbl}>Date *</label>
+        <input
+          type="date"
+          name="paymentDate"
+          required
+          className={inp}
+          defaultValue={new Date().toISOString().split("T")[0]}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {hasContributions && (
+          <div>
+            <label className={lbl}>Contributions</label>
+            <input type="number" name="contributionsPaid" min="0" step="0.01" defaultValue="0" className={inp} />
+          </div>
+        )}
+        {hasSurcharges && (
+          <div>
+            <label className={lbl}>Surcharges</label>
+            <input type="number" name="surchargesPaid" min="0" step="0.01" defaultValue="0" className={inp} />
+          </div>
+        )}
+        {hasWages && (
+          <div>
+            <label className={lbl}>Wages</label>
+            <input type="number" name="wagesPaid" min="0" step="0.01" defaultValue="0" className={inp} />
+          </div>
+        )}
+      </div>
+      <div>
+        <label className={lbl}>Reference</label>
+        <input type="text" name="reference" placeholder="Bank / receipt ref…" className={inp} />
+      </div>
+      <div>
+        <label className={lbl}>Notes</label>
+        <input type="text" name="notes" placeholder="Optional notes…" className={inp} />
+      </div>
+      <div className="flex gap-2 pt-1">
+        <button
+          type="button"
+          onClick={onDone}
+          className="flex-1 py-2 rounded-xl border border-white/10 text-slate-400 text-sm font-semibold hover:border-white/20 hover:text-slate-200 transition-all"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex-1 py-2 rounded-xl bg-sky-500 text-white text-sm font-bold hover:bg-sky-400 disabled:opacity-50 transition-all active:scale-95"
+        >
+          {loading ? "Saving…" : "Save Payment"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ─── Financial Card ───────────────────────────────────────────────────────────
+
+function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
+  const [showForm, setShowForm] = useState(false);
+
+  const paidContributions = c.payments.reduce((sum, p) => sum + Number(p.contributionsPaid), 0);
+  const paidSurcharges    = c.payments.reduce((sum, p) => sum + Number(p.surchargesPaid), 0);
+  const paidWages         = c.payments.reduce((sum, p) => sum + Number(p.wagesPaid), 0);
+  const totalPaid         = paidContributions + paidSurcharges + paidWages;
+  const grandTotalClaim   = Number(c.grandTotalClaim);
+  const outstanding       = grandTotalClaim - totalPaid;
+  const isFullyRecovered  = outstanding <= 0 && grandTotalClaim > 0;
+
+  const fmt = (n: number) =>
+    n.toLocaleString("en-AU", { style: "currency", currency: "SBD" });
+
+  const rows = [
+    { label: "Contributions", claim: Number(c.totalContributions), paid: paidContributions },
+    { label: "Surcharges",    claim: Number(c.totalSurcharges),    paid: paidSurcharges    },
+    { label: "Wages Record",  claim: Number(c.wagesRecord),        paid: paidWages         },
+  ];
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden relative sticky top-4"
+      style={{ background: "linear-gradient(145deg, #1e3d5f 0%, #162d48 60%, #0f1e30 100%)" }}
+    >
+      <div
+        className="pointer-events-none absolute -right-8 -top-8 w-40 h-40 rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(8,159,255,0.2) 0%, transparent 70%)" }}
+      />
+      <div
+        className="pointer-events-none absolute -left-4 bottom-0 w-32 h-32 rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(255,223,24,0.08) 0%, transparent 70%)" }}
+      />
+
+      <div className="relative p-6 space-y-4">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Financial Summary</p>
+
+        {/* Column headers */}
+        <div className="grid grid-cols-4 gap-1 text-[9px] font-black text-slate-600 uppercase tracking-wider border-b border-white/8 pb-2">
+          <span />
+          <span className="text-right">Claim</span>
+          <span className="text-right">Paid</span>
+          <span className="text-right">Owed</span>
+        </div>
+
+        {/* Breakdown rows */}
+        <div className="space-y-2">
+          {rows.map(({ label, claim, paid }) => {
+            const owed = Math.max(0, claim - paid);
+            return (
+              <div key={label} className="grid grid-cols-4 gap-1 items-center">
+                <span className="text-[10px] text-slate-500">{label}</span>
+                <span className="text-right text-[11px] tabular-nums text-slate-400">{fmt(claim)}</span>
+                <span className="text-right text-[11px] tabular-nums text-emerald-400">{paid > 0 ? fmt(paid) : "—"}</span>
+                <span className={`text-right text-[11px] tabular-nums font-semibold ${owed > 0 ? "text-amber-300" : "text-emerald-400"}`}>
+                  {fmt(owed)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Grand total */}
+        <div className="pt-3 border-t border-white/10 space-y-1">
+          <div className="grid grid-cols-4 gap-1 items-baseline">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider col-span-1">Total</span>
+            <span className="text-right text-xs tabular-nums font-bold text-slate-300">{fmt(grandTotalClaim)}</span>
+            <span className="text-right text-xs tabular-nums font-bold text-emerald-400">{totalPaid > 0 ? fmt(totalPaid) : "—"}</span>
+            <span className={`text-right text-2xl tabular-nums font-black leading-none ${outstanding > 0 ? "text-amber-300" : "text-emerald-400"}`}>
+              {fmt(Math.max(0, outstanding))}
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-600 text-right">Outstanding · SBD</p>
+        </div>
+
+        {isFullyRecovered && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/20">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="text-xs font-bold text-emerald-300">Fully Recovered</span>
+          </div>
+        )}
+
+        {/* Record payment */}
+        {!isClosed && (
+          <div className="border-t border-white/8 pt-3">
+            <AnimatePresence mode="wait">
+              {showForm ? (
+                <motion.div
+                  key="form"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <RecordPaymentForm caseId={c.id} types={c.types} onDone={() => setShowForm(false)} />
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.1 }}
+                  type="button"
+                  onClick={() => setShowForm(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-slate-300 text-sm font-semibold hover:bg-white/5 hover:border-white/15 transition-all active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Record Payment
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* Payment history */}
+        {c.payments.length > 0 && (
+          <div className="border-t border-white/8 pt-3 space-y-2">
+            <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
+              {c.payments.length} Payment{c.payments.length !== 1 ? "s" : ""} Recorded
+            </p>
+            <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+              {c.payments.map((p) => {
+                const amount = Number(p.contributionsPaid) + Number(p.surchargesPaid) + Number(p.wagesPaid);
+                return (
+                  <div key={p.id} className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-slate-300">{p.paymentDate}</p>
+                      {p.reference && (
+                        <p className="text-[10px] text-slate-600 truncate">{p.reference}</p>
+                      )}
+                    </div>
+                    <span className="text-[11px] font-bold tabular-nums text-emerald-400 shrink-0">
+                      {fmt(amount)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 type TabId = "overview" | "documents" | "proceedings" | "activity";
@@ -630,44 +863,8 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
                 )}
               </div>
 
-              {/* Right: financial summary — prominent */}
-              <div
-                className="rounded-2xl overflow-hidden p-6 sticky top-4"
-                style={{ background: "linear-gradient(145deg, #1e3d5f 0%, #162d48 60%, #0f1e30 100%)" }}
-              >
-                {/* Decorative glows */}
-                <div className="pointer-events-none absolute -right-8 -top-8 w-40 h-40 rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(8,159,255,0.2) 0%, transparent 70%)" }} />
-                <div className="pointer-events-none absolute -left-4 bottom-0 w-32 h-32 rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(255,223,24,0.08) 0%, transparent 70%)" }} />
-
-                <div className="relative space-y-4">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Financial Summary</p>
-
-                  <div className="space-y-2.5">
-                    {[
-                      ["Contributions", c.totalContributions],
-                      ["Surcharges",    c.totalSurcharges],
-                      ["Wages Record",  c.wagesRecord],
-                    ].map(([label, val]) => (
-                      <div key={String(label)} className="flex justify-between items-center text-sm">
-                        <span className="text-slate-400">{label}</span>
-                        <span className="font-semibold tabular-nums text-slate-200">
-                          {Number(val).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="pt-4 border-t border-white/10">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Grand Total Claim</p>
-                    <p className="text-3xl font-black text-white tracking-tight tabular-nums">
-                      {Number(c.grandTotalClaim).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
-                    </p>
-                    <p className="text-[10px] text-slate-500 mt-1">Auto-calculated · SBD</p>
-                  </div>
-                </div>
-              </div>
+              {/* Right: financial card */}
+              <FinancialCard c={c} isClosed={isClosed} />
 
             </div>
           )}

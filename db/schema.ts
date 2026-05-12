@@ -124,6 +124,7 @@ export const activityTypeEnum = pgEnum("activity_type", [
   "case_closed",
   "document_added",
   "note_added",
+  "payment_recorded",
 ]);
 
 export const courtTypeEnum = pgEnum("court_type", [
@@ -281,4 +282,25 @@ export const caseClosure = pgTable("case_closure", {
 export const caseClosureRelations = relations(caseClosure, ({ one }) => ({
   case:     one(caseReferrals, { fields: [caseClosure.caseReferralId], references: [caseReferrals.id] }),
   closedBy: one(user, { fields: [caseClosure.closedBy], references: [user.id] }),
+}));
+
+
+// ─── Payments ─────────────────────────────────────────────────────────────────
+
+export const casePayments = pgTable("case_payments", {
+  id:                text("id").primaryKey().default(sql`gen_random_uuid()`),
+  caseReferralId:    text("case_referral_id").notNull().references(() => caseReferrals.id, { onDelete: "cascade" }),
+  paymentDate:       date("payment_date").notNull(),
+  contributionsPaid: numeric("contributions_paid", { precision: 15, scale: 2 }).notNull().default("0"),
+  surchargesPaid:    numeric("surcharges_paid",    { precision: 15, scale: 2 }).notNull().default("0"),
+  wagesPaid:         numeric("wages_paid",         { precision: 15, scale: 2 }).notNull().default("0"),
+  reference:         text("reference"),
+  notes:             text("notes"),
+  recordedBy:        text("recorded_by").references(() => user.id, { onDelete: "set null" }),
+  createdAt:         timestamp("created_at").notNull().default(sql`now()`),
+});
+
+export const casePaymentRelations = relations(casePayments, ({ one }) => ({
+  case:       one(caseReferrals, { fields: [casePayments.caseReferralId], references: [caseReferrals.id] }),
+  recordedBy: one(user, { fields: [casePayments.recordedBy], references: [user.id] }),
 }));

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { caseReferrals, caseReferralTypes, caseActivities, caseProceedings, caseClosure, caseAttachments, employers, user } from "@/db/schema";
+import { caseReferrals, caseReferralTypes, caseActivities, caseProceedings, caseClosure, caseAttachments, casePayments, employers, user } from "@/db/schema";
 import { eq, desc, asc } from "drizzle-orm";
 import CaseDetailClient from "./case-detail-client";
 import type { CaseDetail } from "@/db/types";
@@ -34,7 +34,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
 
   if (!row) notFound();
 
-  const [types, activities, proceedings, closureRows, attachmentRows] = await Promise.all([
+  const [types, activities, proceedings, closureRows, attachmentRows, paymentRows] = await Promise.all([
     db.select().from(caseReferralTypes).where(eq(caseReferralTypes.caseReferralId, id)),
 
     db
@@ -77,6 +77,10 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     db.select().from(caseAttachments)
       .where(eq(caseAttachments.caseReferralId, id))
       .orderBy(asc(caseAttachments.uploadedAt)),
+
+    db.select().from(casePayments)
+      .where(eq(casePayments.caseReferralId, id))
+      .orderBy(desc(casePayments.paymentDate)),
   ]);
 
   const documents = await Promise.all(
@@ -93,6 +97,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     proceedings,
     closure: closureRows[0] ?? null,
     documents,
+    payments: paymentRows,
   };
 
   return <CaseDetailClient caseDetail={caseDetail} />;

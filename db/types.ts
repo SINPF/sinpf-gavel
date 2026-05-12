@@ -5,6 +5,7 @@ import {
   caseProceedings,
   caseClosure,
   caseAttachments,
+  casePayments,
   employers,
 } from "./schema";
 
@@ -20,9 +21,10 @@ export type CaseWithAssignee = Case & {
 };
 
 export type CaseAttachment = InferSelectModel<typeof caseAttachments> & { presignedUrl: string };
-export type CaseActivity = InferSelectModel<typeof caseActivities>;
+export type CaseActivity   = InferSelectModel<typeof caseActivities>;
 export type CaseProceeding = InferSelectModel<typeof caseProceedings>;
-export type CaseClosure = InferSelectModel<typeof caseClosure>;
+export type CaseClosure    = InferSelectModel<typeof caseClosure>;
+export type CasePayment    = InferSelectModel<typeof casePayments>;
 
 export type CaseActivityWithUser = CaseActivity & {
   performerName: string | null;
@@ -44,4 +46,5 @@ export type CaseDetail = Case & {
   proceedings: CaseProceedingWithUser[];
   closure: CaseClosure | null;
   documents: CaseAttachment[];
+  payments: CasePayment[];
 };
