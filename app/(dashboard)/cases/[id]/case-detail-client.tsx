@@ -1,17 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, FileText, Gavel, HandshakeIcon, ScrollText,
-  CheckCircle2, Clock, ChevronRight, Plus, X,
+  CheckCircle2, Clock, ChevronRight, Plus, X, Upload,
+  Download, FileSpreadsheet, Loader2,
 } from "lucide-react";
 import Link from "next/link";
-import type { CaseDetail } from "@/db/types";
+import type { CaseDetail, CaseAttachment } from "@/db/types";
 import { updateCaseStage, type CaseStage } from "@/app/actions/update-case-stage";
 import { addCaseProceeding } from "@/app/actions/add-case-proceeding";
 import { closeCase } from "@/app/actions/close-case";
 import { addCaseActivity } from "@/app/actions/add-case-activity";
+import { uploadCaseDocument } from "@/app/actions/upload-case-document";
 
 // ─── Stage config ─────────────────────────────────────────────────────────────
 
@@ -319,6 +321,147 @@ function CloseCaseForm({ caseId, onDone }: { caseId: string; onDone: () => void 
   );
 }
 
+// ─── Documents Section ────────────────────────────────────────────────────────
+
+const FILE_ICON: Record<string, React.ReactNode> = {
+  pdf:   <FileText className="w-4 h-4 text-red-500" />,
+  excel: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+  csv:   <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+};
+
+function StageDocuments({
+  stageKey,
+  stageLabel,
+  docs,
+  isCurrent,
+  caseId,
+}: {
+  stageKey: string;
+  stageLabel: string;
+  docs: CaseAttachment[];
+  isCurrent: boolean;
+  caseId: string;
+}) {
+  const router    = useRouter();
+  const inputRef  = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError]         = useState<string | null>(null);
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("caseId", caseId);
+      fd.append("stage", stageKey);
+      Array.from(files).forEach((f) => fd.append("files", f));
+      await uploadCaseDocument(fd);
+      router.refresh();
+    } catch {
+      setError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className={`rounded-2xl border overflow-hidden ${isCurrent ? "border-brand-blue/30 bg-brand-blue/[0.02]" : "border-border bg-background"}`}>
+      {/* Stage header */}
+      <div className={`flex items-center justify-between px-4 py-3 border-b ${isCurrent ? "border-brand-blue/20 bg-brand-blue/5" : "border-border bg-muted/30"}`}>
+        <div className="flex items-center gap-2">
+          <span className={`text-[10px] font-black uppercase tracking-widest ${isCurrent ? "text-brand-blue" : "text-muted-foreground"}`}>
+            {stageLabel}
+          </span>
+          {docs.length > 0 && (
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isCurrent ? "bg-brand-blue/15 text-brand-blue" : "bg-muted text-muted-foreground"}`}>
+              {docs.length}
+            </span>
+          )}
+        </div>
+        {isCurrent && (
+          <>
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              accept=".pdf,.xlsx,.xls,.csv"
+              className="hidden"
+              title="Upload documents"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand-blue text-white text-[11px] font-bold hover:bg-brand-blue/90 disabled:opacity-50 transition-all active:scale-95"
+            >
+              {uploading
+                ? <Loader2 className="w-3 h-3 animate-spin" />
+                : <Upload className="w-3 h-3" />}
+              Upload
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* File list */}
+      <div className="px-4 py-3">
+        {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
+        {docs.length === 0 ? (
+          <p className="text-xs text-muted-foreground/50 italic py-1">No documents</p>
+        ) : (
+          <div className="space-y-1.5">
+            {docs.map((doc) => (
+              <div key={doc.id} className="flex items-center gap-2 group">
+                {FILE_ICON[doc.fileType] ?? <FileText className="w-4 h-4 text-muted-foreground" />}
+                <span className="flex-1 text-xs text-foreground truncate">{doc.fileName}</span>
+                <a
+                  href={doc.presignedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Download"
+                  className="p-1 rounded-lg text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground transition-all"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DocumentsSection({ caseId, status, documents }: { caseId: string; status: string; documents: CaseAttachment[] }) {
+  const activeStages = STAGES.filter((s) => s.key !== "closed");
+  const byStage = Object.fromEntries(
+    activeStages.map((s) => [s.key, documents.filter((d) => d.stage === s.key)])
+  );
+
+  return (
+    <div className="rounded-2xl border border-border bg-background overflow-hidden">
+      <div className="px-5 py-4 border-b border-border">
+        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Documents</h3>
+      </div>
+      <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+        {activeStages.map((s) => (
+          <StageDocuments
+            key={s.key}
+            stageKey={s.key}
+            stageLabel={s.label}
+            docs={byStage[s.key] ?? []}
+            isCurrent={s.key === status}
+            caseId={caseId}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDetail }) {
@@ -364,6 +507,9 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
       <div className="p-6 rounded-2xl border border-border bg-background overflow-x-auto">
         <StageStepper status={c.status} caseId={c.id} />
       </div>
+
+      {/* Documents */}
+      <DocumentsSection caseId={c.id} status={c.status} documents={c.documents} />
 
       {/* Close case form */}
       {showCloseForm && (

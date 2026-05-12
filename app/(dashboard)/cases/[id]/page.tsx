@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { caseReferrals, caseReferralTypes, caseActivities, caseProceedings, caseClosure, employers, user } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { caseReferrals, caseReferralTypes, caseActivities, caseProceedings, caseClosure, caseAttachments, employers, user } from "@/db/schema";
+import { eq, desc, asc } from "drizzle-orm";
 import CaseDetailClient from "./case-detail-client";
 import type { CaseDetail } from "@/db/types";
+import { getPresignedUrl } from "@/lib/minio";
 
 export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -33,7 +34,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
 
   if (!row) notFound();
 
-  const [types, activities, proceedings, closureRows] = await Promise.all([
+  const [types, activities, proceedings, closureRows, attachmentRows] = await Promise.all([
     db.select().from(caseReferralTypes).where(eq(caseReferralTypes.caseReferralId, id)),
 
     db
@@ -72,7 +73,18 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
       .orderBy(desc(caseProceedings.createdAt)),
 
     db.select().from(caseClosure).where(eq(caseClosure.caseReferralId, id)),
+
+    db.select().from(caseAttachments)
+      .where(eq(caseAttachments.caseReferralId, id))
+      .orderBy(asc(caseAttachments.uploadedAt)),
   ]);
+
+  const documents = await Promise.all(
+    attachmentRows.map(async (a) => ({
+      ...a,
+      presignedUrl: await getPresignedUrl(a.fileUrl),
+    }))
+  );
 
   const caseDetail: CaseDetail = {
     ...row,
@@ -80,6 +92,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     activities,
     proceedings,
     closure: closureRows[0] ?? null,
+    documents,
   };
 
   return <CaseDetailClient caseDetail={caseDetail} />;

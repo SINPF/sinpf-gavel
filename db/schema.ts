@@ -223,6 +223,8 @@ export const caseAttachments = pgTable("case_attachments", {
   fileName:       text("file_name").notNull(),
   fileType:       text("file_type").notNull(),
   fileUrl:        text("file_url").notNull(),
+  stage:          text("stage"),
+  uploadedBy:     text("uploaded_by").references(() => user.id, { onDelete: "set null" }),
   uploadedAt:     timestamp("uploaded_at").notNull().default(sql`now()`),
 });
 

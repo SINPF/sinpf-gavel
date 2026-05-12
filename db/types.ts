@@ -4,6 +4,7 @@ import {
   caseActivities,
   caseProceedings,
   caseClosure,
+  caseAttachments,
   employers,
 } from "./schema";
 
@@ -18,6 +19,7 @@ export type CaseWithAssignee = Case & {
   types: string[];
 };
 
+export type CaseAttachment = InferSelectModel<typeof caseAttachments> & { presignedUrl: string };
 export type CaseActivity = InferSelectModel<typeof caseActivities>;
 export type CaseProceeding = InferSelectModel<typeof caseProceedings>;
 export type CaseClosure = InferSelectModel<typeof caseClosure>;
@@ -41,4 +43,5 @@ export type CaseDetail = Case & {
   activities: CaseActivityWithUser[];
   proceedings: CaseProceedingWithUser[];
   closure: CaseClosure | null;
+  documents: CaseAttachment[];
 };

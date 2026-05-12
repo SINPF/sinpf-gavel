@@ -23,3 +23,7 @@ export async function uploadFile(objectKey: string, file: File): Promise<string>
   });
   return objectKey;
 }
+
+export async function getPresignedUrl(objectKey: string, expirySeconds = 3600): Promise<string> {
+  return minioClient.presignedGetObject(BUCKET, objectKey, expirySeconds);
+}
