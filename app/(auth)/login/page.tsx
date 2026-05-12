@@ -150,12 +150,12 @@ export default function LoginPage() {
               type="button"
               onClick={handleMicrosoftSignIn}
               disabled={isLoading || isMsLoading}
-              className="w-full h-11 flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white
-                text-slate-700 text-sm font-semibold hover:bg-slate-50 active:scale-[0.99]
+              className="w-full h-11 flex items-center justify-center gap-3 rounded-xl bg-[#1e1e1e]
+                text-white text-sm font-semibold hover:bg-[#2d2d2d] active:scale-[0.99]
                 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
             >
               {isMsLoading ? (
-                <span className="w-4 h-4 rounded-full border-2 border-slate-300 border-t-slate-600 animate-spin" />
+                <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
               ) : (
                 <svg width="18" height="18" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <rect x="1" y="1" width="9" height="9" fill="#F25022" />
