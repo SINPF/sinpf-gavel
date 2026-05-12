@@ -28,9 +28,9 @@ export default function AppSidebar() {
     <div className="flex items-center gap-3">
       <Image src="/sinpf-logo.png" alt="SINPF" width={36} height={36} className="rounded-xl" />
       <div>
-        <p className="text-white font-bold text-sm tracking-tight leading-tight">LCMS</p>
+        <p className="text-white font-bold text-sm tracking-tight leading-tight">Gavel</p>
         <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.15em] leading-tight mt-0.5">
-          Legal Department
+          SINPF Legal
         </p>
       </div>
     </div>

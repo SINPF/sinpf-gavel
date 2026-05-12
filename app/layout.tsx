@@ -15,8 +15,8 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LCMS | SINPF",
-  description: "Legal Case Management Portal",
+  title: "Gavel | SINPF",
+  description: "Gavel — SINPF Legal Case Management & Registry System",
   icons: {
     icon: "/logo.png",
   },

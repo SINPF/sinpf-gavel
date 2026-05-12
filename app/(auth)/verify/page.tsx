@@ -194,10 +194,10 @@ export default function VerifyPage() {
           {/* Branding text */}
           <div className="absolute bottom-0 left-0 right-0 p-10">
             <p className="text-brand-yellow text-[10px] font-black tracking-[0.25em] uppercase mb-2">
-              Secure Justice Portal
+              SINPF Legal & Registry System
             </p>
             <h1 className="text-white text-3xl font-bold tracking-tight leading-snug">
-              Legal Case<br />Management
+              Gavel
             </h1>
             <p className="text-white/50 text-xs mt-3 leading-relaxed">
               Solomon Islands National Provident Fund
