@@ -524,7 +524,7 @@ function RecordPaymentModal({ caseId, types, onDone }: { caseId: string; types: 
       >
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
           <h2 className="text-base font-bold text-foreground">Record Payment</h2>
-          <button type="button" onClick={onDone} className="p-1.5 rounded-lg hover:bg-muted transition-all">
+          <button type="button" onClick={onDone} title="Close" aria-label="Close" className="p-1.5 rounded-lg hover:bg-muted transition-all">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
