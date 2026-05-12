@@ -367,7 +367,7 @@ function StageDocuments({
   };
 
   return (
-    <div className={`rounded-2xl border overflow-hidden ${isCurrent ? "border-brand-blue/30 bg-brand-blue/[0.02]" : "border-border bg-background"}`}>
+    <div className={`rounded-2xl border overflow-hidden ${isCurrent ? "border-brand-blue/30 bg-brand-blue/2" : "border-border bg-background"}`}>
       {/* Stage header */}
       <div className={`flex items-center justify-between px-4 py-3 border-b ${isCurrent ? "border-brand-blue/20 bg-brand-blue/5" : "border-border bg-muted/30"}`}>
         <div className="flex items-center gap-2">
