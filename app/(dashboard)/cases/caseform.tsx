@@ -7,14 +7,11 @@ import { X, Maximize2, Minimize2, Briefcase, ChevronLeft, ChevronRight } from "l
 import { insertCaseSchema, CaseFormValues } from "@/db/validator";
 import { createCase } from "@/app/actions/create-case";
 import General from "./caseform-general";
-import CaseTypes from "./caseform-case-types";
-import UploadFiles from "./caseform-upload-files";
-import FinancialDetails from "./caseform-financial-details";
+import CaseTypes, { type WagesMode } from "./caseform-case-types";
 
 const TABS = [
   { step: "01", label: "Employer Info" },
-  { step: "02", label: "Type of Case" },
-  { step: "03", label: "Financial Details" },
+  { step: "02", label: "Case Types & Amounts" },
 ];
 
 function CaseFormHeader({
@@ -50,6 +47,7 @@ function CaseFormHeader({
 
       <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={onToggleExpand}
           className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all flex items-center justify-center"
           title={isMaximized ? "Restore" : "Maximize"}
@@ -59,6 +57,7 @@ function CaseFormHeader({
             : <Maximize2 className="w-4 h-4 active:scale-90" />}
         </button>
         <button
+          type="button"
           onClick={onClose}
           className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/15 border border-transparent hover:border-red-500/20 transition-all flex items-center justify-center"
           title="Close"
@@ -81,7 +80,7 @@ function TabBar({
     <div className="shrink-0 flex border-b border-border bg-background">
       {TABS.map(({ step, label }, i) => {
         const isActive = activeTab === i;
-        const isPast = i < activeTab;
+        const isPast   = i < activeTab;
         return (
           <button
             key={i}
@@ -112,11 +111,45 @@ function TabBar({
   );
 }
 
+function GrandTotalBanner({ total }: { total: number }) {
+  return (
+    <div
+      className="relative rounded-2xl overflow-hidden p-5"
+      style={{ background: "linear-gradient(135deg, #1e3d5f 0%, #162d48 60%, #112236 100%)" }}
+    >
+      <div
+        className="pointer-events-none absolute -right-6 -top-6 w-36 h-36 rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(8,159,255,0.25) 0%, transparent 70%)" }}
+      />
+      <div
+        className="pointer-events-none absolute -left-4 bottom-0 w-28 h-28 rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(255,223,24,0.12) 0%, transparent 70%)" }}
+      />
+      <div className="relative flex items-center justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            Grand Total Claim
+          </p>
+          <p className="text-xs text-slate-500 mt-0.5">Auto-calculated · SBD</p>
+        </div>
+        <span className="text-3xl font-black text-white tracking-tight tabular-nums">
+          {total.toLocaleString("en-SB", {
+            style: "currency",
+            currency: "SBD",
+            minimumFractionDigits: 2,
+          })}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function CaseForm({ onClose }: { onClose: () => void }) {
   const [isMaximized, setIsMaximized] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
-  const [files, setFiles] = useState<File[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [activeTab,   setActiveTab]   = useState(0);
+  const [files,       setFiles]       = useState<File[]>([]);
+  const [wagesMode,   setWagesMode]   = useState<WagesMode>("amount");
+  const [error,       setError]       = useState<string | null>(null);
 
   const {
     register,
@@ -128,23 +161,25 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   } = useForm<CaseFormValues>({
     resolver: zodResolver(insertCaseSchema) as Resolver<CaseFormValues>,
     defaultValues: {
-      employerId: "",
-      referralDate: new Date().toISOString().split("T")[0],
-      selectedTypes: [],
+      employerId:         "",
+      referralDate:       new Date().toISOString().split("T")[0],
+      selectedTypes:      [],
       totalContributions: 0,
-      totalSurcharges: 0,
-      wagesRecord: 0,
-      grandTotalClaim: 0,
+      totalSurcharges:    0,
+      wagesRecord:        0,
+      grandTotalClaim:    0,
     },
   });
 
-  const selectedTypes = watch("selectedTypes") ?? [];
+  const selectedTypes        = watch("selectedTypes") ?? [];
+  const isWagesSelected      = selectedTypes.includes("Wages record");
+  const requiresFiles        = isWagesSelected && (wagesMode === "documents" || wagesMode === "both");
+  const canSave              = !requiresFiles || files.length > 0;
+
   const grandTotal =
     (watch("totalContributions") || 0) +
-    (watch("totalSurcharges") || 0) +
-    (watch("wagesRecord") || 0);
-  const isWagesRecordSelected = selectedTypes.includes("Wages record");
-  const canSave = !isWagesRecordSelected || files.length > 0;
+    (watch("totalSurcharges")    || 0) +
+    (watch("wagesRecord")        || 0);
 
   const isLastTab = activeTab === TABS.length - 1;
 
@@ -153,12 +188,12 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       const formData = new FormData();
-      formData.append("employerId",   data.employerId);
-      formData.append("referralDate", data.referralDate ?? "");
-      formData.append("totalContributions", String(data.totalContributions));
-      formData.append("totalSurcharges", String(data.totalSurcharges));
-      formData.append("wagesRecord", String(data.wagesRecord));
-      formData.append("grandTotalClaim", String(grandTotal));
+      formData.append("employerId",          data.employerId);
+      formData.append("referralDate",        data.referralDate ?? "");
+      formData.append("totalContributions",  String(data.totalContributions));
+      formData.append("totalSurcharges",     String(data.totalSurcharges));
+      formData.append("wagesRecord",         String(data.wagesRecord));
+      formData.append("grandTotalClaim",     String(grandTotal));
       data.selectedTypes.forEach((t) => formData.append("selectedTypes", t));
       files.forEach((f) => formData.append("files", f));
       await createCase(formData);
@@ -183,39 +218,30 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
       <TabBar activeTab={activeTab} onSelect={setActiveTab} />
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto flex flex-col min-h-0">
-        <div className="flex-1 p-6 animate-in fade-in duration-200">
-          {activeTab === 0 && <General register={register} setValue={setValue} watch={watch} />}
-          {activeTab === 1 && (
-            <div className="space-y-6">
-              <CaseTypes control={control} />
-              {isWagesRecordSelected && (
-                <div className="pt-2 space-y-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-1 h-4 bg-brand-yellow rounded-full" />
-                    <h4 className="text-xs font-black text-foreground uppercase tracking-widest">
-                      Supporting Files
-                    </h4>
-                  </div>
-                  <UploadFiles files={files} setFiles={setFiles} />
-                  {files.length === 0 && (
-                    <div className="p-3.5 rounded-xl bg-brand-yellow/10 border border-brand-yellow/25 text-sm text-foreground font-semibold flex items-center gap-3">
-                      <span className="flex h-2 w-2 rounded-full bg-brand-yellow animate-pulse shrink-0" />
-                      Upload at least one file (PDF, Excel, or CSV) to continue.
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+        <div className="flex-1 p-6 animate-in fade-in duration-200 space-y-6">
+          {activeTab === 0 && (
+            <General register={register} setValue={setValue} watch={watch} />
           )}
-          {activeTab === 2 && (
-            <FinancialDetails
-              register={register}
-              grandTotal={grandTotal}
-            />
+
+          {activeTab === 1 && (
+            <>
+              <CaseTypes
+                control={control}
+                register={register}
+                setValue={setValue}
+                files={files}
+                setFiles={setFiles}
+                wagesMode={wagesMode}
+                setWagesMode={setWagesMode}
+              />
+              {selectedTypes.length > 0 && (
+                <GrandTotalBanner total={grandTotal} />
+              )}
+            </>
           )}
 
           {error && (
-            <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-500 font-medium">
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-500 font-medium">
               {error}
             </div>
           )}
