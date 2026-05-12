@@ -125,6 +125,7 @@ export const activityTypeEnum = pgEnum("activity_type", [
   "document_added",
   "note_added",
   "payment_recorded",
+  "action_undone",
 ]);
 
 export const courtTypeEnum = pgEnum("court_type", [

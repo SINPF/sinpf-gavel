@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   ArrowLeft, FileText, Gavel, HandshakeIcon, ScrollText,
   CheckCircle2, Clock, ChevronRight, Plus, X, Upload,
-  Download, FileSpreadsheet, Loader2,
+  Download, FileSpreadsheet, Loader2, RotateCcw,
 } from "lucide-react";
 import { Badge, type BadgeStatus } from "@/components/ui/Badge";
 import type { CaseDetail, CaseAttachment } from "@/db/types";
@@ -17,6 +17,7 @@ import { closeCase } from "@/app/actions/close-case";
 import { addCaseActivity } from "@/app/actions/add-case-activity";
 import { uploadCaseDocument } from "@/app/actions/upload-case-document";
 import { recordPayment } from "@/app/actions/record-payment";
+import { undoLastAction } from "@/app/actions/undo-last-action";
 
 // ─── Stage config ─────────────────────────────────────────────────────────────
 
@@ -56,7 +57,10 @@ const ACTIVITY_LABELS: Record<string, string> = {
   document_added:          "Document Added",
   note_added:              "Note Added",
   payment_recorded:        "Payment Recorded",
+  action_undone:           "Action Undone",
 };
+
+const UNDOABLE_TYPES = new Set(["payment_recorded", "note_added", "stage_changed"]);
 
 // ─── Stage Stepper ────────────────────────────────────────────────────────────
 
@@ -751,10 +755,22 @@ function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
 type TabId = "overview" | "documents" | "proceedings" | "activity";
 
 export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDetail }) {
+  const router = useRouter();
   const [showProceedingForm, setShowProceedingForm] = useState(false);
   const [showCloseForm, setShowCloseForm]           = useState(false);
   const [activeTab, setActiveTab]                   = useState<TabId>("overview");
+  const [undoLoading, setUndoLoading]               = useState(false);
   const isClosed = c.status === "closed";
+
+  const lastActivity    = c.activities[0] ?? null;
+  const undoableActivity = lastActivity && UNDOABLE_TYPES.has(lastActivity.activityType) ? lastActivity : null;
+
+  const handleUndo = async () => {
+    setUndoLoading(true);
+    await undoLastAction(c.id);
+    setUndoLoading(false);
+    router.refresh();
+  };
 
   const tabs: { id: TabId; label: string; count?: number }[] = [
     { id: "overview",    label: "Overview" },
@@ -963,7 +979,22 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
           {/* Activity */}
           {activeTab === "activity" && (
             <div className="p-5 rounded-2xl border border-border bg-background">
-              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-4">Activity Log</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Activity Log</p>
+                {undoableActivity && !isClosed && (
+                  <button
+                    type="button"
+                    onClick={handleUndo}
+                    disabled={undoLoading}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 transition-all"
+                  >
+                    {undoLoading
+                      ? <Loader2 className="w-3 h-3 animate-spin" />
+                      : <RotateCcw className="w-3 h-3" />}
+                    Undo: {ACTIVITY_LABELS[undoableActivity.activityType]}
+                  </button>
+                )}
+              </div>
               {c.activities.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
               ) : (
