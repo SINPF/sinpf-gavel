@@ -72,24 +72,30 @@ function CaseFormHeader({
 function TabBar({
   activeTab,
   onSelect,
+  canNavigateTo,
 }: {
   activeTab: number;
   onSelect: (i: number) => void;
+  canNavigateTo: (i: number) => boolean;
 }) {
   return (
     <div className="shrink-0 flex border-b border-border bg-background">
       {TABS.map(({ step, label }, i) => {
-        const isActive = activeTab === i;
-        const isPast   = i < activeTab;
+        const isActive  = activeTab === i;
+        const isPast    = i < activeTab;
+        const isEnabled = canNavigateTo(i);
         return (
           <button
             key={i}
             type="button"
-            onClick={() => onSelect(i)}
+            onClick={() => isEnabled && onSelect(i)}
+            disabled={!isEnabled}
             className={`relative flex items-center gap-2.5 px-6 py-3.5 text-sm font-medium transition-all border-b-2 -mb-px ${
               isActive
                 ? "border-brand-blue text-brand-blue"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                : isEnabled
+                ? "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                : "border-transparent text-muted-foreground/40 cursor-not-allowed"
             }`}
           >
             <span
@@ -171,15 +177,34 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
     },
   });
 
-  const selectedTypes        = watch("selectedTypes") ?? [];
-  const isWagesSelected      = selectedTypes.includes("Wages record");
-  const requiresFiles        = isWagesSelected && (wagesMode === "documents" || wagesMode === "both");
-  const canSave              = !requiresFiles || files.length > 0;
+  const selectedTypes   = watch("selectedTypes") ?? [];
+  const employerId      = watch("employerId")         as string ?? "";
+  const referralDate    = watch("referralDate")       as string ?? "";
+  const contributions   = watch("totalContributions") as number || 0;
+  const surcharges      = watch("totalSurcharges")    as number || 0;
+  const wages           = watch("wagesRecord")        as number || 0;
 
-  const grandTotal =
-    (watch("totalContributions") || 0) +
-    (watch("totalSurcharges")    || 0) +
-    (watch("wagesRecord")        || 0);
+  const grandTotal = contributions + surcharges + wages;
+
+  // Tab 1 gate: employer selected + date set
+  const tab1Valid = !!employerId && !!referralDate;
+
+  // Tab 2 gate: at least one type, and each selected type satisfies its requirement
+  const isWagesSelected          = selectedTypes.includes("Wages record");
+  const isContributionsSelected  = selectedTypes.includes("Unpaid contributions");
+  const isSurchargesSelected     = selectedTypes.includes("Unpaid surcharges");
+
+  const contributionsOk = !isContributionsSelected || contributions > 0;
+  const surchargesOk    = !isSurchargesSelected    || surcharges    > 0;
+  const wagesOk         = !isWagesSelected || (
+    wagesMode === "amount"    ? wages > 0 :
+    wagesMode === "documents" ? files.length > 0 :
+    /* both */                  wages > 0 && files.length > 0
+  );
+
+  const tab2Valid = selectedTypes.length > 0 && contributionsOk && surchargesOk && wagesOk;
+
+  const canNavigateTo = (i: number) => i === 0 || (i === 1 && tab1Valid);
 
   const isLastTab = activeTab === TABS.length - 1;
 
@@ -215,7 +240,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
         isMaximized={isMaximized}
       />
 
-      <TabBar activeTab={activeTab} onSelect={setActiveTab} />
+      <TabBar activeTab={activeTab} onSelect={setActiveTab} canNavigateTo={canNavigateTo} />
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto flex flex-col min-h-0">
         <div className="flex-1 p-6 animate-in fade-in duration-200 space-y-6">
@@ -275,8 +300,13 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
             {!isLastTab ? (
               <button
                 type="button"
+                disabled={!tab1Valid}
                 onClick={() => setActiveTab((t) => t + 1)}
-                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm font-bold bg-brand-blue text-white hover:bg-brand-blue/90 shadow-sm shadow-brand-blue/20 transition-all active:scale-95"
+                className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95 ${
+                  tab1Valid
+                    ? "bg-brand-blue text-white hover:bg-brand-blue/90 shadow-brand-blue/20"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                }`}
               >
                 Next
                 <ChevronRight className="w-4 h-4" />
@@ -284,9 +314,9 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
             ) : (
               <button
                 type="submit"
-                disabled={!canSave || isSubmitting}
+                disabled={!tab2Valid || isSubmitting}
                 className={`px-8 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 ${
-                  canSave && !isSubmitting
+                  tab2Valid && !isSubmitting
                     ? "bg-brand-blue text-white hover:bg-brand-blue/90 shadow-brand-blue/20"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                 }`}
