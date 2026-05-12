@@ -547,7 +547,7 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
             >
               {tab.label}
               {tab.count !== undefined && tab.count > 0 && (
-                <span className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center ${
+                <span className={`min-w-4.5 h-4.5 px-1 rounded-full text-[10px] font-black flex items-center justify-center ${
                   activeTab === tab.id ? "bg-brand-blue text-white" : "bg-muted text-muted-foreground"
                 }`}>
                   {tab.count}
@@ -584,59 +584,77 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
 
           {/* Overview */}
           {activeTab === "overview" && (
-            <div className="space-y-4">
-              <div className="p-6 rounded-2xl border border-border bg-background overflow-x-auto">
-                <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-5">Case Stage</p>
-                <StageStepper status={c.status} caseId={c.id} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+
+              {/* Left: stage + actions + closure */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="p-6 rounded-2xl border border-border bg-background overflow-x-auto">
+                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-5">Case Stage</p>
+                  <StageStepper status={c.status} caseId={c.id} />
+                </div>
+
+                {!isClosed && (
+                  <div className="p-5 rounded-2xl border border-border bg-background">
+                    <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Next Actions</p>
+                    <StageActions caseId={c.id} status={c.status} />
+                  </div>
+                )}
+
+                {c.closure && (
+                  <div className="p-5 rounded-2xl border border-border bg-background">
+                    <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Closure</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {c.closure.closureType.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
+                    </p>
+                    {c.closure.closureReason && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {c.closure.closureReason.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
+                      </p>
+                    )}
+                    {c.closure.notes && <p className="text-sm text-muted-foreground mt-2">{c.closure.notes}</p>}
+                  </div>
+                )}
               </div>
 
-              {!isClosed && (
-                <div className="p-5 rounded-2xl border border-border bg-background">
-                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Next Actions</p>
-                  <StageActions caseId={c.id} status={c.status} />
-                </div>
-              )}
+              {/* Right: financial summary — prominent */}
+              <div
+                className="rounded-2xl overflow-hidden p-6 sticky top-4"
+                style={{ background: "linear-gradient(145deg, #1e3d5f 0%, #162d48 60%, #0f1e30 100%)" }}
+              >
+                {/* Decorative glows */}
+                <div className="pointer-events-none absolute -right-8 -top-8 w-40 h-40 rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(8,159,255,0.2) 0%, transparent 70%)" }} />
+                <div className="pointer-events-none absolute -left-4 bottom-0 w-32 h-32 rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(255,223,24,0.08) 0%, transparent 70%)" }} />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl border border-border bg-background space-y-3">
-                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Financial Summary</p>
-                  {[
-                    ["Contributions", c.totalContributions],
-                    ["Surcharges",    c.totalSurcharges],
-                    ["Wages Record",  c.wagesRecord],
-                  ].map(([label, val]) => (
-                    <div key={String(label)} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{label}</span>
-                      <span className="font-semibold tabular-nums">
-                        {Number(val).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
-                      </span>
-                    </div>
-                  ))}
-                  <div className="pt-3 border-t border-border flex justify-between">
-                    <span className="text-sm font-bold">Grand Total</span>
-                    <span className="text-sm font-black text-brand-blue tabular-nums">
+                <div className="relative space-y-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Financial Summary</p>
+
+                  <div className="space-y-2.5">
+                    {[
+                      ["Contributions", c.totalContributions],
+                      ["Surcharges",    c.totalSurcharges],
+                      ["Wages Record",  c.wagesRecord],
+                    ].map(([label, val]) => (
+                      <div key={String(label)} className="flex justify-between items-center text-sm">
+                        <span className="text-slate-400">{label}</span>
+                        <span className="font-semibold tabular-nums text-slate-200">
+                          {Number(val).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4 border-t border-white/10">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Grand Total Claim</p>
+                    <p className="text-3xl font-black text-white tracking-tight tabular-nums">
                       {Number(c.grandTotalClaim).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
-                    </span>
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-1">Auto-calculated · SBD</p>
                   </div>
                 </div>
-
-                <div className="space-y-4">
-                  {c.closure && (
-                    <div className="p-5 rounded-2xl border border-border bg-background">
-                      <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Closure</p>
-                      <p className="text-sm font-semibold text-foreground">
-                        {c.closure.closureType.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
-                      </p>
-                      {c.closure.closureReason && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {c.closure.closureReason.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
-                        </p>
-                      )}
-                      {c.closure.notes && <p className="text-sm text-muted-foreground mt-2">{c.closure.notes}</p>}
-                    </div>
-                  )}
-                </div>
               </div>
+
             </div>
           )}
 
