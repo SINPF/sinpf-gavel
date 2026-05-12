@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -9,6 +9,7 @@ import {
   CheckCircle2, Clock, ChevronRight, Plus, X, Upload,
   Download, FileSpreadsheet, Loader2,
 } from "lucide-react";
+import { Badge, type BadgeStatus } from "@/components/ui/Badge";
 import type { CaseDetail, CaseAttachment } from "@/db/types";
 import { updateCaseStage, type CaseStage } from "@/app/actions/update-case-stage";
 import { addCaseProceeding } from "@/app/actions/add-case-proceeding";
@@ -369,7 +370,6 @@ function StageDocuments({
 
   return (
     <div className={`rounded-2xl border overflow-hidden ${isCurrent ? "border-brand-blue/30 bg-brand-blue/2" : "border-border bg-background"}`}>
-      {/* Stage header */}
       <div className={`flex items-center justify-between px-4 py-3 border-b ${isCurrent ? "border-brand-blue/20 bg-brand-blue/5" : "border-border bg-muted/30"}`}>
         <div className="flex items-center gap-2">
           <span className={`text-[10px] font-black uppercase tracking-widest ${isCurrent ? "text-brand-blue" : "text-muted-foreground"}`}>
@@ -407,7 +407,6 @@ function StageDocuments({
         )}
       </div>
 
-      {/* File list */}
       <div className="px-4 py-3">
         {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
         {docs.length === 0 ? (
@@ -445,7 +444,7 @@ function DocumentsSection({ caseId, status, documents }: { caseId: string; statu
   return (
     <div className="rounded-2xl border border-border bg-background overflow-hidden">
       <div className="px-5 py-4 border-b border-border">
-        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Documents</h3>
+        <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Documents by Stage</h3>
       </div>
       <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
         {activeStages.map((s) => (
@@ -465,216 +464,288 @@ function DocumentsSection({ caseId, status, documents }: { caseId: string; statu
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+type TabId = "overview" | "documents" | "proceedings" | "activity";
+
 export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDetail }) {
-  const router = useRouter();
   const [showProceedingForm, setShowProceedingForm] = useState(false);
-  const [showCloseForm, setShowCloseForm] = useState(false);
+  const [showCloseForm, setShowCloseForm]           = useState(false);
+  const [activeTab, setActiveTab]                   = useState<TabId>("overview");
   const isClosed = c.status === "closed";
+
+  const tabs: { id: TabId; label: string; count?: number }[] = [
+    { id: "overview",    label: "Overview" },
+    { id: "documents",   label: "Documents",   count: c.documents.length   },
+    { id: "proceedings", label: "Proceedings", count: c.proceedings.length },
+    { id: "activity",    label: "Activity",    count: c.activities.length  },
+  ];
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-4"
       initial={{ opacity: 0, x: 32 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
-      {/* Back + header */}
-      <div>
-        <Link href="/cases" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4" /> Back to Cases
-        </Link>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{c.employerName}</h1>
-            <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-              <span className="font-mono">{c.employerCode}</span>
-              <span>·</span>
-              <span>Referred {c.referralDate}</span>
-              {c.assigneeEmail && (
-                <>
-                  <span>·</span>
-                  <span>Assigned to <span className="font-semibold text-foreground">{c.assigneeName || c.assigneeEmail}</span></span>
-                </>
-              )}
+      {/* ── Header card with integrated tab bar ── */}
+      <div className="rounded-2xl border border-border bg-background overflow-hidden">
+        <div className="px-6 pt-5 pb-4">
+          <Link
+            href="/cases"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Cases
+          </Link>
+
+          <div className="mt-3 flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-xl font-bold text-foreground">{c.employerName}</h1>
+                <Badge status={c.status as BadgeStatus} />
+              </div>
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap text-sm text-muted-foreground">
+                <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded-md">{c.employerCode}</span>
+                <span>·</span>
+                <span>Referred {c.referralDate}</span>
+                {c.assigneeEmail && (
+                  <>
+                    <span>·</span>
+                    <span>Assigned to <span className="font-semibold text-foreground">{c.assigneeName || c.assigneeEmail}</span></span>
+                  </>
+                )}
+              </div>
             </div>
+
+            {!isClosed && (
+              <button
+                type="button"
+                onClick={() => setShowCloseForm(!showCloseForm)}
+                className="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-all"
+              >
+                Close Case
+              </button>
+            )}
           </div>
-          {!isClosed && (
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex border-t border-border px-2">
+          {tabs.map((tab) => (
             <button
+              key={tab.id}
               type="button"
-              onClick={() => setShowCloseForm(!showCloseForm)}
-              className="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-all"
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex items-center gap-2 px-4 py-3.5 text-sm font-medium border-b-2 -mb-px transition-all ${
+                activeTab === tab.id
+                  ? "border-brand-blue text-brand-blue"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
             >
-              Close Case
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Stage stepper */}
-      <div className="p-6 rounded-2xl border border-border bg-background overflow-x-auto">
-        <StageStepper status={c.status} caseId={c.id} />
-      </div>
-
-      {/* Documents */}
-      <DocumentsSection caseId={c.id} status={c.status} documents={c.documents} />
-
-      {/* Close case form */}
-      {showCloseForm && (
-        <CloseCaseForm caseId={c.id} onDone={() => setShowCloseForm(false)} />
-      )}
-
-      {/* Stage actions */}
-      {!isClosed && (
-        <div className="p-5 rounded-2xl border border-border bg-background">
-          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Next Actions</p>
-          <StageActions caseId={c.id} status={c.status} />
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: financial summary + types */}
-        <div className="space-y-4">
-          <div className="p-5 rounded-2xl border border-border bg-background space-y-4">
-            <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Financial Summary</p>
-            {[
-              ["Contributions", c.totalContributions],
-              ["Surcharges",    c.totalSurcharges],
-              ["Wages Record",  c.wagesRecord],
-            ].map(([label, val]) => (
-              <div key={String(label)} className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{label}</span>
-                <span className="font-semibold tabular-nums">
-                  {Number(val).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
+              {tab.label}
+              {tab.count !== undefined && tab.count > 0 && (
+                <span className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center ${
+                  activeTab === tab.id ? "bg-brand-blue text-white" : "bg-muted text-muted-foreground"
+                }`}>
+                  {tab.count}
                 </span>
-              </div>
-            ))}
-            <div className="pt-3 border-t border-border flex justify-between">
-              <span className="text-sm font-bold">Grand Total</span>
-              <span className="text-sm font-black text-brand-blue tabular-nums">
-                {Number(c.grandTotalClaim).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
-              </span>
-            </div>
-          </div>
-
-          {c.types.length > 0 && (
-            <div className="p-5 rounded-2xl border border-border bg-background">
-              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Case Types</p>
-              <div className="flex flex-wrap gap-2">
-                {c.types.map((t) => (
-                  <span key={t} className="px-3 py-1 rounded-full bg-brand-blue/10 text-brand-blue text-xs font-bold">
-                    {t.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {c.closure && (
-            <div className="p-5 rounded-2xl border border-border bg-background">
-              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Closure</p>
-              <p className="text-sm font-semibold text-foreground">
-                {c.closure.closureType.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
-              </p>
-              {c.closure.closureReason && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {c.closure.closureReason.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
-                </p>
               )}
-              {c.closure.notes && <p className="text-sm text-muted-foreground mt-2">{c.closure.notes}</p>}
-            </div>
-          )}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Right: proceedings + activity log */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Proceedings */}
-          <div className="p-5 rounded-2xl border border-border bg-background">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Court Proceedings</p>
-              {!isClosed && c.status === "prosecution" && (
-                <button
-                  type="button"
-                  onClick={() => setShowProceedingForm(!showProceedingForm)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-blue/10 text-brand-blue text-xs font-bold hover:bg-brand-blue/20 transition-all"
-                >
-                  <Plus className="w-3 h-3" /> Add Proceeding
-                </button>
+      {/* ── Close case form (inline, below header) ── */}
+      <AnimatePresence>
+        {showCloseForm && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+          >
+            <CloseCaseForm caseId={c.id} onDone={() => setShowCloseForm(false)} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Tab content ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+
+          {/* Overview */}
+          {activeTab === "overview" && (
+            <div className="space-y-4">
+              <div className="p-6 rounded-2xl border border-border bg-background overflow-x-auto">
+                <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-5">Case Stage</p>
+                <StageStepper status={c.status} caseId={c.id} />
+              </div>
+
+              {!isClosed && (
+                <div className="p-5 rounded-2xl border border-border bg-background">
+                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Next Actions</p>
+                  <StageActions caseId={c.id} status={c.status} />
+                </div>
               )}
-            </div>
 
-            {showProceedingForm && (
-              <div className="mb-4">
-                <AddProceedingForm caseId={c.id} onDone={() => setShowProceedingForm(false)} />
-              </div>
-            )}
-
-            {c.proceedings.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No court proceedings recorded yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {c.proceedings.map((p) => (
-                  <div key={p.id} className="flex gap-4 p-4 rounded-xl border border-border bg-muted/20">
-                    <div className="w-2 h-2 rounded-full bg-brand-blue mt-1.5 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-bold text-foreground">
-                          {p.proceedingType.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue text-[10px] font-black uppercase">
-                          {p.court === "high_court" ? "High Court" : "Magistrates Court"}
-                        </span>
-                      </div>
-                      {p.hearingDate && <p className="text-xs text-muted-foreground mt-0.5">Hearing: {p.hearingDate}</p>}
-                      {p.nextDate    && <p className="text-xs text-muted-foreground">Next date: {p.nextDate}</p>}
-                      {p.outcomeNotes && <p className="text-sm text-foreground/80 mt-1">{p.outcomeNotes}</p>}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-5 rounded-2xl border border-border bg-background space-y-3">
+                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Financial Summary</p>
+                  {[
+                    ["Contributions", c.totalContributions],
+                    ["Surcharges",    c.totalSurcharges],
+                    ["Wages Record",  c.wagesRecord],
+                  ].map(([label, val]) => (
+                    <div key={String(label)} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{label}</span>
+                      <span className="font-semibold tabular-nums">
+                        {Number(val).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
+                      </span>
                     </div>
+                  ))}
+                  <div className="pt-3 border-t border-border flex justify-between">
+                    <span className="text-sm font-bold">Grand Total</span>
+                    <span className="text-sm font-black text-brand-blue tabular-nums">
+                      {Number(c.grandTotalClaim).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
+                    </span>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
 
-          {/* Activity log */}
-          <div className="p-5 rounded-2xl border border-border bg-background">
-            <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-4">Activity Log</p>
-            {c.activities.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
-            ) : (
-              <div className="relative">
-                <div className="absolute left-3.5 top-0 bottom-0 w-px bg-border" />
                 <div className="space-y-4">
-                  {c.activities.map((a) => (
-                    <div key={a.id} className="flex gap-4 relative">
-                      <div className="w-7 h-7 rounded-full bg-background border-2 border-brand-blue/30 flex items-center justify-center shrink-0 z-10">
-                        <Clock className="w-3 h-3 text-brand-blue/60" />
-                      </div>
-                      <div className="flex-1 pb-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-semibold text-foreground">
-                            {ACTIVITY_LABELS[a.activityType] ?? a.activityType}
+                  {c.types.length > 0 && (
+                    <div className="p-5 rounded-2xl border border-border bg-background">
+                      <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Case Types</p>
+                      <div className="flex flex-wrap gap-2">
+                        {c.types.map((t) => (
+                          <span key={t} className="px-3 py-1 rounded-full bg-brand-blue/10 text-brand-blue text-xs font-bold">
+                            {t.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
                           </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {new Date(a.createdAt).toLocaleString("en-GB", {
-                              day: "numeric", month: "short", year: "numeric",
-                              hour: "2-digit", minute: "2-digit",
-                            })}
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {c.closure && (
+                    <div className="p-5 rounded-2xl border border-border bg-background">
+                      <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-3">Closure</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {c.closure.closureType.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
+                      </p>
+                      {c.closure.closureReason && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {c.closure.closureReason.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
+                        </p>
+                      )}
+                      {c.closure.notes && <p className="text-sm text-muted-foreground mt-2">{c.closure.notes}</p>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Documents */}
+          {activeTab === "documents" && (
+            <DocumentsSection caseId={c.id} status={c.status} documents={c.documents} />
+          )}
+
+          {/* Proceedings */}
+          {activeTab === "proceedings" && (
+            <div className="p-5 rounded-2xl border border-border bg-background">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Court Proceedings</p>
+                {!isClosed && c.status === "prosecution" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowProceedingForm(!showProceedingForm)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-blue/10 text-brand-blue text-xs font-bold hover:bg-brand-blue/20 transition-all"
+                  >
+                    <Plus className="w-3 h-3" /> Add Proceeding
+                  </button>
+                )}
+              </div>
+
+              {showProceedingForm && (
+                <div className="mb-4">
+                  <AddProceedingForm caseId={c.id} onDone={() => setShowProceedingForm(false)} />
+                </div>
+              )}
+
+              {c.proceedings.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No court proceedings recorded yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {c.proceedings.map((p) => (
+                    <div key={p.id} className="flex gap-4 p-4 rounded-xl border border-border bg-muted/20">
+                      <div className="w-2 h-2 rounded-full bg-brand-blue mt-1.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-foreground">
+                            {p.proceedingType.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue text-[10px] font-black uppercase">
+                            {p.court === "high_court" ? "High Court" : "Magistrates Court"}
                           </span>
                         </div>
-                        {a.notes && <p className="text-sm text-muted-foreground mt-0.5">{a.notes}</p>}
-                        {(a.performerName || a.performerEmail) && (
-                          <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-                            by {a.performerName || a.performerEmail}
-                          </p>
-                        )}
+                        {p.hearingDate  && <p className="text-xs text-muted-foreground mt-0.5">Hearing: {p.hearingDate}</p>}
+                        {p.nextDate     && <p className="text-xs text-muted-foreground">Next date: {p.nextDate}</p>}
+                        {p.outcomeNotes && <p className="text-sm text-foreground/80 mt-1">{p.outcomeNotes}</p>}
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+              )}
+            </div>
+          )}
+
+          {/* Activity */}
+          {activeTab === "activity" && (
+            <div className="p-5 rounded-2xl border border-border bg-background">
+              <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-4">Activity Log</p>
+              {c.activities.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
+              ) : (
+                <div className="relative">
+                  <div className="absolute left-3.5 top-0 bottom-0 w-px bg-border" />
+                  <div className="space-y-4">
+                    {c.activities.map((a) => (
+                      <div key={a.id} className="flex gap-4 relative">
+                        <div className="w-7 h-7 rounded-full bg-background border-2 border-brand-blue/30 flex items-center justify-center shrink-0 z-10">
+                          <Clock className="w-3 h-3 text-brand-blue/60" />
+                        </div>
+                        <div className="flex-1 pb-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-foreground">
+                              {ACTIVITY_LABELS[a.activityType] ?? a.activityType}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(a.createdAt).toLocaleString("en-GB", {
+                                day: "numeric", month: "short", year: "numeric",
+                                hour: "2-digit", minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                          {a.notes && <p className="text-sm text-muted-foreground mt-0.5">{a.notes}</p>}
+                          {(a.performerName || a.performerEmail) && (
+                            <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+                              by {a.performerName || a.performerEmail}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+        </motion.div>
+      </AnimatePresence>
     </motion.div>
   );
 }
