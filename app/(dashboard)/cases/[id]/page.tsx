@@ -4,7 +4,7 @@ import { caseReferrals, caseReferralTypes, caseActivities, caseProceedings, case
 import { eq, desc, asc } from "drizzle-orm";
 import CaseDetailClient from "./case-detail-client";
 import type { CaseDetail } from "@/db/types";
-import { getPresignedUrl } from "@/lib/minio";
+import { getDownloadUrl } from "@/lib/storage";
 
 export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -86,7 +86,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
   const documents = await Promise.all(
     attachmentRows.map(async (a) => ({
       ...a,
-      presignedUrl: await getPresignedUrl(a.fileUrl),
+      presignedUrl: await getDownloadUrl(a.fileUrl),
     }))
   );
 

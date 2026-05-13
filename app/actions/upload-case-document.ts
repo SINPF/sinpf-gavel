@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { caseAttachments, caseActivities } from "@/db/schema";
-import { uploadFile } from "@/lib/minio";
+import { uploadFile } from "@/lib/storage";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
