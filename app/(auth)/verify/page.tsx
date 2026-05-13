@@ -183,6 +183,7 @@ export default function VerifyPage() {
             autoPlay
             muted
             playsInline
+            preload="none"
             className="absolute inset-0 w-full h-full object-cover"
           >
             <source src="/videos/gavel.mp4" type="video/mp4" />
