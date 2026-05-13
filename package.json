@@ -8,7 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:push": "npx drizzle-kit push"
+    "db:push": "npx drizzle-kit push",
+    "docker:dev:up": "docker compose -f compose.dev.yml up -d",
+    "docker:dev:down": "docker compose -f compose.dev.yml down",
+    "docker:staging:up": "docker compose -f compose.staging.yml --env-file .env.staging up -d",
+    "docker:staging:down": "docker compose -f compose.staging.yml down",
+    "docker:staging:build": "docker compose -f compose.staging.yml --env-file .env.staging up -d --build"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.3",

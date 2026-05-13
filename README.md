@@ -1,6 +1,6 @@
-# SINPF LCMS
+# Gavel
 
-Legal Case Management System for the Solomon Islands National Provident Fund (SINPF). Built to track, manage, and progress legal cases involving employer non-compliance — unpaid contributions, surcharges, and wages record disputes.
+Legal Case Management & Registry System for the Solomon Islands National Provident Fund (SINPF). Built to track, manage, and progress legal cases involving employer non-compliance — unpaid contributions, surcharges, and wages record disputes.
 
 ---
 
@@ -10,15 +10,15 @@ Legal Case Management System for the Solomon Islands National Provident Fund (SI
 |---|---|
 | Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
+| Runtime | Bun |
 | Database | PostgreSQL via Drizzle ORM |
-| Auth | Better Auth (email OTP) |
-| File Storage | MinIO (S3-compatible) |
+| Auth | Better Auth (email OTP + Microsoft SSO) |
+| File Storage | MinIO (local) / Azure Blob Storage (production) |
 | Styling | Tailwind CSS v4 |
 | Forms | React Hook Form + Zod |
 | Animation | Motion (formerly Framer Motion) |
 | Email | Resend |
 | Icons | Lucide React, Tabler Icons |
-| Fonts | DM Sans, DM Mono |
 
 ---
 
@@ -26,6 +26,7 @@ Legal Case Management System for the Solomon Islands National Provident Fund (SI
 
 ### Authentication
 - Email + OTP login (no passwords)
+- Microsoft SSO via Azure Entra ID (restricted to `@sinpf.org.sb` tenant)
 - Session-based auth with Better Auth
 - Route protection — all dashboard routes redirect to login if unauthenticated
 
@@ -67,8 +68,9 @@ Legal Case Management System for the Solomon Islands National Provident Fund (SI
 - **Overview tab**
   - Interactive stage stepper — click any stage to advance the case
   - Next Actions panel with contextual stage-advance buttons and an Add Note action
-  - Financial summary panel (prominent dark card, right-side) showing contributions, surcharges, wages record, and grand total claim
-  - Closure details shown when case is closed
+  - Financial summary card showing claim amounts, payments recorded, and outstanding balance per case type
+  - Record Payment modal — select case type and enter payment details
+  - Undo last action button in the Activity tab
 
 - **Documents tab**
   - Documents grouped by workflow stage
@@ -82,8 +84,9 @@ Legal Case Management System for the Solomon Islands National Provident Fund (SI
 
 - **Activity tab**
   - Chronological audit log of all case events
-  - Tracks stage changes, document uploads, notes, and court activity
+  - Tracks stage changes, document uploads, notes, payments, and court activity
   - Shows performer name and timestamp for each event
+  - Undo last action (payments, notes, stage changes)
 
 **Case Lifecycle**
 - Stages: Registered → Assessment → Demand Issued → Negotiation → Prosecution → Closed
@@ -98,9 +101,10 @@ Legal Case Management System for the Solomon Islands National Provident Fund (SI
 employers
 └── case_referrals
     ├── case_referral_types   (unpaid_contributions | unpaid_surcharges | wages_record)
-    ├── case_attachments      (stage-tagged, stored in MinIO)
+    ├── case_attachments      (stage-tagged, stored in MinIO / Azure Blob)
     ├── case_activities       (audit log)
     ├── case_proceedings      (court proceedings)
+    ├── case_payments         (payment history per case type)
     └── case_closure          (one-to-one, terminal state)
 ```
 
@@ -109,8 +113,8 @@ employers
 ## Local Development
 
 ### Prerequisites
-- Node.js 20+
-- Docker (for PostgreSQL and MinIO)
+- [Bun](https://bun.sh) 1.x
+- [Docker](https://www.docker.com) (for PostgreSQL and MinIO)
 - A [Resend](https://resend.com) API key for email OTP
 
 ### Setup
@@ -118,42 +122,129 @@ employers
 ```bash
 git clone <repository-url>
 cd sinpf-lcms
-npm install
+bun install
 ```
 
-Copy `.env.example` to `.env.local` and fill in the values:
+Start the dev infrastructure (Postgres on port 5434, MinIO on port 9000):
+
+```bash
+bun run docker:dev:up
+```
+
+Create `.env.local` with the following values:
 
 ```env
-DATABASE_URL=postgres://...
-BETTER_AUTH_SECRET=...
-RESEND_API_KEY=...
-MINIO_ENDPOINT=...
-MINIO_PORT=...
-MINIO_ACCESS_KEY=...
-MINIO_SECRET_KEY=...
-MINIO_BUCKET=...
+SUPER_ADMIN_EMAIL=you@sinpf.org.sb
+BETTER_AUTH_SECRET=<random string>
+BETTER_AUTH_URL=http://localhost:3000
+
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=lcms-db
+DATABASE_URL=postgres://postgres:postgres@localhost:5434/lcms-db
+
+RESEND_API_KEY=<your resend key>
+
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin123
+MINIO_BUCKET=lcms-attachments
+MINIO_USE_SSL=false
+
+# Optional — Microsoft SSO (leave blank to disable)
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+MICROSOFT_TENANT_ID=
 ```
 
 Push the database schema:
 
 ```bash
-npm run db:push
+bun run db:push
 ```
 
 Start the development server:
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-### Scripts
+---
+
+## Staging (local)
+
+Staging runs the fully containerised app (Next.js + Postgres + MinIO + nginx) on your local machine to mirror the production environment before deploying.
+
+Create `.env.staging`:
+
+```env
+BETTER_AUTH_SECRET=<random string>
+BETTER_AUTH_URL=http://localhost
+
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=lcms-db
+
+RESEND_API_KEY=<your resend key>
+
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin123
+MINIO_BUCKET=lcms-attachments
+MINIO_PUBLIC_URL=http://localhost/storage
+
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+MICROSOFT_TENANT_ID=
+```
+
+Build the image and start the stack:
+
+```bash
+bun run docker:staging:build
+```
+
+Open [http://localhost](http://localhost). To restart without rebuilding:
+
+```bash
+bun run docker:staging:up
+```
+
+Stop the stack:
+
+```bash
+bun run docker:staging:down
+```
+
+> **Note:** Do not run dev and staging stacks simultaneously — they conflict on shared ports.
+
+---
+
+## File Storage
+
+Storage is abstracted in `lib/storage.ts`. MinIO is used for local and staging environments. Azure Blob Storage is prepared but commented out for production use.
+
+| Environment | Backend | How |
+|---|---|---|
+| Local dev | MinIO | SDK connects directly to `localhost:9000` |
+| Staging | MinIO | nginx proxies `/storage/` → MinIO container |
+| Production | Azure Blob Storage | Uncomment Azure branch in `lib/storage.ts`, set `AZURE_STORAGE_ACCOUNT` |
+
+---
+
+## Scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run db:push` | Push Drizzle schema to the database |
+| `bun run dev` | Start development server |
+| `bun run build` | Build for production |
+| `bun run start` | Start production server |
+| `bun run lint` | Run ESLint |
+| `bun run db:push` | Push Drizzle schema to the database |
+| `bun run docker:dev:up` | Start dev infrastructure (Postgres + MinIO) |
+| `bun run docker:dev:down` | Stop dev infrastructure |
+| `bun run docker:staging:up` | Start staging stack |
+| `bun run docker:staging:down` | Stop staging stack |
+| `bun run docker:staging:build` | Rebuild app image and start staging stack |
