@@ -17,7 +17,7 @@ Legal Case Management & Registry System for the Solomon Islands National Provide
 | Styling | Tailwind CSS v4 |
 | Forms | React Hook Form + Zod |
 | Animation | Motion (formerly Framer Motion) |
-| Email | Resend |
+| Email | Azure Communication Services (production) / console log (dev) |
 | Icons | Lucide React, Tabler Icons |
 
 ---
@@ -115,7 +115,7 @@ employers
 ### Prerequisites
 - [Bun](https://bun.sh) 1.x
 - [Docker](https://www.docker.com) (for PostgreSQL and MinIO)
-- A [Resend](https://resend.com) API key for email OTP
+- Docker (for PostgreSQL and MinIO)
 
 ### Setup
 
@@ -142,8 +142,6 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=lcms-db
 DATABASE_URL=postgres://postgres:postgres@localhost:5434/lcms-db
-
-RESEND_API_KEY=<your resend key>
 
 MINIO_ENDPOINT=localhost
 MINIO_PORT=9000
@@ -188,8 +186,6 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=lcms-db
 
-RESEND_API_KEY=<your resend key>
-
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin123
 MINIO_BUCKET=lcms-attachments
@@ -231,6 +227,16 @@ Storage is abstracted in `lib/storage.ts`. MinIO is used for local and staging e
 | Local dev | MinIO | SDK connects directly to `localhost:9000` |
 | Staging | MinIO | nginx proxies `/storage/` → MinIO container |
 | Production | Azure Blob Storage | Uncomment Azure branch in `lib/storage.ts`, set `AZURE_STORAGE_ACCOUNT` |
+
+## Email
+
+Email is abstracted in `lib/mailer.ts`. OTP codes are logged to the console in dev and staging. Azure Communication Services (ACS) is prepared but commented out for production use.
+
+| Environment | Backend | How |
+|---|---|---|
+| Local dev | Console | OTP printed to terminal |
+| Staging | Console | OTP printed to container logs |
+| Production | Azure Communication Services | Uncomment ACS branch in `lib/mailer.ts`, set `AZURE_ACS_CONNECTION_STRING` |
 
 ---
 

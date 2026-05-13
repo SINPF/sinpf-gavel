@@ -4,9 +4,7 @@ import { db } from "@/db";
 import { user, session, account, verification } from "@/db/schema";
 import { createAuthMiddleware, APIError } from "better-auth/api";
 import { emailOTP } from "better-auth/plugins";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from "@/lib/mailer";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -30,12 +28,7 @@ export const auth = betterAuth({
             ? `Your sign-in code is: ${otp}`
             : `Verify your email with this code: ${otp}`;
 
-        await resend.emails.send({
-          from: "SINPF Auth <auth@resend.dev>",
-          to: email,
-          subject: "Your Verification Code",
-          text: message,
-        });
+        await sendEmail(email, "Your Verification Code", message);
       },
     }),
   ],

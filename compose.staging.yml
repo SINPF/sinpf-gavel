@@ -42,8 +42,7 @@ services:
       DATABASE_URL:        postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       BETTER_AUTH_SECRET:  ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL:     ${BETTER_AUTH_URL}
-      RESEND_API_KEY:      ${RESEND_API_KEY}
-      # Internal MinIO connection (server-side SDK)
+# Internal MinIO connection (server-side SDK)
       MINIO_ENDPOINT:      minio
       MINIO_PORT:          "9000"
       MINIO_ACCESS_KEY:    ${MINIO_ACCESS_KEY}
