@@ -1,11 +1,11 @@
-FROM node:20-alpine AS base
+FROM oven/bun:1-alpine AS base
 
 # ── Install dependencies ──────────────────────────────────────────────────────
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 FROM base AS builder
@@ -13,10 +13,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+RUN bun run build
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
-FROM base AS runner
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
