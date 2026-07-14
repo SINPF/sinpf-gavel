@@ -10,6 +10,8 @@ interface StatCardProps {
   className?: string;
 }
 
+// Overline label (Sans 11, 600, +0.06em, uppercase) per §2 typography.
+// Card: 1px border, no shadow, 6px radius per §3.
 export function StatCard({
   label,
   value,
@@ -24,32 +26,32 @@ export function StatCard({
 
   return (
     <div
-      className={`bg-background border border-border rounded-2xl p-6 shadow-sm flex flex-col gap-4 ${className}`}
+      className={`bg-card text-card-foreground border border-border rounded-md p-6 flex flex-col gap-4 ${className}`}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+        <span className="text-[11px] leading-4 font-semibold text-muted-foreground uppercase tracking-[0.06em]">
           {label}
         </span>
         {icon && (
-          <span className="p-2 bg-muted rounded-xl text-muted-foreground">
+          <span className="p-2 bg-muted rounded-md text-muted-foreground">
             {icon}
           </span>
         )}
       </div>
 
       <div className="flex items-end justify-between gap-2">
-        <span className="text-3xl font-bold text-foreground font-mono tracking-tight">
+        <span className="text-3xl font-bold text-foreground tabular-nums tracking-tight">
           {value}
         </span>
 
         {hasDelta && (
           <span
-            className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg ${
+            className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-sm tabular-nums ${
               isNeutral
-                ? "bg-slate-100 text-slate-500"
+                ? "bg-muted text-muted-foreground"
                 : isPositive
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-red-50 text-red-700"
+                ? "bg-success/10 text-success"
+                : "bg-destructive/10 text-destructive"
             }`}
           >
             {isNeutral ? (

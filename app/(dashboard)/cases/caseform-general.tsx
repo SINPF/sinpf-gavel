@@ -8,9 +8,9 @@ import { Search, ChevronDown, Building2 } from "lucide-react";
 type EmployerOption = { id: string; name: string; code: string };
 
 const inputClasses =
-  "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all placeholder:text-muted-foreground/30";
+  "w-full px-4 py-3 rounded-md border border-border bg-background text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-ring transition-colors placeholder:text-muted-foreground/30";
 const labelClasses =
-  "block text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1";
+  "block text-sm font-medium text-foreground mb-2 ml-1";
 
 function EmployerCombobox({
   value,
@@ -56,9 +56,9 @@ function EmployerCombobox({
         <span className="flex items-center gap-2 truncate">
           {selected ? (
             <>
-              <Building2 className="w-4 h-4 text-brand-blue shrink-0" />
+              <Building2 className="w-4 h-4 text-primary shrink-0" />
               <span className="font-medium text-foreground">{selected.name}</span>
-              <span className="text-xs text-muted-foreground font-mono">{selected.code}</span>
+              <span className="text-xs text-muted-foreground tabular-nums">{selected.code}</span>
             </>
           ) : (
             "Select employer…"
@@ -68,7 +68,7 @@ function EmployerCombobox({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-[calc(100%+4px)] z-50 w-full rounded-2xl border border-border bg-background shadow-lg shadow-black/10 overflow-hidden">
+        <div className="absolute left-0 top-[calc(100%+4px)] z-50 w-full rounded-md border border-border bg-background shadow-md overflow-hidden">
           <div className="p-2 border-b border-border">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -77,7 +77,7 @@ function EmployerCombobox({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search employers…"
-                className="w-full pl-8 pr-3 py-2 text-sm bg-muted/40 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
+                className="w-full pl-8 pr-3 py-2 text-sm bg-muted/40 rounded-md border-0 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               />
             </div>
           </div>
@@ -91,12 +91,12 @@ function EmployerCombobox({
                   type="button"
                   onClick={() => { onChange(emp.id); setOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors hover:bg-muted ${
-                    emp.id === value ? "bg-brand-blue/8 text-brand-blue" : "text-foreground"
+                    emp.id === value ? "bg-blue-50 text-primary" : "text-foreground"
                   }`}
                 >
                   <Building2 className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                   <span className="flex-1 font-medium">{emp.name}</span>
-                  <span className="text-xs font-mono text-muted-foreground">{emp.code}</span>
+                  <span className="text-xs tabular-nums text-muted-foreground">{emp.code}</span>
                 </button>
               ))
             )}
@@ -130,7 +130,7 @@ export default function General({
       </div>
 
       <div className="flex flex-col">
-        <label className={labelClasses}>Referral Date</label>
+        <label className={labelClasses}>Referral date</label>
         <input
           {...register("referralDate")}
           type="date"

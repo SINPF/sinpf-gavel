@@ -23,51 +23,32 @@ interface SidebarProps {
   className?: string;
 }
 
+// DESIGN-SYSTEM.md §4:
+//   Navy sidebar (--sidebar / blue-900), white-ish text,
+//   active item = 3px gold left-bar + gold icon.
+//   Gold is present here on purpose — it trains users that gold = "where the action is".
 export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside
-      className={`flex flex-col h-full w-64 shrink-0 relative overflow-hidden ${className}`}
-      style={{
-        background: "linear-gradient(160deg, #0f2444 0%, #0B1120 45%, #07101e 100%)",
-      }}
+      className={`flex flex-col h-full w-60 shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border ${className}`}
     >
-      {/* Ambient top glow */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-[#1279BD]/25 via-[#089FFF]/8 to-transparent" />
-
-      {/* Brand yellow radial — mid-left */}
-      <div
-        className="pointer-events-none absolute -left-12 top-[38%] w-64 h-64 rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(255,223,24,0.18) 0%, rgba(255,223,24,0.06) 45%, transparent 70%)" }}
-      />
-
-      {/* Sky blue radial — bottom-right */}
-      <div
-        className="pointer-events-none absolute -right-10 -bottom-6 w-56 h-56 rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(8,159,255,0.22) 0%, rgba(8,159,255,0.08) 45%, transparent 70%)" }}
-      />
-
-      {/* Bottom sky gradient sweep */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[#089FFF]/[0.12] to-transparent" />
-
-      {/* Logo slot */}
       {logo && (
-        <div className="relative px-5 py-5 border-b border-white/[0.06]">
+        <div className="px-5 py-5 border-b border-sidebar-border">
           {logo}
         </div>
       )}
 
-      {/* Nav sections */}
-      <nav className="relative flex-1 overflow-y-auto px-3 py-6 space-y-8">
+      <nav className="flex-1 overflow-y-auto py-6 space-y-8">
         {sections.map((section, si) => (
           <div key={si}>
             {section.title && (
-              <p className="px-3 mb-3 text-[9px] font-black uppercase tracking-[0.25em] text-slate-500">
+              <p className="px-6 mb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-sidebar-foreground/50">
                 {section.title}
               </p>
             )}
-            <ul className="space-y-1.5">
+            <ul>
               {section.items.map((item) => {
                 const isActive =
                   item.href === "/"
@@ -79,45 +60,33 @@ export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps
                     <Link
                       href={item.href}
                       className={[
-                        "relative flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group",
+                        "relative flex items-center gap-3 pl-6 pr-4 py-2.5 text-sm transition-colors",
                         isActive
-                          ? "text-white font-semibold"
-                          : "text-slate-400 hover:text-slate-100",
+                          ? "bg-sidebar-accent text-white font-semibold"
+                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-white",
                       ].join(" ")}
+                      aria-current={isActive ? "page" : undefined}
                     >
-                      {/* Active background pill */}
-                      {isActive && (
-                        <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-brand-blue/30 via-brand-sky/15 to-transparent border border-brand-blue/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]" />
-                      )}
-                      {/* Hover background */}
-                      {!isActive && (
-                        <span className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-white/5 transition-opacity duration-150" />
-                      )}
-
-                      {/* Left accent bar */}
+                      {/* 3px gold left-bar on active items — the signature marker */}
                       <span
-                        className={`relative w-0.5 h-4 rounded-full shrink-0 transition-all duration-200 ${
-                          isActive
-                            ? "bg-brand-yellow shadow-[0_0_8px_rgba(255,223,24,0.6)]"
-                            : "bg-transparent group-hover:bg-white/20"
+                        aria-hidden
+                        className={`absolute left-0 top-0 bottom-0 w-[3px] ${
+                          isActive ? "bg-sidebar-primary" : "bg-transparent"
                         }`}
                       />
 
-                      {/* Icon */}
                       <span
-                        className={`relative shrink-0 transition-colors duration-200 ${
-                          isActive ? "text-brand-sky" : "text-slate-500 group-hover:text-slate-300"
+                        className={`shrink-0 ${
+                          isActive ? "text-sidebar-primary" : "text-sidebar-foreground/60"
                         }`}
                       >
                         {item.icon}
                       </span>
 
-                      {/* Label */}
-                      <span className="relative flex-1 truncate">{item.label}</span>
+                      <span className="flex-1 truncate">{item.label}</span>
 
-                      {/* Badge */}
                       {item.badge !== undefined && item.badge > 0 && (
-                        <span className="relative shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-brand-yellow text-brand-ink text-[10px] font-black flex items-center justify-center shadow-[0_0_10px_rgba(255,223,24,0.3)]">
+                        <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-sm bg-highlight text-highlight-foreground text-[11px] font-semibold flex items-center justify-center tabular-nums">
                           {item.badge > 99 ? "99+" : item.badge}
                         </span>
                       )}
@@ -130,9 +99,8 @@ export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps
         ))}
       </nav>
 
-      {/* Footer slot */}
       {footer && (
-        <div className="relative px-3 py-4 border-t border-white/[0.06]">
+        <div className="border-t border-sidebar-border">
           {footer}
         </div>
       )}

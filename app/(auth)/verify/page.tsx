@@ -90,15 +90,15 @@ function VerifyForm() {
       </div>
 
       <div className="text-center mb-8">
-        <h2 className="text-slate-900 text-lg font-bold mb-1">Check your email</h2>
-        <p className="text-slate-500 text-sm">
+        <h2 className="font-serif text-foreground text-2xl font-semibold mb-1">Check your email</h2>
+        <p className="text-muted-foreground text-sm">
           We sent a 6-digit code to{" "}
-          <span className="font-semibold text-brand-blue">{email || "your email"}</span>.
+          <span className="font-medium text-foreground tabular-nums">{email || "your email"}</span>.
         </p>
       </div>
 
       {error && (
-        <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 font-medium">
+        <div className="mb-5 p-3 rounded-md bg-destructive/10 border border-destructive/30 text-sm text-destructive font-medium">
           {error}
         </div>
       )}
@@ -123,13 +123,13 @@ function VerifyForm() {
               onPaste={handlePaste}
               autoFocus={i === 0}
               className={[
-                "w-11 h-12 text-center text-xl font-bold rounded-xl border transition-all",
-                "text-slate-800 focus:outline-none focus:ring-2",
+                "w-11 h-12 text-center text-xl font-semibold tabular-nums rounded-md border transition-colors",
+                "text-foreground focus:outline-none focus:ring-2 focus:ring-offset-2",
                 error
-                  ? "border-red-300 bg-red-50 focus:ring-red-200"
+                  ? "border-destructive bg-destructive/5 focus:ring-destructive"
                   : digit
-                  ? "border-brand-blue bg-brand-blue/5 focus:ring-brand-blue/20 focus:border-brand-blue"
-                  : "border-slate-200 bg-slate-50 focus:ring-brand-blue/20 focus:border-brand-blue focus:bg-white",
+                  ? "border-primary bg-accent focus:ring-ring focus:border-ring"
+                  : "border-input bg-muted focus:ring-ring focus:border-ring focus:bg-background",
               ].join(" ")}
             />
           ))}
@@ -138,33 +138,33 @@ function VerifyForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-brand-blue text-white text-sm font-semibold
-            shadow-lg shadow-brand-blue/25 hover:bg-brand-blue/90 active:scale-[0.99] disabled:opacity-60
-            disabled:cursor-not-allowed transition-all"
+          className="w-full h-11 flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-medium
+            hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+            disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? (
             <>
-              <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
               Verifying…
             </>
           ) : (
-            "Verify & Sign In"
+            "Verify and sign in"
           )}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Didn&apos;t receive the code?{" "}
         <button
           type="button"
           onClick={handleResend}
-          className="text-brand-blue font-semibold hover:underline underline-offset-2 transition-all"
+          className="text-primary font-medium hover:underline underline-offset-2"
         >
           Resend
         </button>
       </p>
       <p className="mt-3 text-center text-sm">
-        <a href="/login" className="text-slate-400 hover:text-slate-600 transition-colors">
+        <a href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
           ← Use a different email
         </a>
       </p>
@@ -190,17 +190,17 @@ export default function VerifyPage() {
           </video>
 
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-linear-to-t from-brand-ink/95 via-brand-ink/50 to-brand-ink/20" />
+          <div className="absolute inset-0 bg-linear-to-t from-sinpf-navy/95 via-sinpf-navy/50 to-sinpf-navy/20" />
 
           {/* Branding text */}
           <div className="absolute bottom-0 left-0 right-0 p-10">
-            <p className="text-brand-yellow text-[10px] font-black tracking-[0.25em] uppercase mb-2">
-              SINPF Legal & Registry System
+            <p className="text-highlight text-[11px] font-semibold tracking-[0.06em] uppercase mb-2">
+              SINPF Legal &amp; Registry System
             </p>
-            <h1 className="text-white text-3xl font-bold tracking-tight leading-snug">
+            <h1 className="font-serif text-white text-4xl font-bold tracking-tight leading-snug">
               Gavel
             </h1>
-            <p className="text-white/50 text-xs mt-3 leading-relaxed">
+            <p className="text-white/60 text-xs mt-3 leading-relaxed">
               Solomon Islands National Provident Fund
             </p>
           </div>
@@ -211,7 +211,7 @@ export default function VerifyPage() {
           <Suspense
             fallback={
               <div className="flex justify-center items-center min-h-72">
-                <span className="w-6 h-6 border-2 border-slate-200 border-t-brand-blue rounded-full animate-spin" />
+                <span className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" />
               </div>
             }
           >

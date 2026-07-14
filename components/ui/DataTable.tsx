@@ -24,6 +24,10 @@ const alignClass = {
   right:  "text-right",
 };
 
+// Table conventions (DESIGN-SYSTEM.md §5):
+//   14px, tabular-nums, row hover blue-50, selected row blue-100,
+//   sticky header with --muted background.
+//   Column headers are Sans 14/500 (label style).
 export function DataTable<T extends Record<string, unknown>>({
   columns,
   data,
@@ -34,15 +38,15 @@ export function DataTable<T extends Record<string, unknown>>({
   onRowClick,
 }: DataTableProps<T>) {
   return (
-    <div className={`w-full overflow-x-auto rounded-2xl border border-border ${className}`}>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-muted/40 border-b border-border">
+    <div className={`w-full overflow-x-auto rounded-md border border-border bg-card ${className}`}>
+      <table className="w-full text-sm tabular-nums">
+        <thead className="sticky top-0 z-10">
+          <tr className="bg-muted border-b border-border">
             {columns.map((col, i) => (
               <th
                 key={`${i}-${String(col.key)}`}
                 style={col.width ? { width: col.width } : undefined}
-                className={`px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground ${
+                className={`px-4 py-3 text-sm font-medium text-muted-foreground ${
                   alignClass[col.align ?? "left"]
                 }`}
               >
@@ -55,9 +59,9 @@ export function DataTable<T extends Record<string, unknown>>({
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <tr key={i} className="border-b border-border last:border-0">
-                {columns.map((col, i) => (
-                  <td key={`${i}-${String(col.key)}`} className="px-4 py-3">
-                    <div className="h-4 bg-muted/60 rounded animate-pulse" />
+                {columns.map((col, j) => (
+                  <td key={`${j}-${String(col.key)}`} className="px-4 py-3">
+                    <div className="h-4 bg-muted rounded-sm animate-pulse" />
                   </td>
                 ))}
               </tr>
@@ -76,7 +80,7 @@ export function DataTable<T extends Record<string, unknown>>({
               <tr
                 key={String(row[keyField])}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={`group border-b border-border last:border-0 hover:bg-muted/20 transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
+                className={`group border-b border-border last:border-0 hover:bg-blue-50 transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
               >
                 {columns.map((col, i) => (
                   <td

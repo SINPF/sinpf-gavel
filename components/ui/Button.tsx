@@ -4,16 +4,18 @@ type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 type Size = "sm" | "md";
 
 const variantClasses: Record<Variant, string> = {
+  // blue-500 → blue-600 hover → blue-700 active. No shadow — institutional.
   primary:
-    "bg-brand-blue text-white border-transparent hover:bg-brand-blue/90 shadow-sm shadow-brand-blue/20",
+    "bg-primary text-primary-foreground border-transparent hover:bg-blue-600 active:bg-blue-700",
+  // blue-100 bg with navy text — DESIGN-SYSTEM.md §5
   secondary:
-    "bg-brand-yellow text-brand-ink border-transparent hover:bg-brand-yellow/90 shadow-sm shadow-brand-yellow/20",
+    "bg-secondary text-secondary-foreground border-transparent hover:bg-blue-200 active:bg-blue-300",
   outline:
-    "bg-transparent text-foreground border-border hover:bg-muted hover:border-foreground/20",
+    "bg-transparent text-foreground border-border hover:bg-accent hover:border-primary/40",
   ghost:
-    "bg-transparent text-foreground border-transparent hover:bg-muted",
+    "bg-transparent text-foreground border-transparent hover:bg-accent",
   danger:
-    "bg-red-600 text-white border-transparent hover:bg-red-700 shadow-sm shadow-red-500/20",
+    "bg-destructive text-destructive-foreground border-transparent hover:brightness-95 active:brightness-90",
 };
 
 const sizeClasses: Record<Size, string> = {
@@ -46,9 +48,9 @@ export function Button({
     <button
       disabled={isDisabled}
       className={[
-        "inline-flex items-center justify-center font-semibold rounded-lg border",
-        "transition-all duration-150 active:scale-95 focus-visible:outline-none",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        "inline-flex items-center justify-center font-medium rounded-md border",
+        "transition-colors duration-150 focus-visible:outline-none",
+        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         "disabled:opacity-50 disabled:pointer-events-none",
         variantClasses[variant],
         sizeClasses[size],

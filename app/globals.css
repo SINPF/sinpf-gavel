@@ -1,107 +1,273 @@
+/* =============================================================
+   SINPF Legal CMS — globals.css
+   Tailwind v4 CSS-first, aligned to DESIGN-SYSTEM.md v1.0
+   Institutional navy + interactive blue + signal gold.
+   ============================================================= */
+
 @import "tailwindcss";
 
-/* ─── Brand Raw Tokens ─────────────────────────────────────────────── */
+@custom-variant dark (&:is(.dark *));
+
 :root {
-  --yellow: #FFDF18;
-  --blue:   #1279BD;
-  --sky:    #089FFF;
-  --ink:    #0B1120;
+  /* ---------- SINPF brand primitives ---------- */
+  --sinpf-navy: #02314f;
+  --sinpf-blue: #0b75bb;
+  --sinpf-gold: #ffde11;
 
-  /* Radius scale */
-  --radius-sm:  0.375rem;
-  --radius-md:  0.625rem;
-  --radius-lg:  0.875rem;
-  --radius-xl:  1.125rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
+  --blue-50:  #f0f7fc;
+  --blue-100: #dceef9;
+  --blue-200: #b9def3;
+  --blue-300: #8cc9eb;
+  --blue-400: #4ba3d9;
+  --blue-500: #0b75bb;
+  --blue-600: #095f99;
+  --blue-700: #084d7c;
+  --blue-800: #053c61;
+  --blue-900: #02314f;
+  --blue-950: #021f33;
 
-  /* Status colors */
-  --status-filed:   #1279BD;
-  --status-active:  #059669;
-  --status-pending: #d97706;
-  --status-hearing: #ea580c;
-  --status-closed:  #64748b;
-  --status-appeal:  #7c3aed;
+  --gold-50:  #fffce8;
+  --gold-100: #fff7c2;
+  --gold-200: #ffef87;
+  --gold-300: #ffe74d;
+  --gold-400: #ffde11;
+  --gold-600: #cca800;
+  --gold-900: #715312;
 
-  /* Priority colors */
-  --priority-critical: #dc2626;
-  --priority-high:     #ea580c;
-  --priority-medium:   #d97706;
-  --priority-low:      #6b7280;
+  /* ---------- shadcn-style semantic tokens (light) ---------- */
+  --background: #ffffff;
+  --foreground: var(--blue-900);
+
+  --card: #ffffff;
+  --card-foreground: var(--blue-900);
+  --popover: #ffffff;
+  --popover-foreground: var(--blue-900);
+
+  --primary: var(--blue-500);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--blue-100);
+  --secondary-foreground: var(--blue-900);
+
+  --muted: #f2f6f9;
+  --muted-foreground: #52708a;
+
+  /* accent = subtle hover/selection tint (NOT gold — gold is a signal,
+     not a hover state; see --highlight below) */
+  --accent: var(--blue-50);
+  --accent-foreground: var(--blue-900);
+
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+
+  --success: #177245;
+  --warning: #b45309;
+  --info: var(--blue-500);
+
+  /* SINPF-specific signal tokens */
+  --highlight: var(--gold-400);
+  --highlight-muted: var(--gold-100);
+  --highlight-foreground: var(--gold-900);
+
+  --border: #d7e2ea;
+  --input: #d7e2ea;
+  --ring: var(--blue-500);
+
+  --chart-1: var(--blue-500);
+  --chart-2: var(--blue-300);
+  --chart-3: var(--gold-400);
+  --chart-4: var(--blue-800);
+  --chart-5: #177245;
+
+  /* Navy sidebar — the signature element */
+  --sidebar: var(--blue-900);
+  --sidebar-foreground: #e8f1f8;
+  --sidebar-primary: var(--gold-400);
+  --sidebar-primary-foreground: var(--blue-950);
+  --sidebar-accent: var(--blue-800);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: var(--blue-800);
+  --sidebar-ring: var(--gold-400);
+
+  --radius: 0.375rem; /* 6px — institutional, not playful */
 }
 
-/* ─── Tailwind v4 Theme (Light only) ───────────────────────────────── */
-@theme {
-  /* Semantic colors – direct hex values to avoid CSS variable chain issues */
-  --color-background:           #ffffff;
-  --color-foreground:           #1e293b;
+.dark {
+  --background: #071a2a;
+  --foreground: #e8f1f8;
 
-  --color-primary:              #1279BD;
-  --color-primary-foreground:   #ffffff;
+  --card: #0a2438;
+  --card-foreground: #e8f1f8;
+  --popover: #0a2438;
+  --popover-foreground: #e8f1f8;
 
-  --color-secondary:            #FFDF18;
-  --color-secondary-foreground: #0B1120;
+  --primary: var(--blue-400);
+  --primary-foreground: var(--blue-950);
 
-  --color-accent:               #0B1120;
-  --color-accent-foreground:    #ffffff;
+  --secondary: var(--blue-800);
+  --secondary-foreground: #e8f1f8;
 
-  --color-muted:                #e2e8f0;
-  --color-muted-foreground:     #64748b;
+  --muted: #0d2a40;
+  --muted-foreground: #9db8cc;
 
-  --color-border:               #cbd5e1;
-  --color-ring:                 #1279BD;
+  --accent: #0d2a40;
+  --accent-foreground: #e8f1f8;
 
-  /* Brand palette utilities */
-  --color-brand-yellow: #FFDF18;
-  --color-brand-blue:   #1279BD;
-  --color-brand-sky:    #089FFF;
-  --color-brand-ink:    #0B1120;
+  --destructive: #f97066;
+  --destructive-foreground: #1a0503;
 
-  /* Sidebar */
-  --color-sidebar:            #0B1120;
-  --color-sidebar-foreground: #e2e8f0;
-  --color-sidebar-muted:      #334155;
-  --color-sidebar-active:     #FFDF18;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --info: var(--blue-400);
 
-  /* Radius utilities */
-  --radius-sm:  0.375rem;
-  --radius-md:  0.625rem;
-  --radius-lg:  0.875rem;
-  --radius-xl:  1.125rem;
-  --radius-2xl: 1.5rem;
-  --radius-3xl: 2rem;
+  --highlight: var(--gold-400);
+  --highlight-muted: #3d3410;
+  --highlight-foreground: var(--gold-300);
+
+  --border: #143550;
+  --input: #143550;
+  --ring: var(--blue-400);
+
+  --sidebar: var(--blue-950);
+  --sidebar-foreground: #e8f1f8;
+  --sidebar-primary: var(--gold-400);
+  --sidebar-primary-foreground: var(--blue-950);
+  --sidebar-accent: var(--blue-900);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: var(--blue-900);
+  --sidebar-ring: var(--gold-400);
 }
 
-/* Font stacks reference Next.js injected vars, so they need @theme inline */
+/* ---------- Expose tokens to Tailwind utilities ---------- */
 @theme inline {
-  --font-sans:    var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
-  --font-mono:    var(--font-dm-mono), 'DM Mono', 'Fira Code', monospace;
-  --font-heading: var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-highlight: var(--highlight);
+  --color-highlight-muted: var(--highlight-muted);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Blue and gold ramps as Tailwind utility colors */
+  --color-sinpf-navy: var(--sinpf-navy);
+  --color-sinpf-blue: var(--sinpf-blue);
+  --color-sinpf-gold: var(--sinpf-gold);
+
+  --color-blue-50:  var(--blue-50);
+  --color-blue-100: var(--blue-100);
+  --color-blue-200: var(--blue-200);
+  --color-blue-300: var(--blue-300);
+  --color-blue-400: var(--blue-400);
+  --color-blue-500: var(--blue-500);
+  --color-blue-600: var(--blue-600);
+  --color-blue-700: var(--blue-700);
+  --color-blue-800: var(--blue-800);
+  --color-blue-900: var(--blue-900);
+  --color-blue-950: var(--blue-950);
+
+  --color-gold-50:  var(--gold-50);
+  --color-gold-100: var(--gold-100);
+  --color-gold-200: var(--gold-200);
+  --color-gold-300: var(--gold-300);
+  --color-gold-400: var(--gold-400);
+  --color-gold-600: var(--gold-600);
+  --color-gold-900: var(--gold-900);
+
+  /* Font stacks — variables set by next/font in app/layout.tsx */
+  --font-sans:  var(--font-source-sans), "Segoe UI", system-ui, Arial, sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, "Times New Roman", serif;
+  /* Tabular numerals piggyback on the sans stack — SINPF has no separate mono */
+  --font-mono:  var(--font-source-sans), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
 }
 
-/* ─── Global Base ──────────────────────────────────────────────────── */
 @layer base {
   * {
     box-sizing: border-box;
     border-color: var(--color-border);
   }
-
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    line-height: 1.6;
+    font-size: 0.875rem;      /* 14px UI default */
+    line-height: 1.4285714;   /* 20/14 */
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4 {
-    font-family: var(--font-heading);
+  /* Typography scale (see DESIGN-SYSTEM.md §2) */
+  h1 {
+    font-family: var(--font-serif);
+    font-size: 2rem;        /* 32 */
+    line-height: 2.5rem;    /* 40 */
     font-weight: 700;
-    color: #0B1120;
+    letter-spacing: -0.01em;
+    color: var(--foreground);
+  }
+  h2 {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;      /* 24 */
+    line-height: 2rem;      /* 32 */
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  h3 {
+    font-family: var(--font-sans);
+    font-size: 1.25rem;     /* 20 */
+    line-height: 1.75rem;   /* 28 */
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  h4 {
+    font-family: var(--font-sans);
+    font-size: 1rem;        /* 16 */
+    line-height: 1.5rem;    /* 24 */
+    font-weight: 600;
+    color: var(--foreground);
   }
 
   button, input, select, textarea {
     font-family: inherit;
+  }
+
+  /* Every number that appears in a column must align */
+  table, [data-slot="table"], .tabular {
+    font-variant-numeric: tabular-nums;
   }
 
   /* Scrollbar */

@@ -10,8 +10,8 @@ import General from "./caseform-general";
 import CaseTypes, { type WagesMode } from "./caseform-case-types";
 
 const TABS = [
-  { step: "01", label: "Employer Info" },
-  { step: "02", label: "Case Types & Amounts" },
+  { step: "01", label: "Employer info" },
+  { step: "02", label: "Case types and amounts" },
 ];
 
 function CaseFormHeader({
@@ -24,22 +24,19 @@ function CaseFormHeader({
   isMaximized: boolean;
 }) {
   return (
-    <header
-      className="px-8 py-5 flex justify-between items-center shrink-0"
-      style={{ background: "linear-gradient(135deg, #1e3d5f 0%, #162d48 100%)" }}
-    >
+    <header className="px-8 py-5 flex justify-between items-center shrink-0 bg-sinpf-navy border-b border-blue-800">
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-xl bg-brand-blue/20 border border-brand-blue/30 flex items-center justify-center shrink-0">
-          <Briefcase className="w-5 h-5 text-brand-sky" />
+        <div className="w-10 h-10 rounded-md bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+          <Briefcase className="w-5 h-5 text-blue-400" />
         </div>
         <div>
-          <h2 className="text-base font-bold text-white tracking-tight leading-tight">
-            Create New Case
+          <h2 className="text-base font-serif font-bold text-white tracking-tight leading-tight">
+            Create new matter
           </h2>
           <div className="flex items-center gap-2 mt-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse" />
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">
-              Legal Filing Portal
+            <div className="w-1.5 h-1.5 rounded-full bg-highlight animate-pulse" />
+            <p className="text-[11px] text-white/60 uppercase tracking-[0.06em] font-semibold">
+              Legal filing portal
             </p>
           </div>
         </div>
@@ -49,20 +46,20 @@ function CaseFormHeader({
         <button
           type="button"
           onClick={onToggleExpand}
-          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all flex items-center justify-center"
+          className="p-2 rounded-md text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors flex items-center justify-center"
           title={isMaximized ? "Restore" : "Maximize"}
         >
           {isMaximized
-            ? <Minimize2 className="w-4 h-4 active:scale-90" />
-            : <Maximize2 className="w-4 h-4 active:scale-90" />}
+            ? <Minimize2 className="w-4 h-4" />
+            : <Maximize2 className="w-4 h-4" />}
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/15 border border-transparent hover:border-red-500/20 transition-all flex items-center justify-center"
+          className="p-2 rounded-md text-white/60 hover:text-white hover:bg-destructive/30 border border-transparent hover:border-destructive/40 transition-colors flex items-center justify-center"
           title="Close"
         >
-          <X className="w-4 h-4 active:scale-90" />
+          <X className="w-4 h-4" />
         </button>
       </div>
     </header>
@@ -90,20 +87,20 @@ function TabBar({
             type="button"
             onClick={() => isEnabled && onSelect(i)}
             disabled={!isEnabled}
-            className={`relative flex items-center gap-2.5 px-6 py-3.5 text-sm font-medium transition-all border-b-2 -mb-px ${
+            className={`relative flex items-center gap-2.5 px-6 py-3.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
               isActive
-                ? "border-brand-blue text-brand-blue"
+                ? "border-primary text-primary"
                 : isEnabled
                 ? "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                 : "border-transparent text-muted-foreground/40 cursor-not-allowed"
             }`}
           >
             <span
-              className={`w-5 h-5 rounded-md text-[10px] font-black flex items-center justify-center shrink-0 transition-colors ${
+              className={`w-5 h-5 rounded-md text-[10px] font-semibold flex items-center justify-center shrink-0 transition-colors ${
                 isActive
-                  ? "bg-brand-blue text-white"
+                  ? "bg-primary text-primary-foreground"
                   : isPast
-                  ? "bg-emerald-500 text-white"
+                  ? "bg-success text-white"
                   : "bg-muted text-muted-foreground"
               }`}
             >
@@ -119,26 +116,15 @@ function TabBar({
 
 function GrandTotalBanner({ total }: { total: number }) {
   return (
-    <div
-      className="relative rounded-2xl overflow-hidden p-5"
-      style={{ background: "linear-gradient(135deg, #1e3d5f 0%, #162d48 60%, #112236 100%)" }}
-    >
-      <div
-        className="pointer-events-none absolute -right-6 -top-6 w-36 h-36 rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(8,159,255,0.25) 0%, transparent 70%)" }}
-      />
-      <div
-        className="pointer-events-none absolute -left-4 bottom-0 w-28 h-28 rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(255,223,24,0.12) 0%, transparent 70%)" }}
-      />
+    <div className="relative rounded-md overflow-hidden p-5 bg-sinpf-navy border border-blue-800">
       <div className="relative flex items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            Grand Total Claim
+          <p className="text-[11px] font-semibold text-white/60 uppercase tracking-[0.06em]">
+            Grand total claim
           </p>
-          <p className="text-xs text-slate-500 mt-0.5">Auto-calculated · SBD</p>
+          <p className="text-xs text-white/50 mt-0.5">Auto-calculated · SBD</p>
         </div>
-        <span className="text-3xl font-black text-white tracking-tight tabular-nums">
+        <span className="text-3xl font-bold text-white tracking-tight tabular-nums">
           {total.toLocaleString("en-AU", {
             style: "currency",
             currency: "SBD",
@@ -230,7 +216,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className={`relative bg-background rounded-2xl shadow-2xl border border-border z-10 overflow-hidden flex flex-col transition-all duration-300 ${
+      className={`relative bg-background rounded-md border border-border z-10 overflow-hidden flex flex-col transition-all duration-300 ${
         isMaximized ? "w-full h-full rounded-none" : "w-5/6 h-5/6"
       }`}
     >
@@ -266,7 +252,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
           )}
 
           {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-500 font-medium">
+            <div className="p-4 rounded-md bg-destructive/10 border border-destructive/30 text-sm text-destructive font-medium">
               {error}
             </div>
           )}
@@ -277,10 +263,10 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
           <div className="flex items-center gap-2.5">
             <div
               className={`w-2 h-2 rounded-full ${
-                isSubmitSuccessful ? "bg-emerald-500" : "bg-amber-400"
+                isSubmitSuccessful ? "bg-success" : "bg-warning"
               } animate-pulse`}
             />
-            <span className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">
               {isSubmitSuccessful ? "Referred" : "Draft"}
             </span>
           </div>
@@ -290,7 +276,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
               <button
                 type="button"
                 onClick={() => setActiveTab((t) => t - 1)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-all"
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-md text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Back
@@ -302,9 +288,9 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
                 type="button"
                 disabled={!tab1Valid}
                 onClick={() => setActiveTab((t) => t + 1)}
-                className={`flex items-center gap-1.5 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-6 py-2.5 rounded-md text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors ${
                   tab1Valid
-                    ? "bg-brand-blue text-white hover:bg-brand-blue/90 shadow-brand-blue/20"
+                    ? "bg-primary text-primary-foreground hover:bg-blue-600 active:bg-blue-700"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                 }`}
               >
@@ -315,13 +301,13 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
               <button
                 type="submit"
                 disabled={!tab2Valid || isSubmitting}
-                className={`px-8 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 ${
+                className={`px-8 py-2.5 rounded-md font-semibold text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors ${
                   tab2Valid && !isSubmitting
-                    ? "bg-brand-blue text-white hover:bg-brand-blue/90 shadow-brand-blue/20"
+                    ? "bg-primary text-primary-foreground hover:bg-blue-600 active:bg-blue-700"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                 }`}
               >
-                {isSubmitting ? "Saving…" : "Save Record"}
+                {isSubmitting ? "Saving…" : "Save record"}
               </button>
             )}
           </div>

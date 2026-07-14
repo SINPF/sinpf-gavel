@@ -19,7 +19,7 @@ function highlight(text: string, query: string) {
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === q.toLowerCase() ? (
-          <mark key={i} className="bg-brand-yellow/50 text-foreground not-italic rounded-sm px-px">
+          <mark key={i} className="bg-highlight/40 text-foreground not-italic rounded-sm px-px">
             {part}
           </mark>
         ) : (
@@ -36,9 +36,9 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
   const columns: Column<CaseRow>[] = [
     {
       key: "id",
-      header: "Case ID",
+      header: "Matter no.",
       render: (v) => (
-        <span className="font-mono text-[11px] text-muted-foreground tracking-tight">
+        <span className="text-xs text-muted-foreground tabular-nums">
           {highlight(String(v).slice(0, 8).toUpperCase(), query)}
         </span>
       ),
@@ -49,7 +49,7 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
       render: (v, row) => (
         <div>
           <p className="text-sm font-medium text-foreground">{highlight(String(v), query)}</p>
-          <p className="font-mono text-[11px] text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
             {highlight(String(row.employerCode), query)}
           </p>
         </div>
@@ -57,16 +57,16 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
     },
     {
       key: "types",
-      header: "Case Types",
+      header: "Types",
       render: (v) => {
         const types = v as string[];
-        if (!types?.length) return <span className="text-muted-foreground/40 text-sm">—</span>;
+        if (!types?.length) return <span className="text-muted-foreground/60 text-sm">—</span>;
         return (
           <div className="flex flex-wrap gap-1">
             {types.map((t) => (
               <span
                 key={t}
-                className="inline-block px-2 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue text-[10px] font-bold uppercase tracking-wider"
+                className="inline-block px-2 py-0.5 rounded-sm bg-secondary text-secondary-foreground text-xs font-medium"
               >
                 {t.replace(/_/g, " ")}
               </span>
@@ -77,17 +77,17 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
     },
     {
       key: "referralDate",
-      header: "Referral Date",
+      header: "Referral date",
       render: (v) => (
-        <span className="text-sm text-muted-foreground">{String(v)}</span>
+        <span className="text-sm text-muted-foreground tabular-nums">{String(v)}</span>
       ),
     },
     {
       key: "grandTotalClaim",
-      header: "Total Claim",
+      header: "Total claim",
       align: "right",
       render: (v) => (
-        <span className="text-sm font-semibold text-foreground tabular-nums">
+        <span className="text-sm font-medium text-foreground tabular-nums">
           {Number(v).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
         </span>
       ),
@@ -99,12 +99,12 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
     },
     {
       key: "assigneeEmail",
-      header: "Assigned To",
+      header: "Assigned to",
       render: (_, row) => {
         if (row.assignedTo && row.assignedTo === currentUserId) {
           return (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue text-[11px] font-bold">
-              me
+            <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-secondary text-secondary-foreground text-xs font-medium">
+              Me
             </span>
           );
         }
@@ -112,17 +112,17 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
         return display ? (
           <span className="text-sm text-muted-foreground">{String(display)}</span>
         ) : (
-          <span className="text-sm text-muted-foreground/40">—</span>
+          <span className="text-sm text-muted-foreground/60">—</span>
         );
       },
     },
     {
       key: "id",
-      header: "Actions",
+      header: "",
       align: "right",
       render: () => (
         <div className="flex items-center justify-end">
-          <ChevronRight className="w-4 h-4 rotate-0 text-muted-foreground/40 group-hover:text-brand-blue group-hover:translate-x-0.5 transition-[color,transform] duration-150" />
+          <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
         </div>
       ),
     },

@@ -16,10 +16,10 @@ export default function SignOutButton() {
   return (
     <button
       onClick={handleSignOut}
-      className="flex items-center gap-2 px-4 py-2.5 w-full rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border transition-all"
+      className="flex items-center gap-2 px-4 py-2 w-full rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent border border-transparent hover:border-border transition-colors"
     >
       <IconLogout className="w-4 h-4 shrink-0" />
-      <span>Sign Out</span>
+      <span>Sign out</span>
     </button>
   );
 }

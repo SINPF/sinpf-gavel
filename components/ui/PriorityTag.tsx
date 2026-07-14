@@ -2,14 +2,23 @@ import { IconFlag3Filled } from "@tabler/icons-react";
 
 export type Priority = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
 
-const config: Record<
-  Priority,
-  { bg: string; text: string; icon: string }
-> = {
-  CRITICAL: { bg: "bg-red-50",    text: "text-red-700",    icon: "text-red-500" },
-  HIGH:     { bg: "bg-orange-50", text: "text-orange-700", icon: "text-orange-500" },
-  MEDIUM:   { bg: "bg-amber-50",  text: "text-amber-700",  icon: "text-amber-500" },
-  LOW:      { bg: "bg-slate-100", text: "text-slate-500",  icon: "text-slate-400" },
+// Priority maps to semantic families:
+//   CRITICAL / HIGH → destructive / warning (litigation risk vibe)
+//   MEDIUM         → warning-tinted (approaching deadline)
+//   LOW            → muted
+// Gold (highlight) is reserved for "action required"/"due soon" — not priority level.
+const config: Record<Priority, { className: string }> = {
+  CRITICAL: { className: "bg-destructive/10 text-destructive" },
+  HIGH:     { className: "bg-warning/10 text-warning" },
+  MEDIUM:   { className: "bg-blue-50 text-blue-800" },
+  LOW:      { className: "bg-muted text-muted-foreground" },
+};
+
+const labels: Record<Priority, string> = {
+  CRITICAL: "Critical",
+  HIGH:     "High",
+  MEDIUM:   "Medium",
+  LOW:      "Low",
 };
 
 interface PriorityTagProps {
@@ -18,13 +27,13 @@ interface PriorityTagProps {
 }
 
 export function PriorityTag({ priority, className = "" }: PriorityTagProps) {
-  const { bg, text, icon } = config[priority];
+  const { className: cls } = config[priority];
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-widest border border-black/5 ${bg} ${text} ${className}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs font-medium ${cls} ${className}`}
     >
-      <IconFlag3Filled className={`w-2.5 h-2.5 ${icon}`} />
-      {priority}
+      <IconFlag3Filled className="w-2.5 h-2.5" />
+      {labels[priority]}
     </span>
   );
 }

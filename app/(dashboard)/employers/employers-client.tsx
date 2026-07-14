@@ -18,8 +18,8 @@ type EmployerRow = {
 
 type View = "grid" | "table";
 
-const inputCls = "w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all placeholder:text-muted-foreground/40";
-const labelCls = "block text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-1.5";
+const inputCls = "w-full px-4 py-2.5 rounded-md border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-muted-foreground/40";
+const labelCls = "block text-sm font-medium text-muted-foreground mb-1.5";
 
 function useEditState(emp: EmployerRow) {
   const [editing, setEditing] = useState(false);
@@ -63,12 +63,12 @@ function EditableCard({ emp }: { emp: EmployerRow }) {
 
   if (editing) {
     return (
-      <div className="p-5 rounded-2xl border border-brand-blue/40 bg-background shadow-sm space-y-3">
+      <div className="p-5 rounded-md border border-primary/40 bg-background shadow-sm space-y-3">
         <div className="flex items-center gap-2 mb-1">
-          <div className="p-2.5 rounded-xl bg-brand-blue/10">
-            <Building2 className="w-5 h-5 text-brand-blue" />
+          <div className="p-2.5 rounded-md bg-primary/10">
+            <Building2 className="w-5 h-5 text-primary" />
           </div>
-          <span className="text-xs font-semibold text-brand-blue">Editing</span>
+          <span className="text-xs font-semibold text-primary">Editing</span>
         </div>
         <div className="space-y-2">
           <div>
@@ -92,13 +92,13 @@ function EditableCard({ emp }: { emp: EmployerRow }) {
             <input value={fields.address} onChange={set("address")} className={inputCls} placeholder="Street address" />
           </div>
         </div>
-        {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+        {error && <p className="text-xs text-destructive font-medium">{error}</p>}
         <div className="flex items-center gap-2 pt-1">
           <button
             type="button"
             onClick={handleSave}
             disabled={saving || !fields.name.trim() || !fields.code.trim()}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-blue text-white text-xs font-bold hover:bg-brand-blue/90 disabled:opacity-50 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
             Save
@@ -107,7 +107,7 @@ function EditableCard({ emp }: { emp: EmployerRow }) {
             type="button"
             onClick={handleCancel}
             disabled={saving}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-border hover:bg-muted transition-all"
+            className="px-3.5 py-1.5 rounded-md text-xs font-semibold border border-border hover:bg-muted transition-all"
           >
             Cancel
           </button>
@@ -117,21 +117,21 @@ function EditableCard({ emp }: { emp: EmployerRow }) {
   }
 
   return (
-    <div className="group rounded-2xl border border-border bg-background hover:shadow-md transition-all overflow-hidden">
+    <div className="group rounded-md border border-border bg-card hover:border-primary/40 transition-colors overflow-hidden">
       <div className="flex items-center gap-3 px-5 pt-5 pb-4">
-        <div className="p-2.5 rounded-xl bg-brand-blue/10 shrink-0">
-          <Building2 className="w-5 h-5 text-brand-blue" />
+        <div className="p-2.5 rounded-md bg-primary/10 shrink-0">
+          <Building2 className="w-5 h-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-foreground leading-snug truncate">{emp.name}</p>
-          <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-bold font-mono tracking-wide">
+          <span className="inline-block mt-1 px-2 py-0.5 rounded-sm bg-muted text-muted-foreground text-[11px] font-medium tabular-nums">
             {emp.code}
           </span>
         </div>
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="shrink-0 p-1.5 rounded-lg text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground transition-all"
+          className="shrink-0 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground transition-all"
           title="Edit employer"
         >
           <Pencil className="w-3.5 h-3.5" />
@@ -170,7 +170,7 @@ function EditableTableRow({ emp }: { emp: EmployerRow }) {
 
   if (editing) {
     return (
-      <tr className="bg-brand-blue/5 border-y border-brand-blue/20">
+      <tr className="bg-primary/5 border-y border-primary/20">
         <td colSpan={7} className="px-4 py-4">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-3">
             <div>
@@ -194,13 +194,13 @@ function EditableTableRow({ emp }: { emp: EmployerRow }) {
               <input value={fields.address} onChange={set("address")} className={inputCls} placeholder="Street address" />
             </div>
           </div>
-          {error && <p className="text-xs text-red-600 font-medium mb-2">{error}</p>}
+          {error && <p className="text-xs text-destructive font-medium mb-2">{error}</p>}
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleSave}
               disabled={saving || !fields.name.trim() || !fields.code.trim()}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-brand-blue text-white text-xs font-bold hover:bg-brand-blue/90 disabled:opacity-50 transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
               Save
@@ -209,7 +209,7 @@ function EditableTableRow({ emp }: { emp: EmployerRow }) {
               type="button"
               onClick={handleCancel}
               disabled={saving}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-border hover:bg-muted transition-all"
+              className="px-3.5 py-1.5 rounded-md text-xs font-semibold border border-border hover:bg-muted transition-all"
             >
               Cancel
             </button>
@@ -223,14 +223,14 @@ function EditableTableRow({ emp }: { emp: EmployerRow }) {
     <tr className="group border-b border-border hover:bg-muted/40 transition-colors">
       <td className="px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-brand-blue/10 shrink-0">
-            <Building2 className="w-3.5 h-3.5 text-brand-blue" />
+          <div className="p-1.5 rounded-md bg-primary/10 shrink-0">
+            <Building2 className="w-3.5 h-3.5 text-primary" />
           </div>
           <span className="text-sm font-semibold text-foreground">{emp.name}</span>
         </div>
       </td>
       <td className="px-4 py-3">
-        <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-bold font-mono tracking-wide">
+        <span className="px-2 py-0.5 rounded-sm bg-muted text-muted-foreground text-[11px] font-medium tabular-nums">
           {emp.code}
         </span>
       </td>
@@ -254,7 +254,7 @@ function EditableTableRow({ emp }: { emp: EmployerRow }) {
           type="button"
           onClick={() => setEditing(true)}
           title="Edit employer"
-          className="p-1.5 rounded-lg text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground transition-all"
+          className="p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground transition-all"
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>
@@ -278,41 +278,41 @@ export default function EmployersClient({ employers }: { employers: EmployerRow[
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Employers</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="font-serif text-[2rem] leading-10 font-bold text-foreground tracking-tight">Employers</h1>
+          <p className="text-sm text-muted-foreground mt-1 tabular-nums">
             {employers.length} registered employer{employers.length !== 1 ? "s" : ""}
           </p>
         </div>
         <Link
           href="/employers/register"
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-brand-blue text-white text-sm font-semibold shadow-sm hover:bg-brand-blue/90 active:scale-95 transition-all"
+          className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
         >
-          <Plus className="w-4 h-4 stroke-[2.5px]" />
-          Register Employer
+          <Plus className="w-4 h-4" strokeWidth={2} />
+          Register employer
         </Link>
       </div>
 
       {/* Toolbar */}
       <div className="flex items-center gap-3">
         <div className="relative group w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-brand-blue transition-colors" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or code…"
-            className="w-full pl-9 pr-4 h-10 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+            className="w-full pl-9 pr-4 h-10 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
 
         {/* View toggle */}
-        <div className="flex items-center rounded-xl border border-border bg-background overflow-hidden">
+        <div className="flex items-center rounded-md border border-border bg-background overflow-hidden">
           <button
             type="button"
             onClick={() => setView("grid")}
             title="Grid view"
             className={`flex items-center justify-center w-10 h-10 transition-colors ${
-              view === "grid" ? "bg-brand-blue text-white" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              view === "grid" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             <LayoutGrid className="w-4 h-4" />
@@ -322,7 +322,7 @@ export default function EmployersClient({ employers }: { employers: EmployerRow[
             onClick={() => setView("table")}
             title="Table view"
             className={`flex items-center justify-center w-10 h-10 transition-colors ${
-              view === "table" ? "bg-brand-blue text-white" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              view === "table" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             <List className="w-4 h-4" />
@@ -340,16 +340,16 @@ export default function EmployersClient({ employers }: { employers: EmployerRow[
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-border overflow-hidden">
+        <div className="rounded-md border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
-                <th className="px-4 py-3 text-left text-[11px] font-black text-muted-foreground uppercase tracking-widest">Name</th>
-                <th className="px-4 py-3 text-left text-[11px] font-black text-muted-foreground uppercase tracking-widest">Code</th>
-                <th className="px-4 py-3 text-left text-[11px] font-black text-muted-foreground uppercase tracking-widest">Phone</th>
-                <th className="px-4 py-3 text-left text-[11px] font-black text-muted-foreground uppercase tracking-widest">Email</th>
-                <th className="px-4 py-3 text-left text-[11px] font-black text-muted-foreground uppercase tracking-widest">Address</th>
-                <th className="px-4 py-3 text-left text-[11px] font-black text-muted-foreground uppercase tracking-widest">Cases</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Code</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Phone</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Email</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Address</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Cases</th>
                 <th className="px-4 py-3 w-10"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>

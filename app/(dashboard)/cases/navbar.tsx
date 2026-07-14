@@ -10,17 +10,17 @@ export default async function NavBar() {
   const active = total - closed;
 
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-bold text-foreground">Case Records</h2>
-          <span className="px-2.5 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue text-xs font-bold">
+          <h2 className="font-serif text-2xl font-semibold text-foreground">Matters</h2>
+          <span className="px-2 py-0.5 rounded-sm bg-secondary text-secondary-foreground text-xs font-medium tabular-nums">
             {total} total
           </span>
-          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold">
+          <span className="px-2 py-0.5 rounded-sm bg-success/10 text-success text-xs font-medium tabular-nums">
             {active} active
           </span>
-          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
+          <span className="px-2 py-0.5 rounded-sm bg-muted text-muted-foreground text-xs font-medium tabular-nums">
             {closed} closed
           </span>
         </div>
@@ -28,10 +28,10 @@ export default async function NavBar() {
         <div className="flex items-center gap-3">
           <Link
             href="/cases/create-new"
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-brand-blue text-white text-sm font-semibold shadow-sm hover:bg-brand-blue/90 active:scale-95 transition-all"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
           >
-            <Plus className="w-4 h-4 stroke-[2.5px]" />
-            New Case
+            <Plus className="w-4 h-4" strokeWidth={2} />
+            New matter
           </Link>
         </div>
       </div>

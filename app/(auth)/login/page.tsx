@@ -54,17 +54,17 @@ export default function LoginPage() {
           </video>
 
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-linear-to-t from-brand-ink/95 via-brand-ink/50 to-brand-ink/20" />
+          <div className="absolute inset-0 bg-linear-to-t from-sinpf-navy/95 via-sinpf-navy/50 to-sinpf-navy/20" />
 
           {/* Branding text */}
           <div className="absolute bottom-0 left-0 right-0 p-10">
-            <p className="text-brand-yellow text-[10px] font-black tracking-[0.25em] uppercase mb-2">
-              SINPF Legal & Registry System
+            <p className="text-highlight text-[11px] font-semibold tracking-[0.06em] uppercase mb-2">
+              SINPF Legal &amp; Registry System
             </p>
-            <h1 className="text-white text-3xl font-bold tracking-tight leading-snug">
+            <h1 className="font-serif text-white text-4xl font-bold tracking-tight leading-snug">
               Gavel
             </h1>
-            <p className="text-white/50 text-xs mt-3 leading-relaxed">
+            <p className="text-white/60 text-xs mt-3 leading-relaxed">
               Solomon Islands National Provident Fund
             </p>
           </div>
@@ -86,12 +86,12 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <p className="text-center text-slate-500 text-sm mb-8">
+          <p className="text-center text-muted-foreground text-sm mb-8">
             Welcome back. Sign in to Gavel.
           </p>
 
           {error && (
-            <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 font-medium">
+            <div className="mb-5 p-3 rounded-md bg-destructive/10 border border-destructive/30 text-sm text-destructive font-medium">
               {error}
             </div>
           )}
@@ -101,9 +101,9 @@ export default function LoginPage() {
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="email"
-                  className="text-[11px] font-black text-slate-500 uppercase tracking-widest"
+                  className="text-sm font-medium text-foreground"
                 >
-                  Email Address
+                  Email address
                 </label>
                 <input
                   id="email"
@@ -112,11 +112,11 @@ export default function LoginPage() {
                   onChange={(e) => { setEmail(e.target.value); setError(""); }}
                   placeholder="you@sinpf.org.sb"
                   required
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-slate-800 bg-slate-50
-                    placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:bg-white transition-all
+                  className={`w-full px-3 py-2 rounded-md border text-sm text-foreground bg-background
+                    placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors
                     ${error
-                      ? "border-red-300 focus:ring-red-200 focus:border-red-400"
-                      : "border-slate-200 focus:ring-brand-blue/20 focus:border-brand-blue"
+                      ? "border-destructive focus:ring-destructive focus:border-destructive"
+                      : "border-input focus:ring-ring focus:border-ring"
                     }`}
                 />
               </div>
@@ -124,26 +124,26 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading || isMsLoading}
-                className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-brand-blue text-white text-sm font-semibold
-                  shadow-lg shadow-brand-blue/25 hover:bg-brand-blue/90 active:scale-[0.99] disabled:opacity-60
-                  disabled:cursor-not-allowed transition-all"
+                className="w-full h-11 flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-medium
+                  hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                  disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? (
                   <>
-                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                     Sending code…
                   </>
                 ) : (
-                  "Send One-Time Code"
+                  "Send one-time code"
                 )}
               </button>
             </form>
 
             {/* Separator */}
             <div className="relative flex items-center gap-3">
-              <div className="flex-1 border-t border-slate-200" />
-              <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">or</span>
-              <div className="flex-1 border-t border-slate-200" />
+              <div className="flex-1 border-t border-border" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">or</span>
+              <div className="flex-1 border-t border-border" />
             </div>
 
             {/* Microsoft sign-in */}
@@ -151,9 +151,9 @@ export default function LoginPage() {
               type="button"
               onClick={handleMicrosoftSignIn}
               disabled={isLoading || isMsLoading}
-              className="w-full h-11 flex items-center justify-center gap-3 rounded-xl bg-slate-700
-                text-white text-sm font-semibold hover:bg-slate-600 active:scale-[0.99]
-                disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+              className="w-full h-11 flex items-center justify-center gap-3 rounded-md bg-sinpf-navy
+                text-white text-sm font-medium hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {isMsLoading ? (
                 <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />

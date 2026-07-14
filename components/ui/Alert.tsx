@@ -8,14 +8,15 @@ import {
 
 type AlertVariant = "info" | "warning" | "success" | "danger";
 
+// Colors sourced from the semantic tokens so light/dark themes track together.
 const config: Record<
   AlertVariant,
   { bg: string; border: string; text: string; icon: typeof IconInfoCircle }
 > = {
-  info:    { bg: "bg-blue-50",   border: "border-blue-200",   text: "text-blue-800",   icon: IconInfoCircle },
-  warning: { bg: "bg-amber-50",  border: "border-amber-200",  text: "text-amber-800",  icon: IconAlertTriangle },
-  success: { bg: "bg-emerald-50",border: "border-emerald-200",text: "text-emerald-800",icon: IconCircleCheck },
-  danger:  { bg: "bg-red-50",    border: "border-red-200",    text: "text-red-800",    icon: IconCircleX },
+  info:    { bg: "bg-blue-50",         border: "border-blue-200",         text: "text-blue-900",         icon: IconInfoCircle },
+  warning: { bg: "bg-highlight-muted", border: "border-highlight",        text: "text-highlight-foreground", icon: IconAlertTriangle },
+  success: { bg: "bg-success/10",      border: "border-success/40",       text: "text-success",          icon: IconCircleCheck },
+  danger:  { bg: "bg-destructive/10",  border: "border-destructive/40",   text: "text-destructive",      icon: IconCircleX },
 };
 
 interface AlertProps {
@@ -30,7 +31,7 @@ export function Alert({ variant = "info", title, children, className = "" }: Ale
   return (
     <div
       role="alert"
-      className={`flex gap-3 p-4 rounded-xl border ${bg} ${border} ${text} ${className}`}
+      className={`flex gap-3 p-4 rounded-md border ${bg} ${border} ${text} ${className}`}
     >
       <Icon className="w-5 h-5 shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
