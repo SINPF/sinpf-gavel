@@ -8,29 +8,24 @@ import { useState } from "react";
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading]   = useState(false);
-  const [isMsLoading, setIsMsLoading] = useState(false);
-
-  const handleMicrosoftSignIn = async () => {
-    setIsMsLoading(true);
-    await authClient.signIn.social({ provider: "microsoft", callbackURL: "/" });
-    setIsMsLoading(false);
-  };
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
     try {
-      const { error } = await authClient.emailOtp.sendVerificationOtp({
+      const { error } = await authClient.signIn.email({
         email,
-        type: "sign-in",
+        password,
+        callbackURL: "/",
       });
       if (error) {
-        setError(error.message ?? "Something went wrong. Please try again.");
+        setError(error.message ?? "Invalid email or password.");
       } else {
-        router.push(`/verify?email=${encodeURIComponent(email)}`);
+        router.push("/");
       }
     } finally {
       setIsLoading(false);
@@ -112,6 +107,31 @@ export default function LoginPage() {
                   onChange={(e) => { setEmail(e.target.value); setError(""); }}
                   placeholder="you@sinpf.org.sb"
                   required
+                  autoComplete="email"
+                  className={`w-full px-3 py-2 rounded-md border text-sm text-foreground bg-background
+                    placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors
+                    ${error
+                      ? "border-destructive focus:ring-destructive focus:border-destructive"
+                      : "border-input focus:ring-ring focus:border-ring"
+                    }`}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
                   className={`w-full px-3 py-2 rounded-md border text-sm text-foreground bg-background
                     placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors
                     ${error
@@ -123,7 +143,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={isLoading || isMsLoading}
+                disabled={isLoading}
                 className="w-full h-11 flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-medium
                   hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
                   disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
@@ -131,42 +151,13 @@ export default function LoginPage() {
                 {isLoading ? (
                   <>
                     <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                    Sending code…
+                    Signing in…
                   </>
                 ) : (
-                  "Send one-time code"
+                  "Sign in"
                 )}
               </button>
             </form>
-
-            {/* Separator */}
-            <div className="relative flex items-center gap-3">
-              <div className="flex-1 border-t border-border" />
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">or</span>
-              <div className="flex-1 border-t border-border" />
-            </div>
-
-            {/* Microsoft sign-in */}
-            <button
-              type="button"
-              onClick={handleMicrosoftSignIn}
-              disabled={isLoading || isMsLoading}
-              className="w-full h-11 flex items-center justify-center gap-3 rounded-md bg-sinpf-navy
-                text-white text-sm font-medium hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-                disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-            >
-              {isMsLoading ? (
-                <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-              ) : (
-                <svg width="18" height="18" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <rect x="1" y="1" width="9" height="9" fill="#F25022" />
-                  <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
-                  <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
-                  <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
-                </svg>
-              )}
-              Sign in with Microsoft
-            </button>
           </div>
         </div>
       </div>

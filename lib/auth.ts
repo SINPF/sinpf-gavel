@@ -3,14 +3,15 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import { user, session, account, verification } from "@/db/schema";
 import { createAuthMiddleware, APIError } from "better-auth/api";
-import { emailOTP } from "better-auth/plugins";
-import { sendEmail } from "@/lib/mailer";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: { user, session, account, verification },
   }),
+  emailAndPassword: {
+    enabled: true,
+  },
   socialProviders: {
     microsoft: {
       clientId:     process.env.MICROSOFT_CLIENT_ID!,
@@ -20,21 +21,10 @@ export const auth = betterAuth({
       tenantId:     process.env.MICROSOFT_TENANT_ID,
     },
   },
-  plugins: [
-    emailOTP({
-      async sendVerificationOTP({ email, otp, type }) {
-        const message =
-          type === "sign-in"
-            ? `Your sign-in code is: ${otp}`
-            : `Verify your email with this code: ${otp}`;
-
-        await sendEmail(email, "Your Verification Code", message);
-      },
-    }),
-  ],
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path.includes("send-verification-otp")) {
+      const gatedPaths = ["/sign-in/email", "/sign-up/email"];
+      if (gatedPaths.some((p) => ctx.path.endsWith(p))) {
         const email = ctx.body?.email?.toLowerCase().trim();
 
         if (!email || !email.endsWith("@sinpf.org.sb")) {
