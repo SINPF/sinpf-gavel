@@ -60,14 +60,16 @@ services:
     networks:
       - internal
 
-  # ── Nginx reverse proxy ──────────────────────────────────────────────────────
+  # ── Caddy reverse proxy ──────────────────────────────────────────────────────
   proxy:
-    image: nginx:alpine
+    image: caddy:2-alpine
     restart: unless-stopped
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - web
       - minio
@@ -81,3 +83,5 @@ networks:
 volumes:
   postgres_data:
   minio_data:
+  caddy_data:
+  caddy_config:

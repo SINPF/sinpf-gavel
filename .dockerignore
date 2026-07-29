@@ -7,5 +7,5 @@ node_modules
 !.env.example
 Dockerfile
 docker-compose.yml
-nginx.conf
+Caddyfile
 README.md

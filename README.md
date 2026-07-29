@@ -174,7 +174,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Staging (local)
 
-Staging runs the fully containerised app (Next.js + Postgres + MinIO + nginx) on your local machine to mirror the production environment before deploying.
+Staging runs the fully containerised app (Next.js + Postgres + MinIO + Caddy) on your local machine to mirror the production environment before deploying.
 
 Create `.env.staging`:
 
@@ -225,7 +225,7 @@ Storage is abstracted in `lib/storage.ts`. MinIO is used for local and staging e
 | Environment | Backend | How |
 |---|---|---|
 | Local dev | MinIO | SDK connects directly to `localhost:9000` |
-| Staging | MinIO | nginx proxies `/storage/` → MinIO container |
+| Staging | MinIO | Caddy proxies `/storage/` → MinIO container |
 | Production | Azure Blob Storage | Uncomment Azure branch in `lib/storage.ts`, set `AZURE_STORAGE_ACCOUNT` |
 
 ## Email
