@@ -199,19 +199,19 @@ MICROSOFT_TENANT_ID=
 Build the image and start the stack:
 
 ```bash
-bun run docker:staging:build
+bun run docker:build
 ```
 
 Open [http://localhost](http://localhost). To restart without rebuilding:
 
 ```bash
-bun run docker:staging:up
+bun run docker:up
 ```
 
 Stop the stack:
 
 ```bash
-bun run docker:staging:down
+bun run docker:down
 ```
 
 > **Note:** Do not run dev and staging stacks simultaneously — they conflict on shared ports.
@@ -251,6 +251,7 @@ Email is abstracted in `lib/mailer.ts`. OTP codes are logged to the console in d
 | `bun run db:push` | Push Drizzle schema to the database |
 | `bun run docker:dev:up` | Start dev infrastructure (Postgres + MinIO) |
 | `bun run docker:dev:down` | Stop dev infrastructure |
-| `bun run docker:staging:up` | Start staging stack |
-| `bun run docker:staging:down` | Stop staging stack |
-| `bun run docker:staging:build` | Rebuild app image and start staging stack |
+| `bun run docker:up` | Start staging stack |
+| `bun run docker:down` | Stop staging stack |
+| `bun run docker:build` | Rebuild app image and start staging stack |
+| `bun run docker:seed` | Seed the root admin user (reads `SUPER_ADMIN_*` from `.env.staging`) |
