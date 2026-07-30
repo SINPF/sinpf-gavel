@@ -5,7 +5,7 @@
 }
 
 # ── HTTPS ────────────────────────────────────────────────────────────────────
-:443 {
+gavel.sinpf.org.sb {
 	tls internal
 
 	# MinIO storage proxy — /storage/* → minio:9000/*
@@ -27,7 +27,5 @@
 	}
 }
 
-# ── HTTP → HTTPS redirect ────────────────────────────────────────────────────
-:80 {
-	redir https://{host}{uri} permanent
-}
+# Caddy auto-adds an HTTP→HTTPS redirect on :80 for the hostname above,
+# so no explicit :80 block is needed.
