@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [showLinksMenu, setShowLinksMenu] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSsoLoading, setIsSsoLoading] = useState(false);
   const linksMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,6 +52,25 @@ export default function LoginPage() {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleMicrosoftSignIn = async () => {
+    setError("");
+    setIsSsoLoading(true);
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "microsoft",
+        callbackURL: "/",
+      });
+      if (error) {
+        setError(error.message ?? "Microsoft sign-in failed.");
+        setIsSsoLoading(false);
+      }
+      // On success, browser redirects to Microsoft; loading stays true until unmount.
+    } catch {
+      setError("Microsoft sign-in failed.");
+      setIsSsoLoading(false);
     }
   };
 
@@ -220,7 +240,7 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isSsoLoading}
                 className="w-full h-11 flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-medium
                   hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
                   disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
@@ -235,6 +255,40 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
+
+            {/* OR divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">or</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleMicrosoftSignIn}
+              disabled={isLoading || isSsoLoading}
+              className="w-full h-11 flex items-center justify-center gap-2.5 rounded-md border border-input bg-background text-foreground text-sm font-medium
+                hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSsoLoading ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" />
+                  Redirecting…
+                </>
+              ) : (
+                <>
+                  {/* Microsoft brand mark — official 4-square logo, brand colors required for recognition */}
+                  <svg viewBox="0 0 21 21" className="w-4 h-4" aria-hidden="true">
+                    <rect x="1" y="1"   width="9" height="9" fill="#f25022" />
+                    <rect x="11" y="1"  width="9" height="9" fill="#7fba00" />
+                    <rect x="1" y="11"  width="9" height="9" fill="#00a4ef" />
+                    <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+                  </svg>
+                  Sign in with domain
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
