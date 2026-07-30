@@ -119,8 +119,8 @@ export default function General({
   const employerId = watch("employerId") as string ?? "";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <div className="md:col-span-2 flex flex-col">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col">
         <label className={labelClasses}>Employer</label>
         <input type="hidden" {...register("employerId")} />
         <EmployerCombobox

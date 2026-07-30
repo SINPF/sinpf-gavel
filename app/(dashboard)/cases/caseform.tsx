@@ -24,7 +24,7 @@ function CaseFormHeader({
   isMaximized: boolean;
 }) {
   return (
-    <header className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-border">
+    <header className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-border bg-muted/30">
       <h2 className="font-serif text-xl font-semibold text-foreground tracking-tight">
         Create new case referral
       </h2>
@@ -204,7 +204,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
 
       <TabBar activeTab={activeTab} onSelect={setActiveTab} canNavigateTo={canNavigateTo} />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto flex flex-col min-h-0">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-linear-to-br from-background via-blue-50 to-blue-100">
         <div className="flex-1 p-6 animate-in fade-in duration-200 space-y-6">
           {activeTab === 0 && (
             <General register={register} setValue={setValue} watch={watch} />

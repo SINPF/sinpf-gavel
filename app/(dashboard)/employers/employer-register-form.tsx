@@ -33,9 +33,9 @@ export default function EmployerRegisterForm({ onClose }: { onClose: () => void 
   };
 
   return (
-    <div className="w-full max-w-[560px] bg-card rounded-md border border-border shadow-lg overflow-hidden">
+    <div className="w-full max-w-140 bg-card rounded-md border border-border shadow-lg overflow-hidden">
       {/* Header — serif title per §5 dialog convention */}
-      <header className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-border">
+      <header className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-border bg-muted/30">
         <h2 className="font-serif text-xl font-semibold text-foreground tracking-tight">
           Register employer
         </h2>
@@ -51,10 +51,10 @@ export default function EmployerRegisterForm({ onClose }: { onClose: () => void 
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="flex flex-col">
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 bg-linear-to-br from-background via-blue-50 to-blue-100">
           <div>
             <label className={labelCls} htmlFor="er-name">Employer name</label>
-            <input id="er-name" name="name" required placeholder="e.g. Solomon Airlines" className={inputCls} />
+            <input id="er-name" name="name" required placeholder="e.g. SINPF" className={inputCls} />
           </div>
           <div>
             <label className={labelCls} htmlFor="er-code">Employer code</label>
@@ -63,7 +63,7 @@ export default function EmployerRegisterForm({ onClose }: { onClose: () => void 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls} htmlFor="er-phone">Phone <span className="font-normal text-muted-foreground">(optional)</span></label>
-              <input id="er-phone" name="phone" placeholder="+677 XXXXX" className={`${inputCls} tabular-nums`} />
+              <input id="er-phone" name="phone" placeholder="XXXXX" className={`${inputCls} tabular-nums`} />
             </div>
             <div>
               <label className={labelCls} htmlFor="er-email">Email <span className="font-normal text-muted-foreground">(optional)</span></label>
