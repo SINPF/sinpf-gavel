@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { eq } from "drizzle-orm";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 import { auth } from "@/lib/auth";
@@ -18,6 +19,9 @@ async function main() {
     console.error("SUPER_ADMIN_PASSWORD must be set and at least 8 characters.");
     process.exit(1);
   }
+
+  await migrate(db, { migrationsFolder: "./db/migrations" });
+  console.log("Migrations applied.");
 
   const [existing] = await db
     .select()
