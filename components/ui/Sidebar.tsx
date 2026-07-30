@@ -32,23 +32,26 @@ export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps
 
   return (
     <aside
-      className={`flex flex-col h-full w-60 shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border ${className}`}
+      className={`flex flex-col h-full w-64 shrink-0 bg-blue-800 text-sidebar-foreground border-r border-white/10 ${className}`}
     >
       {logo && (
-        <div className="px-5 py-5 border-b border-sidebar-border">
+        <div className="px-5 py-6 border-b border-white/10">
           {logo}
         </div>
       )}
 
-      <nav className="flex-1 overflow-y-auto py-6 space-y-8">
+      <nav className="flex-1 overflow-y-auto py-8 space-y-8">
         {sections.map((section, si) => (
           <div key={si}>
             {section.title && (
-              <p className="px-6 mb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-sidebar-foreground/50">
-                {section.title}
-              </p>
+              <div className="px-6 mb-4 flex items-center gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/80 shrink-0">
+                  {section.title}
+                </p>
+                <div className="flex-1 h-px bg-sidebar-border" />
+              </div>
             )}
-            <ul>
+            <ul className="space-y-1">
               {section.items.map((item) => {
                 const isActive =
                   item.href === "/"
@@ -60,24 +63,18 @@ export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps
                     <Link
                       href={item.href}
                       className={[
-                        "relative flex items-center gap-3 pl-6 pr-4 py-2.5 text-sm transition-colors",
+                        "group flex items-center gap-4 px-8 py-4 font-serif transition-all",
                         isActive
-                          ? "bg-sidebar-accent text-white font-semibold"
-                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-white",
+                          ? "text-white font-semibold text-base"
+                          : "text-sidebar-foreground/70 hover:text-white text-sm",
                       ].join(" ")}
                       aria-current={isActive ? "page" : undefined}
                     >
-                      {/* 3px gold left-bar on active items — the signature marker */}
                       <span
-                        aria-hidden
-                        className={`absolute left-0 top-0 bottom-0 w-[3px] ${
-                          isActive ? "bg-sidebar-primary" : "bg-transparent"
-                        }`}
-                      />
-
-                      <span
-                        className={`shrink-0 ${
-                          isActive ? "text-sidebar-primary" : "text-sidebar-foreground/60"
+                        className={`shrink-0 transition-colors ${
+                          isActive
+                            ? "text-sidebar-primary"
+                            : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70"
                         }`}
                       >
                         {item.icon}
@@ -86,7 +83,7 @@ export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps
                       <span className="flex-1 truncate">{item.label}</span>
 
                       {item.badge !== undefined && item.badge > 0 && (
-                        <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-sm bg-highlight text-highlight-foreground text-[11px] font-semibold flex items-center justify-center tabular-nums">
+                        <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-sm bg-highlight text-highlight-foreground text-[11px] font-semibold font-sans flex items-center justify-center tabular-nums">
                           {item.badge > 99 ? "99+" : item.badge}
                         </span>
                       )}
@@ -100,7 +97,7 @@ export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps
       </nav>
 
       {footer && (
-        <div className="border-t border-sidebar-border">
+        <div className="border-t border-white/10">
           {footer}
         </div>
       )}

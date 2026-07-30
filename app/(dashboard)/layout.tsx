@@ -18,7 +18,7 @@ export default async function DashboardLayout({
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
         <Header />
-        <div className="p-8 max-w-[1200px] mx-auto">{children}</div>
+        <div className="p-6 max-w-[1200px] mx-auto">{children}</div>
       </main>
     </div>
   );
