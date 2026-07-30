@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, Info } from "lucide-react";
 import {
   Controller,
   type Control,
@@ -8,20 +8,12 @@ import {
   type UseFormSetValue,
 } from "react-hook-form";
 import { CaseFormValues } from "@/db/validator";
-import UploadFiles from "./caseform-upload-files";
-
-export type WagesMode = "amount" | "documents" | "both";
+import { Tooltip } from "@/components/ui/Tooltip";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-md border border-primary/30 bg-background text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-ring transition-colors placeholder:text-muted-foreground/40";
 const labelCls =
   "block text-sm font-medium text-foreground mb-1.5";
-
-const WAGES_MODES: { value: WagesMode; label: string }[] = [
-  { value: "amount",    label: "Amount only" },
-  { value: "documents", label: "Documents only" },
-  { value: "both",      label: "Both" },
-];
 
 const CASE_TYPES = [
   {
@@ -45,18 +37,10 @@ export default function CaseTypes({
   control,
   register,
   setValue,
-  files,
-  setFiles,
-  wagesMode,
-  setWagesMode,
 }: {
   control: Control<CaseFormValues>;
   register: UseFormRegister<CaseFormValues>;
   setValue: UseFormSetValue<CaseFormValues>;
-  files: File[];
-  setFiles: (files: File[]) => void;
-  wagesMode: WagesMode;
-  setWagesMode: (m: WagesMode) => void;
 }) {
   return (
     <Controller
@@ -66,13 +50,11 @@ export default function CaseTypes({
         <div className="space-y-3">
           {CASE_TYPES.map(({ value, description, field: formField }) => {
             const isActive = field.value.includes(value);
-            const isWages  = value === "Wages record";
 
             const toggle = () => {
               if (isActive) {
                 field.onChange(field.value.filter((t) => t !== value));
                 setValue(formField, 0);
-                if (isWages) setFiles([]);
               } else {
                 field.onChange([...field.value, value]);
               }
@@ -93,13 +75,15 @@ export default function CaseTypes({
                     isActive ? "bg-blue-50" : "bg-background hover:bg-muted/30"
                   }`}
                 >
-                  <div className="flex-1 min-w-0 pr-4">
-                    <span className={`text-sm font-semibold ${isActive ? "text-primary" : "text-foreground"}`}>
+                  <div className="flex-1 min-w-0 pr-4 flex items-center gap-2">
+                    <span className={`text-sm font-semibold capitalize ${isActive ? "text-primary" : "text-foreground"}`}>
                       {value}
                     </span>
-                    <p className={`text-xs leading-relaxed mt-0.5 ${isActive ? "text-primary/70" : "text-muted-foreground"}`}>
-                      {description}
-                    </p>
+                    <Tooltip content={description}>
+                      <Info className={`w-3.5 h-3.5 shrink-0 cursor-help transition-colors ${
+                        isActive ? "text-primary/60 hover:text-primary" : "text-muted-foreground/60 hover:text-foreground"
+                      }`} />
+                    </Tooltip>
                   </div>
                   <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
                     isActive ? "bg-primary border-primary" : "border-border"
@@ -108,75 +92,21 @@ export default function CaseTypes({
                   </div>
                 </button>
 
-                {/* Expanded section */}
+                {/* Expanded section — just the amount input */}
                 {isActive && (
                   <div
-                    className="px-5 pb-5 pt-4 border-t border-primary/15 bg-blue-50/40 space-y-4"
+                    className="px-5 pb-5 pt-4 border-t border-primary/15 bg-blue-50/40"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {isWages ? (
-                      <>
-                        {/* Mode toggle */}
-                        <div>
-                          <label className={labelCls}>Evidence type</label>
-                          <div className="flex rounded-md border border-border overflow-hidden">
-                            {WAGES_MODES.map(({ value: mv, label }) => (
-                              <button
-                                key={mv}
-                                type="button"
-                                onClick={() => setWagesMode(mv)}
-                                className={`flex-1 py-2 text-xs font-semibold transition-colors ${
-                                  wagesMode === mv
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                }`}
-                              >
-                                {label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {(wagesMode === "amount" || wagesMode === "both") && (
-                          <div>
-                            <label className={labelCls}>Amount (SBD)</label>
-                            <input
-                              {...register("wagesRecord", { valueAsNumber: true })}
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              placeholder="0.00"
-                              className={inputCls}
-                            />
-                          </div>
-                        )}
-
-                        {(wagesMode === "documents" || wagesMode === "both") && (
-                          <div>
-                            <label className={labelCls}>Supporting documents</label>
-                            <UploadFiles files={files} setFiles={setFiles} />
-                            {files.length === 0 && (
-                              <div className="mt-3 p-3 rounded-md bg-highlight-muted border border-highlight/30 text-xs font-semibold text-highlight-foreground flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-highlight animate-pulse shrink-0" />
-                                At least one document is required.
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div>
-                        <label className={labelCls}>Amount (SBD)</label>
-                        <input
-                          {...register(formField, { valueAsNumber: true })}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          className={inputCls}
-                        />
-                      </div>
-                    )}
+                    <label className={labelCls}>Amount (SBD)</label>
+                    <input
+                      {...register(formField, { valueAsNumber: true })}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      className={inputCls}
+                    />
                   </div>
                 )}
               </div>

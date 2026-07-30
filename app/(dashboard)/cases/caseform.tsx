@@ -8,11 +8,13 @@ import { format } from "date-fns";
 import { insertCaseSchema, CaseFormValues } from "@/db/validator";
 import { createCase } from "@/app/actions/create-case";
 import General from "./caseform-general";
-import CaseTypes, { type WagesMode } from "./caseform-case-types";
+import CaseTypes from "./caseform-case-types";
+import UploadFiles from "./caseform-upload-files";
 
 const TABS = [
-  { step: "1", label: "Employer info" },
-  { step: "2", label: "Case types and amounts" },
+  { step: "1", label: "Employer and Referral Date" },
+  { step: "2", label: "Case Type and Claim Amount" },
+  { step: "3", label: "Supporting Documents" },
 ];
 
 function CaseFormHeader({
@@ -93,15 +95,15 @@ function TabBar({
 
 function GrandTotalBanner({ total }: { total: number }) {
   return (
-    <div className="relative rounded-md overflow-hidden p-5 bg-sinpf-navy border border-blue-800">
+    <div className="relative rounded-md overflow-hidden p-5 bg-card border border-primary/30">
       <div className="relative flex items-center justify-between gap-4">
         <div>
-          <p className="text-[11px] font-semibold text-white/60 uppercase tracking-[0.06em]">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">
             Grand total claim
           </p>
-          <p className="text-xs text-white/50 mt-0.5">Auto-calculated · SBD</p>
+          <p className="text-xs text-muted-foreground/70 mt-0.5">Auto-calculated · SBD</p>
         </div>
-        <span className="text-3xl font-bold text-white tracking-tight tabular-nums">
+        <span className="text-3xl font-bold text-primary tracking-tight tabular-nums">
           {total.toLocaleString("en-AU", {
             style: "currency",
             currency: "SBD",
@@ -117,7 +119,6 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [activeTab,   setActiveTab]   = useState(0);
   const [files,       setFiles]       = useState<File[]>([]);
-  const [wagesMode,   setWagesMode]   = useState<WagesMode>("amount");
   const [error,       setError]       = useState<string | null>(null);
 
   const {
@@ -152,27 +153,32 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   // Tab 1 gate: employer selected + date set
   const tab1Valid = !!employerId && !!referralDate;
 
-  // Tab 2 gate: at least one type, and each selected type satisfies its requirement
+  // Tab 2 gate: at least one type, and every selected type has a positive amount
   const isWagesSelected          = selectedTypes.includes("Wages record");
   const isContributionsSelected  = selectedTypes.includes("Unpaid contributions");
   const isSurchargesSelected     = selectedTypes.includes("Unpaid surcharges");
 
   const contributionsOk = !isContributionsSelected || contributions > 0;
   const surchargesOk    = !isSurchargesSelected    || surcharges    > 0;
-  const wagesOk         = !isWagesSelected || (
-    wagesMode === "amount"    ? wages > 0 :
-    wagesMode === "documents" ? files.length > 0 :
-    /* both */                  wages > 0 && files.length > 0
-  );
+  const wagesOk         = !isWagesSelected         || wages         > 0;
 
   const tab2Valid = selectedTypes.length > 0 && contributionsOk && surchargesOk && wagesOk;
 
-  const canNavigateTo = (i: number) => i === 0 || (i === 1 && tab1Valid);
+  // Tab 3: documents are optional across the whole referral
+  const tab3Valid = true;
+
+  const canNavigateTo = (i: number) =>
+    i === 0 ||
+    (i === 1 && tab1Valid) ||
+    (i === 2 && tab1Valid && tab2Valid);
 
   const isLastTab = activeTab === TABS.length - 1;
 
+  // Guard for the "Next" button — checks the *current* tab is valid before advancing
+  const canAdvance = activeTab === 0 ? tab1Valid : tab2Valid;
+
   const onSubmit = async (data: CaseFormValues) => {
-    if (!tab2Valid) return;
+    if (!tab2Valid || !tab3Valid) return;
     setError(null);
     try {
       const formData = new FormData();
@@ -217,15 +223,15 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
                 control={control}
                 register={register}
                 setValue={setValue}
-                files={files}
-                setFiles={setFiles}
-                wagesMode={wagesMode}
-                setWagesMode={setWagesMode}
               />
               {selectedTypes.length > 0 && (
                 <GrandTotalBanner total={grandTotal} />
               )}
             </>
+          )}
+
+          {activeTab === 2 && (
+            <UploadFiles files={files} setFiles={setFiles} />
           )}
 
           {error && (
@@ -252,10 +258,10 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
             {!isLastTab ? (
               <button
                 type="button"
-                disabled={!tab1Valid}
+                disabled={!canAdvance}
                 onClick={() => setActiveTab((t) => t + 1)}
                 className={`flex items-center gap-1.5 px-6 py-2.5 rounded-md text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors ${
-                  tab1Valid
+                  canAdvance
                     ? "bg-primary text-primary-foreground hover:bg-blue-600 active:bg-blue-700"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                 }`}
@@ -273,7 +279,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                 }`}
               >
-                {isSubmitting ? "Saving…" : "Save record"}
+                {isSubmitting ? "Adding…" : "Add referral"}
               </button>
             )}
           </div>
