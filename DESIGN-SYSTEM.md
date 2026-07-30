@@ -50,7 +50,7 @@ pure `gold-400` works as a 3px active-item bar or icon accent.
 
 | Token | Light | Use |
 |---|---|---|
-| `--success` | `#177245` | Matter won, contribution verified, filing accepted |
+| `--success` | `#177245` | Case won, contribution verified, filing accepted |
 | `--warning` | `#B45309` | Approaching deadline (orange, so it never competes with brand gold) |
 | `--destructive` | `#B42318` | Overdue, deletion, litigation risk |
 | `--info` | `#0B75BB` | Neutral notices (reuses brand blue) |
@@ -62,14 +62,14 @@ pure `gold-400` works as a 3px active-item bar or icon accent.
 Loaded via `next/font` (self-hosted at build time — no runtime request to Google,
 which matters on Honiara bandwidth).
 
-- **Source Serif 4** — titles and matter names only. `--font-serif`
+- **Source Serif 4** — titles and case names only. `--font-serif`
 - **Source Sans 3** — everything else. `--font-sans`
 - Tabular numerals (`tabular-nums`) on all member numbers, amounts, dates, docket refs.
 
 | Style | Face | Size/Line | Weight | Use |
 |---|---|---|---|---|
 | Display | Serif | 32/40 | 700 | Page titles |
-| H2 | Serif | 24/32 | 600 | Matter names, section titles |
+| H2 | Serif | 24/32 | 600 | Case names, section titles |
 | H3 | Sans | 20/28 | 600 | Card titles, panel headers |
 | H4 | Sans | 16/24 | 600 | Sub-sections, table group headers |
 | Body | Sans | 16/24 | 400 | Long-form content, legal notes |
@@ -113,7 +113,7 @@ action is" — the same meaning it carries on deadline badges in the content are
 
 ## 6. Content rules
 
-"Matter" for legal cases, "Member" for fund members, "Member No." abbreviated
+"Case" for legal cases, "Member" for fund members, "Member No." abbreviated
 consistently. Sentence case for all UI text including buttons ("Save changes",
 not "SAVE CHANGES"). Dates dd/mm/yyyy. Currency as SBD 1,234.56. Errors state
 what happened and what to do next.

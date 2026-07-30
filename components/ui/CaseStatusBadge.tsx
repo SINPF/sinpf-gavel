@@ -3,7 +3,7 @@
 
 import type { HTMLAttributes } from "react";
 
-export type MatterStatus =
+export type CaseStatus =
   | "open"
   | "actionRequired"
   | "dueSoon"
@@ -11,7 +11,7 @@ export type MatterStatus =
   | "resolved"
   | "closed";
 
-const variantClasses: Record<MatterStatus, string> = {
+const variantClasses: Record<CaseStatus, string> = {
   open:           "bg-secondary text-secondary-foreground",
   actionRequired: "bg-highlight-muted text-highlight-foreground",
   dueSoon:        "bg-highlight-muted text-highlight-foreground ring-1 ring-highlight",
@@ -20,7 +20,7 @@ const variantClasses: Record<MatterStatus, string> = {
   closed:         "bg-muted text-muted-foreground",
 };
 
-const LABELS: Record<MatterStatus, string> = {
+const LABELS: Record<CaseStatus, string> = {
   open: "Open",
   actionRequired: "Action required",
   dueSoon: "Due soon",
@@ -29,16 +29,16 @@ const LABELS: Record<MatterStatus, string> = {
   closed: "Closed",
 };
 
-interface MatterStatusBadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  status?: MatterStatus;
+interface CaseStatusBadgeProps extends HTMLAttributes<HTMLSpanElement> {
+  status?: CaseStatus;
 }
 
-export function MatterStatusBadge({
+export function CaseStatusBadge({
   status = "open",
   className = "",
   children,
   ...props
-}: MatterStatusBadgeProps) {
+}: CaseStatusBadgeProps) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium tabular-nums ${variantClasses[status]} ${className}`}

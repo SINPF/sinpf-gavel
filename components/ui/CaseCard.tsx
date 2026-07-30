@@ -75,7 +75,7 @@ export function CaseCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] tabular-nums">
-              Matter no. #{caseId.slice(0, 8).toUpperCase()}
+              Case no. #{caseId.slice(0, 8).toUpperCase()}
             </span>
             {caseTypes.length > 0 && (
               <span className="text-muted-foreground/40">·</span>

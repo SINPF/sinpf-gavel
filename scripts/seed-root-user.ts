@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
-const NAME = "Root Admin";
+const NAME = "Brandon Tupiti";
 
 async function main() {
   const email = process.env.SUPER_ADMIN_EMAIL;

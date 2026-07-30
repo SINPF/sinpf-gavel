@@ -35,7 +35,7 @@ export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps
       className={`flex flex-col h-full w-64 shrink-0 bg-blue-800 text-sidebar-foreground border-r border-white/10 ${className}`}
     >
       {logo && (
-        <div className="px-5 py-6 border-b border-white/10">
+        <div className="px-5 py-6 border-b border-white/10 text-center">
           {logo}
         </div>
       )}
@@ -51,7 +51,7 @@ export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps
                 <div className="flex-1 h-px bg-sidebar-border" />
               </div>
             )}
-            <ul className="space-y-1">
+            <ul className="divide-y divide-white/10">
               {section.items.map((item) => {
                 const isActive =
                   item.href === "/"
@@ -63,15 +63,15 @@ export function Sidebar({ sections, logo, footer, className = "" }: SidebarProps
                     <Link
                       href={item.href}
                       className={[
-                        "group flex items-center gap-4 px-8 py-4 font-serif transition-all",
+                        "group flex items-center gap-4 px-8 py-4 font-serif",
                         isActive
-                          ? "text-white font-semibold text-base"
+                          ? "text-white font-semibold text-sm"
                           : "text-sidebar-foreground/70 hover:text-white text-sm",
                       ].join(" ")}
                       aria-current={isActive ? "page" : undefined}
                     >
                       <span
-                        className={`shrink-0 transition-colors ${
+                        className={`shrink-0 ${
                           isActive
                             ? "text-sidebar-primary"
                             : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70"

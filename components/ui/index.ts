@@ -1,8 +1,8 @@
 export { Badge } from "./Badge";
 export type { BadgeStatus } from "./Badge";
 
-export { MatterStatusBadge } from "./MatterStatusBadge";
-export type { MatterStatus } from "./MatterStatusBadge";
+export { CaseStatusBadge } from "./CaseStatusBadge";
+export type { CaseStatus } from "./CaseStatusBadge";
 
 export { PriorityTag } from "./PriorityTag";
 export type { Priority } from "./PriorityTag";

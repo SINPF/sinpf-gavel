@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X, Maximize2, Minimize2, Briefcase, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight } from "lucide-react";
 import { insertCaseSchema, CaseFormValues } from "@/db/validator";
 import { createCase } from "@/app/actions/create-case";
 import General from "./caseform-general";
 import CaseTypes, { type WagesMode } from "./caseform-case-types";
 
 const TABS = [
-  { step: "01", label: "Employer info" },
-  { step: "02", label: "Case types and amounts" },
+  { step: "1", label: "Employer info" },
+  { step: "2", label: "Case types and amounts" },
 ];
 
 function CaseFormHeader({
@@ -24,30 +24,17 @@ function CaseFormHeader({
   isMaximized: boolean;
 }) {
   return (
-    <header className="px-8 py-5 flex justify-between items-center shrink-0 bg-sinpf-navy border-b border-blue-800">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-md bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
-          <Briefcase className="w-5 h-5 text-blue-400" />
-        </div>
-        <div>
-          <h2 className="text-base font-serif font-bold text-white tracking-tight leading-tight">
-            Create new matter
-          </h2>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-highlight animate-pulse" />
-            <p className="text-[11px] text-white/60 uppercase tracking-[0.06em] font-semibold">
-              Legal filing portal
-            </p>
-          </div>
-        </div>
-      </div>
+    <header className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-border">
+      <h2 className="font-serif text-xl font-semibold text-foreground tracking-tight">
+        Create new case referral
+      </h2>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={onToggleExpand}
-          className="p-2 rounded-md text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-colors flex items-center justify-center"
-          title={isMaximized ? "Restore" : "Maximize"}
+          aria-label={isMaximized ? "Restore" : "Maximize"}
+          className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
         >
           {isMaximized
             ? <Minimize2 className="w-4 h-4" />
@@ -56,8 +43,8 @@ function CaseFormHeader({
         <button
           type="button"
           onClick={onClose}
-          className="p-2 rounded-md text-white/60 hover:text-white hover:bg-destructive/30 border border-transparent hover:border-destructive/40 transition-colors flex items-center justify-center"
-          title="Close"
+          aria-label="Close"
+          className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -79,7 +66,6 @@ function TabBar({
     <div className="shrink-0 flex border-b border-border bg-background">
       {TABS.map(({ step, label }, i) => {
         const isActive  = activeTab === i;
-        const isPast    = i < activeTab;
         const isEnabled = canNavigateTo(i);
         return (
           <button
@@ -87,7 +73,7 @@ function TabBar({
             type="button"
             onClick={() => isEnabled && onSelect(i)}
             disabled={!isEnabled}
-            className={`relative flex items-center gap-2.5 px-6 py-3.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`relative flex items-center gap-2 px-6 py-3.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
               isActive
                 ? "border-primary text-primary"
                 : isEnabled
@@ -95,17 +81,7 @@ function TabBar({
                 : "border-transparent text-muted-foreground/40 cursor-not-allowed"
             }`}
           >
-            <span
-              className={`w-5 h-5 rounded-md text-[10px] font-semibold flex items-center justify-center shrink-0 transition-colors ${
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : isPast
-                  ? "bg-success text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {isPast ? "✓" : step}
-            </span>
+            <span className="tabular-nums">{step}.</span>
             {label}
           </button>
         );
@@ -149,7 +125,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
     handleSubmit,
     watch,
     setValue,
-    formState: { isSubmitSuccessful, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<CaseFormValues>({
     resolver: zodResolver(insertCaseSchema) as Resolver<CaseFormValues>,
     defaultValues: {
@@ -216,7 +192,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className={`relative bg-background rounded-md border border-border z-10 overflow-hidden flex flex-col transition-all duration-300 ${
+      className={`relative bg-card rounded-md border border-border shadow-lg z-10 overflow-hidden flex flex-col transition-all duration-300 ${
         isMaximized ? "w-full h-full rounded-none" : "w-5/6 h-5/6"
       }`}
     >
@@ -259,18 +235,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex justify-between items-center gap-4">
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                isSubmitSuccessful ? "bg-success" : "bg-warning"
-              } animate-pulse`}
-            />
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">
-              {isSubmitSuccessful ? "Referred" : "Draft"}
-            </span>
-          </div>
-
+        <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex justify-end items-center gap-4">
           <div className="flex items-center gap-2">
             {activeTab > 0 && (
               <button

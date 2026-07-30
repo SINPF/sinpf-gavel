@@ -276,11 +276,13 @@ export default function EmployersClient({ employers }: { employers: EmployerRow[
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-[2rem] leading-10 font-bold text-foreground tracking-tight">Employers</h1>
-          <p className="text-sm text-muted-foreground mt-1 tabular-nums">
-            {employers.length} registered employer{employers.length !== 1 ? "s" : ""}
+      <div className="mb-8 pb-4 border-b border-border flex items-baseline justify-between gap-4 flex-wrap">
+        <div className="flex items-baseline gap-4">
+          <h1 className="font-serif text-2xl font-semibold text-foreground tracking-tight">
+            Employers
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Registered organisations and their case history.
           </p>
         </div>
         <Link

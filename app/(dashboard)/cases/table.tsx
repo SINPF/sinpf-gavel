@@ -36,7 +36,7 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
   const columns: Column<CaseRow>[] = [
     {
       key: "id",
-      header: "Matter no.",
+      header: "Case no.",
       render: (v) => (
         <span className="text-xs text-muted-foreground tabular-nums">
           {highlight(String(v).slice(0, 8).toUpperCase(), query)}
@@ -142,6 +142,7 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
       keyField="id"
       emptyMessage="No cases found."
       onRowClick={(row) => router.push(`/cases/${row.id}`)}
+      className="min-h-[max(32rem,calc(100vh-18rem))]"
     />
   );
 }

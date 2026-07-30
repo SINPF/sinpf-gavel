@@ -240,7 +240,7 @@ export default function CasesClient({
     <div className="space-y-4">
       {/* Search + filter bar */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative group w-72">
+        <div className="relative group flex-1 min-w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
@@ -291,23 +291,23 @@ export default function CasesClient({
           </span>
         </button>
 
-        {hasActiveFilters && (
+      </div>
+
+      {/* Filtered count + clear — only shown when filters are active */}
+      {hasActiveFilters && (
+        <div className="flex items-center gap-3 px-1">
+          <p className="text-sm text-muted-foreground">
+            {filtered.length} of {cases.length} {cases.length === 1 ? "case" : "cases"} matched
+          </p>
           <button
             type="button"
             onClick={clearFilters}
-            className="flex items-center gap-1.5 h-10 px-3.5 rounded-md border border-border bg-background text-sm font-medium text-muted-foreground hover:text-destructive hover:border-destructive/40 hover:bg-destructive/5 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors"
           >
-            <X className="w-3.5 h-3.5" />
-            Clear
+            <X className="w-3 h-3" />
+            Clear filters
           </button>
-        )}
-      </div>
-
-      {/* Filtered count — only shown when filters are active */}
-      {hasActiveFilters && (
-        <p className="px-1 text-sm text-muted-foreground">
-          {filtered.length} of {cases.length} {cases.length === 1 ? "case" : "cases"} matched
-        </p>
+        </div>
       )}
 
       {/* Closed-cases hidden notice — always visible when closed cases exist and are hidden */}
@@ -317,43 +317,46 @@ export default function CasesClient({
         </p>
       )}
 
-      {/* Table */}
-      <Table cases={paginated} currentUserId={currentUserId} query={query} />
+      {/* Table + pagination (only when there are results) */}
+      {filtered.length === 0 ? (
+        <div className="py-16 text-center text-sm text-muted-foreground">No cases found.</div>
+      ) : (
+        <>
+          <Table cases={paginated} currentUserId={currentUserId} query={query} />
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[12px] text-muted-foreground">
-          {filtered.length === 0
-            ? "No results"
-            : `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length} case${filtered.length !== 1 ? "s" : ""}`}
-        </p>
+          <div className="flex items-center justify-between px-1">
+            <p className="text-[12px] text-muted-foreground">
+              Showing {start + 1}–{Math.min(start + PAGE_SIZE, filtered.length)} of {filtered.length} case{filtered.length !== 1 ? "s" : ""}
+            </p>
 
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous
-          </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </button>
 
-          <span className="px-3 py-1.5 text-sm font-semibold text-foreground">
-            {currentPage} / {totalPages}
-          </span>
+              <span className="px-3 py-1.5 text-sm font-semibold text-foreground">
+                {currentPage} / {totalPages}
+              </span>
 
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-          >
-            Next
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

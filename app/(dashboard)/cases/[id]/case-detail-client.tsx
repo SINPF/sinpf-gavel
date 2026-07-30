@@ -52,8 +52,8 @@ const ACTIVITY_LABELS: Record<string, string> = {
   consent_order_entered:   "Consent order entered",
   default_judgment_filed:  "Default judgment filed",
   enforcement_filed:       "Enforcement filed",
-  case_discontinued:       "Matter discontinued",
-  case_closed:             "Matter closed",
+  case_discontinued:       "Case discontinued",
+  case_closed:             "Case closed",
   document_added:          "Document added",
   note_added:              "Note added",
   payment_recorded:        "Payment recorded",
@@ -303,7 +303,7 @@ function CloseCaseForm({ caseId, onDone }: { caseId: string; onDone: () => void 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-5 rounded-md border border-destructive/30 bg-destructive/10">
-      <p className="text-sm font-semibold text-destructive">This action will mark the matter as closed and cannot be undone.</p>
+      <p className="text-sm font-semibold text-destructive">This action will mark the case as closed and cannot be undone.</p>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelCls}>Closure type</label>
@@ -329,14 +329,14 @@ function CloseCaseForm({ caseId, onDone }: { caseId: string; onDone: () => void 
       </div>
       <div>
         <label className={labelCls}>Closing notes</label>
-        <textarea name="notes" rows={2} className={`${inputCls} resize-none`} placeholder="Final notes on matter closure…" />
+        <textarea name="notes" rows={2} className={`${inputCls} resize-none`} placeholder="Final notes on case closure…" />
       </div>
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onDone} className="px-4 py-2 rounded-md text-sm font-semibold border border-border hover:bg-muted transition-colors">
           Cancel
         </button>
         <button type="submit" disabled={loading} className="px-6 py-2 rounded-md bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 disabled:opacity-50 transition-colors">
-          {loading ? "Closing…" : "Close matter"}
+          {loading ? "Closing…" : "Close case"}
         </button>
       </div>
     </form>
@@ -781,7 +781,7 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
             href="/cases"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to matters
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to cases
           </Link>
 
           <div className="mt-3 flex items-start justify-between gap-4">
@@ -814,7 +814,7 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
                 onClick={() => setShowCloseForm(!showCloseForm)}
                 className="shrink-0 px-4 py-2 rounded-md text-sm font-semibold border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors"
               >
-                Close matter
+                Close case
               </button>
             )}
           </div>
@@ -877,7 +877,7 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
               {/* Left: stage + actions + closure */}
               <div className="lg:col-span-2 space-y-4">
                 <div className="p-6 rounded-md border border-border bg-background overflow-x-auto">
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] mb-5">Matter stage</p>
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] mb-5">Case stage</p>
                   <StageStepper status={c.status} caseId={c.id} />
                 </div>
 
