@@ -80,6 +80,24 @@ services:
     networks:
       - internal
 
+  # ── Seed users from scripts/users.txt (on-demand, `--profile seed`) ──────────
+  seed-users:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: seed
+    profiles: ["seed"]
+    command: ["bun", "run", "seed:users"]
+    environment:
+      DATABASE_URL:        postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      BETTER_AUTH_SECRET:  ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL:     ${BETTER_AUTH_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
   # ── Caddy reverse proxy ──────────────────────────────────────────────────────
   proxy:
     image: caddy:2-alpine

@@ -10,12 +10,14 @@
     "lint": "eslint",
     "db:push": "npx drizzle-kit push",
     "seed:root": "bun run scripts/seed-root-user.ts",
+    "seed:users": "bun run scripts/seed-users.ts",
     "docker:dev:up": "docker compose -f compose.dev.yml up -d",
     "docker:dev:down": "docker compose -f compose.dev.yml down",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:build": "docker compose up -d --build",
-    "docker:seed": "docker compose --profile seed run --rm seed"
+    "docker:seed": "docker compose --profile seed run --rm seed",
+    "docker:seed-users": "docker compose --profile seed run --rm seed-users"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.3",
