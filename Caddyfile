@@ -1,8 +1,13 @@
 {
-	auto_https off
+	# Use Caddy's internal CA (self-signed) for all TLS.
+	# The CA is stored in the caddy_data volume so certs persist across restarts.
+	local_certs
 }
 
-:80 {
+# ── HTTPS ────────────────────────────────────────────────────────────────────
+:443 {
+	tls internal
+
 	# MinIO storage proxy — /storage/* → minio:9000/*
 	# Host is forced to minio:9000 so pre-signed URL signatures remain valid.
 	handle_path /storage/* {
@@ -20,4 +25,9 @@
 	request_body {
 		max_size 50MB
 	}
+}
+
+# ── HTTP → HTTPS redirect ────────────────────────────────────────────────────
+:80 {
+	redir https://{host}{uri} permanent
 }
