@@ -131,7 +131,7 @@ Start the dev infrastructure (Postgres on port 5434, MinIO on port 9000):
 bun run docker:dev:up
 ```
 
-Create `.env.local` with the following values:
+Create `.env` with the following values:
 
 ```env
 SUPER_ADMIN_EMAIL=you@sinpf.org.sb
@@ -176,11 +176,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Staging runs the fully containerised app (Next.js + Postgres + MinIO + Caddy) on your local machine to mirror the production environment before deploying.
 
-Create `.env.staging`:
+Create `.env` (also used by `next dev`):
 
 ```env
+SUPER_ADMIN_EMAIL=<admin email>
+SUPER_ADMIN_PASSWORD=<admin password>
 BETTER_AUTH_SECRET=<random string>
-BETTER_AUTH_URL=http://localhost
+BETTER_AUTH_URL=https://<your-hostname>
 
 DB_USER=postgres
 DB_PASSWORD=postgres
@@ -189,7 +191,7 @@ DB_NAME=lcms-db
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin123
 MINIO_BUCKET=lcms-attachments
-MINIO_PUBLIC_URL=http://localhost/storage
+MINIO_PUBLIC_URL=https://<your-hostname>/storage
 
 MICROSOFT_CLIENT_ID=
 MICROSOFT_CLIENT_SECRET=
@@ -254,4 +256,4 @@ Email is abstracted in `lib/mailer.ts`. OTP codes are logged to the console in d
 | `bun run docker:up` | Start staging stack |
 | `bun run docker:down` | Stop staging stack |
 | `bun run docker:build` | Rebuild app image and start staging stack |
-| `bun run docker:seed` | Seed the root admin user (reads `SUPER_ADMIN_*` from `.env.staging`) |
+| `bun run docker:seed` | Seed the root admin user (reads `SUPER_ADMIN_*` from `.env`) |

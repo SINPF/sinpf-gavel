@@ -12,10 +12,10 @@
     "seed:root": "bun run scripts/seed-root-user.ts",
     "docker:dev:up": "docker compose -f compose.dev.yml up -d",
     "docker:dev:down": "docker compose -f compose.dev.yml down",
-    "docker:up": "docker compose --env-file .env.staging up -d",
+    "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "docker:build": "docker compose --env-file .env.staging up -d --build",
-    "docker:seed": "docker compose --env-file .env.staging --profile seed run --rm seed"
+    "docker:build": "docker compose up -d --build",
+    "docker:seed": "docker compose --profile seed run --rm seed"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.3",
