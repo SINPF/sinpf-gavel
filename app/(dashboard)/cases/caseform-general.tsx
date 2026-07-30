@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { type UseFormRegister, type UseFormSetValue } from "react-hook-form";
 import { CaseFormValues } from "@/db/validator";
 import { Search, ChevronDown, Building2 } from "lucide-react";
+import { DateField } from "@/components/ui/DateField";
 
 type EmployerOption = { id: string; name: string; code: string };
 
@@ -116,7 +117,8 @@ export default function General({
   setValue: UseFormSetValue<CaseFormValues>;
   watch: (field: keyof CaseFormValues) => unknown;
 }) {
-  const employerId = watch("employerId") as string ?? "";
+  const employerId   = watch("employerId")   as string ?? "";
+  const referralDate = watch("referralDate") as string ?? "";
 
   return (
     <div className="flex flex-col gap-5">
@@ -131,10 +133,11 @@ export default function General({
 
       <div className="flex flex-col">
         <label className={labelClasses}>Referral date</label>
-        <input
-          {...register("referralDate")}
-          type="date"
-          className={`${inputClasses} cursor-pointer`}
+        <input type="hidden" {...register("referralDate")} />
+        <DateField
+          value={referralDate}
+          onChange={(d) => setValue("referralDate", d, { shouldValidate: true })}
+          placeholder="Select referral date…"
         />
       </div>
     </div>

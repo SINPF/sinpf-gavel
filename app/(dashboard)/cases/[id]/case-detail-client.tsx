@@ -9,6 +9,7 @@ import {
   CheckCircle2, Clock, ChevronRight, Plus, X, Upload,
   Download, FileSpreadsheet, Loader2, RotateCcw,
 } from "lucide-react";
+import { format } from "date-fns";
 import { Badge, type BadgeStatus } from "@/components/ui/Badge";
 import type { CaseDetail, CaseAttachment } from "@/db/types";
 import { updateCaseStage, type CaseStage } from "@/app/actions/update-case-stage";
@@ -573,7 +574,7 @@ function RecordPaymentModal({ caseId, types, onDone }: { caseId: string; types: 
               name="paymentDate"
               required
               title="Payment date"
-              defaultValue={new Date().toISOString().split("T")[0]}
+              defaultValue={format(new Date(), "yyyy-MM-dd")}
               className={inp}
             />
           </div>

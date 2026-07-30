@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
 import { insertCaseSchema, CaseFormValues } from "@/db/validator";
 import { createCase } from "@/app/actions/create-case";
 import General from "./caseform-general";
@@ -130,7 +131,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
     resolver: zodResolver(insertCaseSchema) as Resolver<CaseFormValues>,
     defaultValues: {
       employerId:         "",
-      referralDate:       new Date().toISOString().split("T")[0],
+      referralDate:       format(new Date(), "yyyy-MM-dd"),
       selectedTypes:      [],
       totalContributions: 0,
       totalSurcharges:    0,
