@@ -1,12 +1,12 @@
 import Image from "next/image";
-import { IconLayoutDashboard, IconBriefcase, IconBuildings } from "@tabler/icons-react";
+import { IconLayoutDashboardFilled, IconBriefcaseFilled, IconBuildings } from "@tabler/icons-react";
 import { Sidebar } from "@/components/ui/Sidebar";
 
 const NAV_SECTIONS = [
   {
     items: [
-      { label: "Dashboard", href: "/", icon: <IconLayoutDashboard className="w-4 h-4" strokeWidth={2} /> },
-      { label: "Cases",     href: "/cases",     icon: <IconBriefcase className="w-4 h-4" strokeWidth={2} /> },
+      { label: "Dashboard", href: "/", icon: <IconLayoutDashboardFilled className="w-4 h-4" /> },
+      { label: "Cases",     href: "/cases",     icon: <IconBriefcaseFilled className="w-4 h-4" /> },
       { label: "Employers", href: "/employers", icon: <IconBuildings className="w-4 h-4" strokeWidth={2} /> },
     ],
   },
