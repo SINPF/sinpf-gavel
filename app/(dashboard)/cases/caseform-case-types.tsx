@@ -49,7 +49,8 @@ export default function CaseTypes({
       render={({ field }) => (
         <div className="space-y-3">
           {CASE_TYPES.map(({ value, description, field: formField }) => {
-            const isActive = field.value.includes(value);
+            const isActive        = field.value.includes(value);
+            const isEvidenceOnly  = value === "Wages record";
 
             const toggle = () => {
               if (isActive) {
@@ -92,21 +93,29 @@ export default function CaseTypes({
                   </div>
                 </button>
 
-                {/* Expanded section — just the amount input */}
+                {/* Expanded section — amount input, or evidence-only note for Wages record */}
                 {isActive && (
                   <div
                     className="px-5 pb-5 pt-4 border-t border-primary/15 bg-blue-50/40"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <label className={labelCls}>Amount (SBD)</label>
-                    <input
-                      {...register(formField, { valueAsNumber: true })}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      className={inputCls}
-                    />
+                    {isEvidenceOnly ? (
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        No monetary claim. Attach supporting records in the <span className="font-semibold text-foreground">Supporting Documents</span> tab.
+                      </p>
+                    ) : (
+                      <>
+                        <label className={labelCls}>Amount (SBD)</label>
+                        <input
+                          {...register(formField, { valueAsNumber: true })}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          className={inputCls}
+                        />
+                      </>
+                    )}
                   </div>
                 )}
               </div>

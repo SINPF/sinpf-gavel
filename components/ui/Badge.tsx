@@ -34,6 +34,15 @@ const familyClasses: Record<Family, string> = {
   closed:   "bg-muted text-muted-foreground",
 };
 
+// Solid variant — full-color fill matching the filter dropdown dot colors.
+const solidFamilyClasses: Record<Family, string> = {
+  open:     "bg-primary text-white",
+  inReview: "bg-highlight text-highlight-foreground",
+  urgent:   "bg-destructive text-white",
+  resolved: "bg-success text-white",
+  closed:   "bg-muted-foreground text-background",
+};
+
 const dotClasses: Record<Family, string> = {
   open:     "bg-primary",
   inReview: "bg-highlight",
@@ -61,15 +70,17 @@ const labels: Record<BadgeStatus, string> = {
 interface BadgeProps {
   status: BadgeStatus;
   className?: string;
+  solid?: boolean;
 }
 
-export function Badge({ status, className = "" }: BadgeProps) {
-  const fam = family[status] ?? "closed";
+export function Badge({ status, className = "", solid = false }: BadgeProps) {
+  const fam     = family[status] ?? "closed";
+  const bgText  = solid ? solidFamilyClasses[fam] : familyClasses[fam];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-medium ${familyClasses[fam]} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-semibold ${bgText} ${className}`}
     >
-      <span aria-hidden className={`w-1.5 h-1.5 rounded-full ${dotClasses[fam]}`} />
+      {!solid && <span aria-hidden className={`w-1.5 h-1.5 rounded-full ${dotClasses[fam]}`} />}
       {labels[status] ?? status}
     </span>
   );

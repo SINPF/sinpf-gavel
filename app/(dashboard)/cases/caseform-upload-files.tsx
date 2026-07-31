@@ -99,6 +99,7 @@ export default function UploadFiles({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); removeFile(index); }}
                 className="p-1.5 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-md transition-colors"
               >

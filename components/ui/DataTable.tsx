@@ -40,11 +40,11 @@ export function DataTable<T extends Record<string, unknown>>({
   const isEmpty = !loading && data.length === 0;
 
   return (
-    <div className={`w-full rounded-md border border-border bg-card flex flex-col overflow-hidden ${className}`}>
+    <div className={`w-full rounded-md bg-muted/40 flex flex-col overflow-hidden ${className}`}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm tabular-nums">
           <thead className="sticky top-0 z-10">
-            <tr className="bg-muted border-b border-border">
+            <tr className="bg-muted-foreground/15 border-b border-border">
               {columns.map((col, i) => (
                 <th
                   key={`${i}-${String(col.key)}`}
@@ -61,7 +61,7 @@ export function DataTable<T extends Record<string, unknown>>({
           <tbody>
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <tr key={i} className="border-b border-border last:border-0">
+                <tr key={i} className="border-b border-border bg-card">
                   {columns.map((col, j) => (
                     <td key={`${j}-${String(col.key)}`} className="px-4 py-3">
                       <div className="h-4 bg-muted rounded-sm animate-pulse" />
@@ -74,7 +74,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 <tr
                   key={String(row[keyField])}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
-                  className={`group border-b border-border last:border-0 hover:bg-blue-50 transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
+                  className={`group border-b border-border bg-card hover:bg-blue-50 transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
                 >
                   {columns.map((col, i) => (
                     <td

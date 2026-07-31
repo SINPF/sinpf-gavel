@@ -59,7 +59,9 @@ function EmployerCombobox({
             <>
               <Building2 className="w-4 h-4 text-primary shrink-0" />
               <span className="font-medium text-foreground">{selected.name}</span>
-              <span className="text-xs text-muted-foreground tabular-nums">{selected.code}</span>
+              <span className="shrink-0 px-2 py-0.5 rounded-sm bg-muted-foreground text-background text-[11px] font-semibold tabular-nums">
+                {selected.code}
+              </span>
             </>
           ) : (
             "Select employer…"
@@ -97,7 +99,9 @@ function EmployerCombobox({
                 >
                   <Building2 className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                   <span className="flex-1 font-medium">{emp.name}</span>
-                  <span className="text-xs tabular-nums text-muted-foreground">{emp.code}</span>
+                  <span className="shrink-0 px-2 py-0.5 rounded-sm bg-muted-foreground text-background text-[11px] font-semibold tabular-nums">
+                    {emp.code}
+                  </span>
                 </button>
               ))
             )}

@@ -153,16 +153,15 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   // Tab 1 gate: employer selected + date set
   const tab1Valid = !!employerId && !!referralDate;
 
-  // Tab 2 gate: at least one type, and every selected type has a positive amount
-  const isWagesSelected          = selectedTypes.includes("Wages record");
+  // Tab 2 gate: at least one type, and every monetary type has a positive amount.
+  // "Wages record" is evidence-only (no claim amount), so it has no amount requirement.
   const isContributionsSelected  = selectedTypes.includes("Unpaid contributions");
   const isSurchargesSelected     = selectedTypes.includes("Unpaid surcharges");
 
   const contributionsOk = !isContributionsSelected || contributions > 0;
   const surchargesOk    = !isSurchargesSelected    || surcharges    > 0;
-  const wagesOk         = !isWagesSelected         || wages         > 0;
 
-  const tab2Valid = selectedTypes.length > 0 && contributionsOk && surchargesOk && wagesOk;
+  const tab2Valid = selectedTypes.length > 0 && contributionsOk && surchargesOk;
 
   // Tab 3: documents are optional across the whole referral
   const tab3Valid = true;
@@ -178,6 +177,9 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   const canAdvance = activeTab === 0 ? tab1Valid : tab2Valid;
 
   const onSubmit = async (data: CaseFormValues) => {
+    // Only accept submission from the final tab — blocks Enter-key implicit
+    // submits and any other stray submit triggers on earlier tabs.
+    if (activeTab !== TABS.length - 1) return;
     if (!tab2Valid || !tab3Valid) return;
     setError(null);
     try {
@@ -211,7 +213,7 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
 
       <TabBar activeTab={activeTab} onSelect={setActiveTab} canNavigateTo={canNavigateTo} />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-linear-to-br from-background via-blue-50 to-blue-100">
+      <form onSubmit={(e) => e.preventDefault()} className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-linear-to-br from-background via-blue-50 to-blue-100">
         <div className="flex-1 p-6 animate-in fade-in duration-200 space-y-6">
           {activeTab === 0 && (
             <General register={register} setValue={setValue} watch={watch} />
@@ -271,7 +273,8 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
               </button>
             ) : (
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit(onSubmit)}
                 disabled={!tab2Valid || isSubmitting}
                 className={`px-8 py-2.5 rounded-md font-semibold text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors ${
                   tab2Valid && !isSubmitting

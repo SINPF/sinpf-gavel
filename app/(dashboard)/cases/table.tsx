@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { format, parse, isValid } from "date-fns";
 import { DataTable } from "@/components/ui/DataTable";
 import { Badge, type BadgeStatus } from "@/components/ui/Badge";
 import type { Column } from "@/components/ui/DataTable";
@@ -9,6 +10,14 @@ import { ChevronRight } from "lucide-react";
 import type { CaseWithAssignee } from "@/db/types";
 
 type CaseRow = CaseWithAssignee & Record<string, unknown>;
+
+// Mirrors TYPE_OPTIONS dot colors in cases-client.tsx so the table badges
+// share the visual vocabulary of the type filter dropdown.
+const TYPE_STYLES: Record<string, string> = {
+  unpaid_contributions: "bg-primary text-white",
+  unpaid_surcharges:    "bg-blue-400 text-white",
+  wages_record:         "bg-highlight text-highlight-foreground",
+};
 
 function highlight(text: string, query: string) {
   const q = query.trim();
@@ -46,14 +55,19 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
     {
       key: "employerName",
       header: "Employer",
-      render: (v, row) => (
-        <div>
-          <p className="text-sm font-medium text-foreground">{highlight(String(v), query)}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
-            {highlight(String(row.employerCode), query)}
-          </p>
-        </div>
+      render: (v) => (
+        <p className="text-sm font-medium text-foreground">{highlight(String(v), query)}</p>
       ),
+    },
+    {
+      key: "referralDate",
+      header: "Referral date",
+      render: (v) => {
+        const raw = String(v);
+        const d = parse(raw, "yyyy-MM-dd", new Date());
+        const display = isValid(d) ? format(d, "d MMM yyyy") : raw;
+        return <span className="text-sm text-muted-foreground tabular-nums">{display}</span>;
+      },
     },
     {
       key: "types",
@@ -66,7 +80,7 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
             {types.map((t) => (
               <span
                 key={t}
-                className="inline-block px-2 py-0.5 rounded-sm bg-secondary text-secondary-foreground text-xs font-medium"
+                className={`inline-block px-2 py-0.5 rounded-sm text-xs font-semibold capitalize ${TYPE_STYLES[t] ?? "bg-secondary text-secondary-foreground"}`}
               >
                 {t.replace(/_/g, " ")}
               </span>
@@ -76,26 +90,9 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
       },
     },
     {
-      key: "referralDate",
-      header: "Referral date",
-      render: (v) => (
-        <span className="text-sm text-muted-foreground tabular-nums">{String(v)}</span>
-      ),
-    },
-    {
-      key: "grandTotalClaim",
-      header: "Total claim",
-      align: "right",
-      render: (v) => (
-        <span className="text-sm font-medium text-foreground tabular-nums">
-          {Number(v).toLocaleString("en-AU", { style: "currency", currency: "SBD" })}
-        </span>
-      ),
-    },
-    {
       key: "status",
       header: "Status",
-      render: (v) => <Badge status={v as BadgeStatus} />,
+      render: (v) => <Badge status={v as BadgeStatus} solid />,
     },
     {
       key: "assigneeEmail",
