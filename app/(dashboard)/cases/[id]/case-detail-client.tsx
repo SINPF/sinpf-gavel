@@ -14,6 +14,7 @@ import Modal from "@/components/ui/Modal";
 import { Badge, type BadgeStatus } from "@/components/ui/Badge";
 import { DateField } from "@/components/ui/DateField";
 import { AmountInput } from "@/components/ui/AmountInput";
+import { DataTable, type Column } from "@/components/ui/DataTable";
 import type { CaseDetail, CaseAttachment } from "@/db/types";
 import { updateCaseStage, type CaseStage } from "@/app/actions/update-case-stage";
 import { addCaseProceeding } from "@/app/actions/add-case-proceeding";
@@ -632,6 +633,49 @@ function RecordPaymentForm({ caseId, types, onClose }: { caseId: string; types: 
 
 // ─── Financial Card ───────────────────────────────────────────────────────────
 
+type PaymentRow = {
+  id: string;
+  paymentDate: string;
+  typeLabel: string;
+  reference: string;
+  amount: number;
+} & Record<string, unknown>;
+
+const fmtSBD = (n: number) =>
+  n.toLocaleString("en-AU", { style: "currency", currency: "SBD" });
+
+const paymentColumns: Column<PaymentRow>[] = [
+  {
+    key: "paymentDate",
+    header: "Date",
+    render: (v) => <span className="text-sm text-foreground tabular-nums">{String(v)}</span>,
+  },
+  {
+    key: "typeLabel",
+    header: "Type",
+    render: (v) =>
+      v && v !== "—"
+        ? <span className="text-sm text-muted-foreground">{String(v)}</span>
+        : <span className="text-sm italic text-muted-foreground/40">—</span>,
+  },
+  {
+    key: "reference",
+    header: "Reference",
+    render: (v) =>
+      v
+        ? <span className="text-sm text-muted-foreground">{String(v)}</span>
+        : <span className="text-sm italic text-muted-foreground/40">—</span>,
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    align: "right",
+    render: (v) => (
+      <span className="text-sm font-semibold tabular-nums text-success">{fmtSBD(Number(v))}</span>
+    ),
+  },
+];
+
 function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
   const [showModal, setShowModal] = useState(false);
 
@@ -654,23 +698,12 @@ function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
 
   return (
     <>
-    {!isClosed && (
-      <div className="mb-4 flex justify-end">
-        <button
-          type="button"
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Record payment
-        </button>
-      </div>
-    )}
     <div className="relative rounded-md overflow-hidden bg-card border border-primary/30">
       <div className="relative p-6 space-y-4">
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">Financial summary</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.06em]">Financial summary</p>
 
         {/* Column headers */}
-        <div className="grid grid-cols-4 gap-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.06em] border-b border-border pb-2">
+        <div className="grid grid-cols-4 gap-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] border-b border-border pb-2">
           <span />
           <span className="text-right">Claim</span>
           <span className="text-right">Paid</span>
@@ -678,15 +711,15 @@ function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
         </div>
 
         {/* Breakdown rows */}
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {rows.map(({ label, claim, paid }) => {
             const owed = Math.max(0, claim - paid);
             return (
               <div key={label} className="grid grid-cols-4 gap-1 items-center">
-                <span className="text-[11px] text-muted-foreground">{label}</span>
-                <span className="text-right text-[11px] tabular-nums text-foreground">{fmt(claim)}</span>
-                <span className="text-right text-[11px] tabular-nums text-success">{paid > 0 ? fmt(paid) : "—"}</span>
-                <span className={`text-right text-[11px] tabular-nums font-semibold ${owed > 0 ? "text-highlight-foreground" : "text-success"}`}>
+                <span className="text-sm text-muted-foreground">{label}</span>
+                <span className="text-right text-sm tabular-nums text-foreground">{fmt(claim)}</span>
+                <span className="text-right text-sm tabular-nums text-success">{paid > 0 ? fmt(paid) : "—"}</span>
+                <span className={`text-right text-sm tabular-nums font-semibold ${owed > 0 ? "text-highlight-foreground" : "text-success"}`}>
                   {fmt(owed)}
                 </span>
               </div>
@@ -695,16 +728,14 @@ function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
         </div>
 
         {/* Grand total */}
-        <div className="pt-3 border-t border-border space-y-1">
+        <div className="pt-3 border-t border-border">
           <div className="grid grid-cols-4 gap-1 items-baseline">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] col-span-1">Total</span>
-            <span className="text-right text-xs tabular-nums font-semibold text-foreground">{fmt(grandTotalClaim)}</span>
-            <span className="text-right text-xs tabular-nums font-semibold text-success">{totalPaid > 0 ? fmt(totalPaid) : "—"}</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.06em] col-span-1">Outstanding total</span>
+            <span className="col-span-2" />
             <span className={`text-right text-2xl tabular-nums font-bold leading-none ${outstanding > 0 ? "text-primary" : "text-success"}`}>
               {fmt(Math.max(0, outstanding))}
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground text-right">Outstanding · SBD</p>
         </div>
 
         {isFullyRecovered && (
@@ -717,37 +748,46 @@ function FinancialCard({ c, isClosed }: { c: CaseDetail; isClosed: boolean }) {
       </div>
     </div>
 
-    {/* Payment history card */}
+    {!isClosed && (
+      <div className="mt-8 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setShowModal(true)}
+          className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Record payment
+        </button>
+      </div>
+    )}
+
+    {/* Payment history */}
     {c.payments.length > 0 && (
-      <div className="mt-4 rounded-md border border-border bg-card overflow-hidden">
-        <div className="px-6 py-4 border-b border-border flex items-center gap-2">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">Payment history</p>
+      <div className="mt-6 space-y-3">
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.06em]">Payment history</p>
           <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground tabular-nums">
             {c.payments.length}
           </span>
         </div>
-        <div className="p-6 space-y-2">
-          {c.payments.map((p) => {
+        <DataTable
+          columns={paymentColumns}
+          data={c.payments.map((p) => {
             const amount = Number(p.contributionsPaid) + Number(p.surchargesPaid) + Number(p.wagesPaid);
             const typeLabel =
               Number(p.contributionsPaid) > 0 ? "Contributions" :
               Number(p.surchargesPaid)    > 0 ? "Surcharges" :
-              Number(p.wagesPaid)         > 0 ? "Wages record" : null;
-            return (
-              <div key={p.id} className="flex items-start justify-between gap-3 px-3 py-2 rounded-md hover:bg-muted/40 transition-colors">
-                <div className="min-w-0">
-                  <p className="text-sm text-foreground tabular-nums font-medium">{p.paymentDate}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {typeLabel}{p.reference ? ` · ${p.reference}` : ""}
-                  </p>
-                </div>
-                <span className="text-sm font-semibold tabular-nums text-success shrink-0">
-                  {fmt(amount)}
-                </span>
-              </div>
-            );
+              Number(p.wagesPaid)         > 0 ? "Wages record" : "—";
+            return {
+              id:          p.id,
+              paymentDate: p.paymentDate,
+              typeLabel,
+              reference:   p.reference ?? "",
+              amount,
+            };
           })}
-        </div>
+          keyField="id"
+          emptyMessage="No payments recorded."
+        />
       </div>
     )}
 
