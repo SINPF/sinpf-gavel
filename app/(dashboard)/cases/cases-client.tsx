@@ -10,7 +10,7 @@ const PAGE_SIZE = 25;
 // Dot colors track the Badge status families defined in components/ui/Badge.tsx
 const STATUS_OPTIONS: { value: string; label: string; dot: string }[] = [
   { value: "",              label: "All statuses",  dot: "bg-muted-foreground/40" },
-  { value: "registered",    label: "Registered",    dot: "bg-primary" },
+  { value: "registered",    label: "Referral Registered", dot: "bg-primary" },
   { value: "assessment",    label: "Assessment",    dot: "bg-primary" },
   { value: "demand_issued", label: "Demand issued", dot: "bg-highlight" },
   { value: "negotiation",   label: "Negotiation",   dot: "bg-highlight" },

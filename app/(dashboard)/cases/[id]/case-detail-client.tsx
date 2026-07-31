@@ -26,13 +26,13 @@ import { undoLastAction } from "@/app/actions/undo-last-action";
 
 // ─── Stage config ─────────────────────────────────────────────────────────────
 
-const STAGES: { key: CaseStage; label: string; icon: React.ReactNode }[] = [
-  { key: "registered",   label: "Registered",    icon: <FileText className="w-4 h-4" /> },
-  { key: "assessment",   label: "Assessment",    icon: <ScrollText className="w-4 h-4" /> },
-  { key: "demand_issued",label: "Demand issued", icon: <FileText className="w-4 h-4" /> },
-  { key: "negotiation",  label: "Negotiation",   icon: <HandshakeIcon className="w-4 h-4" /> },
-  { key: "prosecution",  label: "Prosecution",   icon: <Gavel className="w-4 h-4" /> },
-  { key: "closed",       label: "Closed",        icon: <CheckCircle2 className="w-4 h-4" /> },
+const STAGES: { key: CaseStage; label: string; actionLabel?: string; icon: React.ReactNode }[] = [
+  { key: "registered",   label: "Referral Registered",                               icon: <FileText className="w-4 h-4" /> },
+  { key: "assessment",   label: "Under Assessment", actionLabel: "Begin Assessment", icon: <ScrollText className="w-4 h-4" /> },
+  { key: "demand_issued",label: "Demand Issued",                                     icon: <FileText className="w-4 h-4" /> },
+  { key: "negotiation",  label: "Negotiation",                                       icon: <HandshakeIcon className="w-4 h-4" /> },
+  { key: "prosecution",  label: "Prosecution",                                       icon: <Gavel className="w-4 h-4" /> },
+  { key: "closed",       label: "Closed",                                            icon: <CheckCircle2 className="w-4 h-4" /> },
 ];
 
 const STAGE_ORDER = STAGES.map((s) => s.key);
@@ -183,6 +183,51 @@ function StageStepper({
               <div className={`w-12 h-0.5 mb-5 mx-1 ${i < currentIdx ? "bg-success" : "bg-border/50"}`} />
             )}
           </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Next Action Button ───────────────────────────────────────────────────────
+// One CTA per valid transition, using each stage's `actionLabel` (imperative)
+// falling back to a generic "Move to {label}" when no actionLabel is defined.
+
+function NextActionButtons({ caseId, status }: { caseId: string; status: string }) {
+  const router = useRouter();
+  const [loadingStage, setLoadingStage] = useState<string | null>(null);
+  const validNext = VALID_TRANSITIONS[status] ?? [];
+
+  if (validNext.length === 0) return null;
+
+  const handleClick = async (key: CaseStage) => {
+    if (loadingStage) return;
+    setLoadingStage(key);
+    await updateCaseStage(caseId, key);
+    setLoadingStage(null);
+    router.refresh();
+  };
+
+  return (
+    <div className="space-y-2">
+      {validNext.map((key) => {
+        const stage = STAGES.find((s) => s.key === key);
+        if (!stage) return null;
+        const label     = stage.actionLabel ?? `Move to ${stage.label}`;
+        const isLoading = loadingStage === key;
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={() => handleClick(key)}
+            disabled={!!loadingStage}
+            className="w-full inline-flex items-center justify-center gap-2 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 transition-colors"
+          >
+            {isLoading
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <ChevronRight className="w-4 h-4" />}
+            {label}
+          </button>
         );
       })}
     </div>
@@ -896,6 +941,9 @@ export default function CaseDetailClient({ caseDetail: c }: { caseDetail: CaseDe
             )}
           </dl>
         </div>
+
+        {/* Next action */}
+        {!isClosed && <NextActionButtons caseId={c.id} status={c.status} />}
 
         {/* Stage stepper card */}
         <div className="rounded-md border border-border bg-background p-5">

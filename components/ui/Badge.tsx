@@ -52,7 +52,7 @@ const dotClasses: Record<Family, string> = {
 };
 
 const labels: Record<BadgeStatus, string> = {
-  registered:    "Registered",
+  registered:    "Referral Registered",
   filed:         "Filed",
   active:        "Active",
   assessment:    "Assessment",
