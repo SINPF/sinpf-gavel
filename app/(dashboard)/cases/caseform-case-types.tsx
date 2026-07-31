@@ -9,6 +9,7 @@ import {
 } from "react-hook-form";
 import { CaseFormValues } from "@/db/validator";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { AmountInput } from "@/components/ui/AmountInput";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-md border border-primary/30 bg-background text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-ring transition-colors placeholder:text-muted-foreground/40";
@@ -106,21 +107,9 @@ export default function CaseTypes({
                     ) : (
                       <>
                         <label className={labelCls}>Amount (SBD)</label>
-                        <input
+                        <AmountInput
                           {...register(formField, { valueAsNumber: true })}
-                          type="text"
-                          inputMode="decimal"
                           placeholder="0.00"
-                          onKeyDown={(e) => {
-                            const controlKeys = ["Backspace", "Delete", "Tab", "Escape", "Enter",
-                              "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
-                            if (controlKeys.includes(e.key) || e.ctrlKey || e.metaKey) return;
-                            if (!/^[0-9.]$/.test(e.key)) e.preventDefault();
-                          }}
-                          onPaste={(e) => {
-                            const text = e.clipboardData.getData("text");
-                            if (!/^[0-9]*\.?[0-9]*$/.test(text)) e.preventDefault();
-                          }}
                           className={inputCls}
                         />
                       </>
