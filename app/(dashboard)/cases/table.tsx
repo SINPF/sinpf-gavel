@@ -14,9 +14,9 @@ type CaseRow = CaseWithAssignee & Record<string, unknown>;
 // Mirrors TYPE_OPTIONS dot colors in cases-client.tsx so the table badges
 // share the visual vocabulary of the type filter dropdown.
 const TYPE_STYLES: Record<string, string> = {
-  unpaid_contributions: "bg-primary text-white",
-  unpaid_surcharges:    "bg-blue-400 text-white",
-  wages_record:         "bg-highlight text-highlight-foreground",
+  unpaid_contributions: "border border-primary text-primary",
+  unpaid_surcharges:    "border border-blue-400 text-blue-500",
+  wages_record:         "border border-highlight text-highlight-foreground",
 };
 
 function highlight(text: string, query: string) {
@@ -80,7 +80,7 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
             {types.map((t) => (
               <span
                 key={t}
-                className={`inline-block px-2 py-0.5 rounded-sm text-xs font-semibold capitalize ${TYPE_STYLES[t] ?? "bg-secondary text-secondary-foreground"}`}
+                className={`inline-block px-2 py-0.5 rounded-sm text-xs font-semibold capitalize bg-transparent ${TYPE_STYLES[t] ?? "border border-border text-muted-foreground"}`}
               >
                 {t.replace(/_/g, " ")}
               </span>
@@ -100,7 +100,7 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
       render: (_, row) => {
         if (row.assignedTo && row.assignedTo === currentUserId) {
           return (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-sm bg-secondary text-secondary-foreground text-xs font-medium">
+            <span className="text-sm font-semibold text-primary">
               Me
             </span>
           );
