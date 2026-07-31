@@ -4,12 +4,23 @@ import { z } from "zod";
 
 const baseCaseSchema = createInsertSchema(caseReferrals);
 
+// Amount fields default to `undefined` in the form (so the placeholder shows
+// instead of a preset "0"). Coerce undefined/empty/NaN → 0 before validation.
+const amountSchema = z.preprocess(
+  (v) => {
+    if (v === undefined || v === null || v === "") return 0;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  },
+  z.number().min(0),
+);
+
 export const insertCaseSchema = baseCaseSchema.extend({
   employerId:         z.string().min(1, "Employer is required"),
-  totalContributions: z.coerce.number().min(0),
-  totalSurcharges:    z.coerce.number().min(0),
-  wagesRecord:        z.coerce.number().min(0),
-  grandTotalClaim:    z.coerce.number().min(0),
+  totalContributions: amountSchema,
+  totalSurcharges:    amountSchema,
+  wagesRecord:        amountSchema,
+  grandTotalClaim:    amountSchema,
   selectedTypes:      z.array(z.string()).default([]),
 });
 

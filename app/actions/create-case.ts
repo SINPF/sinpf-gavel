@@ -19,6 +19,7 @@ export async function createCase(formData: FormData) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user.id) throw new Error("Not authenticated");
 
+  const formAssignee = (formData.get("assignedTo") as string | null)?.trim();
   const [newCase] = await db
     .insert(caseReferrals)
     .values({
@@ -28,7 +29,7 @@ export async function createCase(formData: FormData) {
       totalSurcharges: formData.get("totalSurcharges") as string,
       wagesRecord: formData.get("wagesRecord") as string,
       grandTotalClaim: formData.get("grandTotalClaim") as string,
-      assignedTo: session.user.id,
+      assignedTo: formAssignee || session.user.id,
     })
     .returning({ id: caseReferrals.id });
 

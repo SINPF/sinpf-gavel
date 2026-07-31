@@ -100,14 +100,14 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
       render: (_, row) => {
         if (row.assignedTo && row.assignedTo === currentUserId) {
           return (
-            <span className="text-sm font-semibold text-primary">
+            <span className="text-sm text-muted-foreground">
               Me
             </span>
           );
         }
         const display = row.assigneeName || row.assigneeEmail;
         return display ? (
-          <span className="text-sm text-muted-foreground">{String(display)}</span>
+          <span className="text-sm font-semibold text-primary">{String(display)}</span>
         ) : (
           <span className="text-sm text-muted-foreground/60">—</span>
         );

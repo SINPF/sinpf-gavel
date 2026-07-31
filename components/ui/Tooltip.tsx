@@ -6,10 +6,11 @@ import { createPortal } from "react-dom";
 export function Tooltip({
   content,
   children,
-  className = "",
+  className,
 }: {
   content: ReactNode;
   children: ReactNode;
+  /** Overrides the default `inline-flex` wrapper class — pass e.g. "block" for full-width wrappers. */
   className?: string;
 }) {
   const [visible, setVisible] = useState(false);
@@ -33,7 +34,7 @@ export function Tooltip({
         onMouseLeave={hide}
         onFocus={show}
         onBlur={hide}
-        className={`inline-flex ${className}`}
+        className={className ?? "inline-flex"}
       >
         {children}
       </span>

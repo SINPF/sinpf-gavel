@@ -1,20 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { insertCaseSchema, CaseFormValues } from "@/db/validator";
 import { createCase } from "@/app/actions/create-case";
+import { authClient } from "@/lib/auth-client";
 import General from "./caseform-general";
 import CaseTypes from "./caseform-case-types";
 import UploadFiles from "./caseform-upload-files";
+import Assignment from "./caseform-assignment";
 
 const TABS = [
   { step: "1", label: "Employer and Referral Date" },
   { step: "2", label: "Case Type and Claim Amount" },
   { step: "3", label: "Supporting Documents" },
+  { step: "4", label: "Assignment" },
 ];
 
 function CaseFormHeader({
@@ -134,12 +137,18 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
       employerId:         "",
       referralDate:       format(new Date(), "yyyy-MM-dd"),
       selectedTypes:      [],
-      totalContributions: 0,
-      totalSurcharges:    0,
-      wagesRecord:        0,
+      // Amount fields start empty rather than at 0 so the placeholder shows
+      // and the user doesn't have to clear a "0" before typing.
+      totalContributions: undefined as unknown as number,
+      totalSurcharges:    undefined as unknown as number,
+      wagesRecord:        undefined as unknown as number,
       grandTotalClaim:    0,
+      assignedTo:         "",
     },
   });
+
+  const { data: sessionData } = authClient.useSession();
+  const currentUserId = sessionData?.user?.id ?? null;
 
   const selectedTypes   = watch("selectedTypes") ?? [];
   const employerId      = watch("employerId")         as string ?? "";
@@ -147,6 +156,14 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   const contributions   = watch("totalContributions") as number || 0;
   const surcharges      = watch("totalSurcharges")    as number || 0;
   const wages           = watch("wagesRecord")        as number || 0;
+  const assignedTo      = watch("assignedTo")         as string ?? "";
+
+  // Default the assignee to the current user once the session resolves.
+  useEffect(() => {
+    if (currentUserId && !assignedTo) {
+      setValue("assignedTo", currentUserId);
+    }
+  }, [currentUserId, assignedTo, setValue]);
 
   const grandTotal = contributions + surcharges + wages;
 
@@ -166,30 +183,40 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   // Tab 3: documents are optional across the whole referral
   const tab3Valid = true;
 
+  // Tab 4: an assignee must be selected (defaults to current user)
+  const tab4Valid = !!assignedTo;
+
   const canNavigateTo = (i: number) =>
     i === 0 ||
     (i === 1 && tab1Valid) ||
-    (i === 2 && tab1Valid && tab2Valid);
+    (i === 2 && tab1Valid && tab2Valid) ||
+    (i === 3 && tab1Valid && tab2Valid);
 
   const isLastTab = activeTab === TABS.length - 1;
 
   // Guard for the "Next" button — checks the *current* tab is valid before advancing
-  const canAdvance = activeTab === 0 ? tab1Valid : tab2Valid;
+  const canAdvance =
+    activeTab === 0 ? tab1Valid :
+    activeTab === 1 ? tab2Valid :
+    activeTab === 2 ? tab3Valid :
+    false;
 
   const onSubmit = async (data: CaseFormValues) => {
     // Only accept submission from the final tab — blocks Enter-key implicit
     // submits and any other stray submit triggers on earlier tabs.
     if (activeTab !== TABS.length - 1) return;
-    if (!tab2Valid || !tab3Valid) return;
+    if (!tab2Valid || !tab3Valid || !tab4Valid) return;
     setError(null);
     try {
       const formData = new FormData();
       formData.append("employerId",          data.employerId);
       formData.append("referralDate",        data.referralDate ?? "");
-      formData.append("totalContributions",  String(data.totalContributions));
-      formData.append("totalSurcharges",     String(data.totalSurcharges));
-      formData.append("wagesRecord",         String(data.wagesRecord));
+      const amt = (v: unknown) => (Number.isFinite(Number(v)) ? String(Number(v)) : "0");
+      formData.append("totalContributions",  amt(data.totalContributions));
+      formData.append("totalSurcharges",     amt(data.totalSurcharges));
+      formData.append("wagesRecord",         amt(data.wagesRecord));
       formData.append("grandTotalClaim",     String(grandTotal));
+      formData.append("assignedTo",          data.assignedTo ?? "");
       data.selectedTypes.forEach((t) => formData.append("selectedTypes", t));
       files.forEach((f) => formData.append("files", f));
       await createCase(formData);
@@ -236,6 +263,14 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
             <UploadFiles files={files} setFiles={setFiles} />
           )}
 
+          {activeTab === 3 && (
+            <Assignment
+              value={assignedTo}
+              onChange={(id) => setValue("assignedTo", id, { shouldValidate: true })}
+              currentUserId={currentUserId}
+            />
+          )}
+
           {error && (
             <div className="p-4 rounded-md bg-destructive/10 border border-destructive/30 text-sm text-destructive font-medium">
               {error}
@@ -275,9 +310,9 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
               <button
                 type="button"
                 onClick={handleSubmit(onSubmit)}
-                disabled={!tab2Valid || isSubmitting}
+                disabled={!tab2Valid || !tab4Valid || isSubmitting}
                 className={`px-8 py-2.5 rounded-md font-semibold text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors ${
-                  tab2Valid && !isSubmitting
+                  tab2Valid && tab4Valid && !isSubmitting
                     ? "bg-primary text-primary-foreground hover:bg-blue-600 active:bg-blue-700"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                 }`}

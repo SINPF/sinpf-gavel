@@ -55,7 +55,7 @@ export default function CaseTypes({
             const toggle = () => {
               if (isActive) {
                 field.onChange(field.value.filter((t) => t !== value));
-                setValue(formField, 0);
+                setValue(formField, undefined as unknown as number);
               } else {
                 field.onChange([...field.value, value]);
               }
@@ -108,10 +108,19 @@ export default function CaseTypes({
                         <label className={labelCls}>Amount (SBD)</label>
                         <input
                           {...register(formField, { valueAsNumber: true })}
-                          type="number"
-                          min="0"
-                          step="0.01"
+                          type="text"
+                          inputMode="decimal"
                           placeholder="0.00"
+                          onKeyDown={(e) => {
+                            const controlKeys = ["Backspace", "Delete", "Tab", "Escape", "Enter",
+                              "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+                            if (controlKeys.includes(e.key) || e.ctrlKey || e.metaKey) return;
+                            if (!/^[0-9.]$/.test(e.key)) e.preventDefault();
+                          }}
+                          onPaste={(e) => {
+                            const text = e.clipboardData.getData("text");
+                            if (!/^[0-9]*\.?[0-9]*$/.test(text)) e.preventDefault();
+                          }}
                           className={inputCls}
                         />
                       </>
