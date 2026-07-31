@@ -55,7 +55,7 @@ const labels: Record<BadgeStatus, string> = {
   registered:    "Referral Registered",
   filed:         "Filed",
   active:        "Active",
-  assessment:    "Assessment",
+  assessment:    "Under Assessment",
   pending:       "Pending",
   demand_issued: "Demand issued",
   negotiation:   "Negotiation",

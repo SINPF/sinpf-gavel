@@ -11,7 +11,7 @@ const PAGE_SIZE = 25;
 const STATUS_OPTIONS: { value: string; label: string; dot: string }[] = [
   { value: "",              label: "All statuses",  dot: "bg-muted-foreground/40" },
   { value: "registered",    label: "Referral Registered", dot: "bg-primary" },
-  { value: "assessment",    label: "Assessment",    dot: "bg-primary" },
+  { value: "assessment",    label: "Under Assessment", dot: "bg-primary" },
   { value: "demand_issued", label: "Demand issued", dot: "bg-highlight" },
   { value: "negotiation",   label: "Negotiation",   dot: "bg-highlight" },
   { value: "prosecution",   label: "Prosecution",   dot: "bg-destructive" },
