@@ -41,7 +41,7 @@ CMD ["node", "server.js"]
 FROM base AS seed
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json bun.lock tsconfig.json ./
+COPY package.json bun.lock tsconfig.json drizzle.config.ts ./
 COPY scripts ./scripts
 COPY db ./db
 COPY lib ./lib

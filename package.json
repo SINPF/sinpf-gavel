@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:push": "npx drizzle-kit push",
+    "db:migrate": "npx drizzle-kit migrate",
     "seed:root": "bun run scripts/seed-root-user.ts",
     "seed:users": "bun run scripts/seed-users.ts",
     "docker:dev:up": "docker compose -f compose.dev.yml up -d",
@@ -16,6 +17,7 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:build": "docker compose up -d --build",
+    "docker:migrate": "docker compose --profile migrate run --rm migrate",
     "docker:seed": "docker compose --profile seed run --rm seed",
     "docker:seed-users": "docker compose --profile seed run --rm seed-users"
   },
