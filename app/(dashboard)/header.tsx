@@ -35,10 +35,16 @@ export default function Header() {
 
   const name  = session?.user.name  ?? "";
   const email = session?.user.email ?? "";
+  const image = session?.user.image ?? "";
   const firstName = name.split(/\s+/)[0] || email.split("@")[0];
-  const initials = name
-    ? name.split(/\s+/).filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase()
-    : email.slice(0, 2).toUpperCase();
+  const initials = (() => {
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return email.slice(0, 2).toUpperCase();
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  })();
+  const [imgFailed, setImgFailed] = useState(false);
+  const showImage = Boolean(image) && !imgFailed;
 
   return (
     <header className="bg-background/95 border-b border-border px-8 py-3 flex items-center justify-end gap-4 sticky top-0 z-40 backdrop-blur-md">
@@ -54,12 +60,22 @@ export default function Header() {
           aria-label="Open user menu"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
-          className="w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center
+          className="w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden
             hover:border-primary/40
             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
             transition-colors"
         >
-          <span className="text-secondary-foreground text-xs font-semibold">{initials}</span>
+          {showImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={image}
+              alt={name || email}
+              onError={() => setImgFailed(true)}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-secondary-foreground text-xs font-semibold">{initials}</span>
+          )}
         </button>
 
         {menuOpen && (
