@@ -1,12 +1,13 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
-import { Plus, Search, Pencil, LayoutGrid, List } from "lucide-react";
+import { Plus, Search, Pencil, LayoutGrid, List, Upload } from "lucide-react";
 import { IconPhone, IconMail, IconMapPin } from "@tabler/icons-react";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import EmployerEditForm, { type EmployerEditRow } from "./employer-edit-form";
+import EmployerImportForm from "./employer-import-form";
 
 type EmployerRow = EmployerEditRow & { createdAt: Date };
 type EmployerTableRow = EmployerRow & Record<string, unknown>;
@@ -140,6 +141,7 @@ export default function EmployersClient({ employers }: { employers: EmployerRow[
   const [query, setQuery]         = useState("");
   const [view,  setView]          = useState<View>("table");
   const [editing, setEditing]     = useState<EmployerRow | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const filtered = employers.filter(
     (e) =>
@@ -159,13 +161,23 @@ export default function EmployersClient({ employers }: { employers: EmployerRow[
             Registered organisations and their case history.
           </p>
         </div>
-        <Link
-          href="/employers/register"
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
-        >
-          <Plus className="w-4 h-4" strokeWidth={2} />
-          Register employer
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setImporting(true)}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-md border border-border bg-background text-foreground text-sm font-medium hover:bg-muted hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+          >
+            <Upload className="w-4 h-4" strokeWidth={2} />
+            Import
+          </button>
+          <Link
+            href="/employers/register"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+          >
+            <Plus className="w-4 h-4" strokeWidth={2} />
+            Register employer
+          </Link>
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -228,6 +240,12 @@ export default function EmployersClient({ employers }: { employers: EmployerRow[
       {editing && (
         <Modal onClose={() => setEditing(null)}>
           <EmployerEditForm emp={editing} onClose={() => setEditing(null)} />
+        </Modal>
+      )}
+
+      {importing && (
+        <Modal onClose={() => setImporting(false)}>
+          <EmployerImportForm onClose={() => setImporting(false)} />
         </Modal>
       )}
     </div>
