@@ -156,7 +156,7 @@ export default function LoginPage() {
 
           <div className="max-w-sm mx-auto w-full space-y-5">
             <p className="text-muted-foreground text-sm mb-6 pb-4 border-b">
-              Welcome back. Sign in to Gavel with your SINPF domain account.
+              Welcome back. Sign in to Gavel.
             </p>
 
             {error && (
@@ -169,13 +169,13 @@ export default function LoginPage() {
               type="button"
               onClick={handleMicrosoftSignIn}
               disabled={isSsoLoading}
-              className="w-full h-11 flex items-center justify-center gap-2.5 rounded-md border border-input bg-background text-foreground text-sm font-medium
-                hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+              className="w-full h-11 flex items-center justify-center gap-2.5 rounded-md bg-primary text-primary-foreground text-sm font-medium
+                hover:bg-blue-600 active:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
                 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {isSsoLoading ? (
                 <>
-                  <span className="w-4 h-4 rounded-full border-2 border-foreground/30 border-t-foreground animate-spin" />
+                  <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                   Redirecting…
                 </>
               ) : (
@@ -187,7 +187,7 @@ export default function LoginPage() {
                     <rect x="1" y="11"  width="9" height="9" fill="#00a4ef" />
                     <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
                   </svg>
-                  Sign in with domain
+                  Continue with Microsoft
                 </>
               )}
             </button>
