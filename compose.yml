@@ -69,7 +69,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: seed
+      target: migrate
     profiles: ["migrate"]
     command: ["bun", "run", "db:migrate"]
     environment:
@@ -80,37 +80,34 @@ services:
     networks:
       - internal
 
-  # ── Seed root admin (on-demand, `--profile seed`) ────────────────────────────
-  seed:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: seed
-    profiles: ["seed"]
+  # ── Wipe users + cases (on-demand, `--profile wipe`) ────────────────────────
+  # Truncates auth + case data. Preserves employers.
+  # Usage: docker compose --profile wipe run --rm wipe
+  wipe:
+    image: postgres:17-alpine
+    profiles: ["wipe"]
     environment:
-      DATABASE_URL:         postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-      SUPER_ADMIN_EMAIL:    ${SUPER_ADMIN_EMAIL}
-      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD}
-      BETTER_AUTH_SECRET:   ${BETTER_AUTH_SECRET}
-      BETTER_AUTH_URL:      ${BETTER_AUTH_URL}
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - internal
-
-  # ── Seed users from scripts/users.txt (on-demand, `--profile seed`) ──────────
-  seed-users:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: seed
-    profiles: ["seed"]
-    command: ["bun", "run", "seed:users"]
-    environment:
-      DATABASE_URL:        postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-      BETTER_AUTH_SECRET:  ${BETTER_AUTH_SECRET}
-      BETTER_AUTH_URL:     ${BETTER_AUTH_URL}
+      PGHOST:     db
+      PGUSER:     ${DB_USER}
+      PGPASSWORD: ${DB_PASSWORD}
+      PGDATABASE: ${DB_NAME}
+    entrypoint: ["psql", "-v", "ON_ERROR_STOP=1"]
+    command:
+      - "-c"
+      - |
+        TRUNCATE TABLE
+          case_payments,
+          case_closure,
+          case_proceedings,
+          case_activities,
+          case_attachments,
+          case_referral_types,
+          case_referrals,
+          session,
+          account,
+          verification,
+          "user"
+        RESTART IDENTITY CASCADE;
     depends_on:
       db:
         condition: service_healthy

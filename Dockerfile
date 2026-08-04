@@ -37,12 +37,10 @@ ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]
 
-# ── Seed / admin scripts (compose profile: seed) ─────────────────────────────
-FROM base AS seed
+# ── DB migrations (compose profile: migrate) ─────────────────────────────────
+FROM base AS migrate
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json bun.lock tsconfig.json drizzle.config.ts ./
-COPY scripts ./scripts
 COPY db ./db
-COPY lib ./lib
-CMD ["bun", "run", "seed:root"]
+CMD ["bun", "run", "db:migrate"]

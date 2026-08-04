@@ -12,7 +12,7 @@ Legal Case Management & Registry System for the Solomon Islands National Provide
 | Language | TypeScript |
 | Runtime | Bun |
 | Database | PostgreSQL via Drizzle ORM |
-| Auth | Better Auth (email OTP + Microsoft SSO) |
+| Auth | Better Auth (Microsoft SSO) |
 | File Storage | MinIO (local) / Azure Blob Storage (production) |
 | Styling | Tailwind CSS v4 |
 | Forms | React Hook Form + Zod |
@@ -25,7 +25,6 @@ Legal Case Management & Registry System for the Solomon Islands National Provide
 ## Features
 
 ### Authentication
-- Email + OTP login (no passwords)
 - Microsoft SSO via Azure Entra ID (restricted to `@sinpf.org.sb` tenant)
 - Session-based auth with Better Auth
 - Route protection — all dashboard routes redirect to login if unauthenticated
@@ -134,7 +133,6 @@ bun run docker:dev:up
 Create `.env` with the following values:
 
 ```env
-SUPER_ADMIN_EMAIL=you@sinpf.org.sb
 BETTER_AUTH_SECRET=<random string>
 BETTER_AUTH_URL=http://localhost:3000
 
@@ -150,7 +148,6 @@ MINIO_SECRET_KEY=minioadmin123
 MINIO_BUCKET=lcms-attachments
 MINIO_USE_SSL=false
 
-# Optional — Microsoft SSO (leave blank to disable)
 MICROSOFT_CLIENT_ID=
 MICROSOFT_CLIENT_SECRET=
 MICROSOFT_TENANT_ID=
@@ -179,8 +176,6 @@ Staging runs the fully containerised app (Next.js + Postgres + MinIO + Caddy) on
 Create `.env` (also used by `next dev`):
 
 ```env
-SUPER_ADMIN_EMAIL=<admin email>
-SUPER_ADMIN_PASSWORD=<admin password>
 BETTER_AUTH_SECRET=<random string>
 BETTER_AUTH_URL=https://<your-hostname>
 
@@ -256,4 +251,4 @@ Email is abstracted in `lib/mailer.ts`. OTP codes are logged to the console in d
 | `bun run docker:up` | Start staging stack |
 | `bun run docker:down` | Stop staging stack |
 | `bun run docker:build` | Rebuild app image and start staging stack |
-| `bun run docker:seed` | Seed the root admin user (reads `SUPER_ADMIN_*` from `.env`) |
+| `bun run docker:migrate` | Run Drizzle migrations against the staging database |

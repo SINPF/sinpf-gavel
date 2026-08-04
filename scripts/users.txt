@@ -1,4 +1,0 @@
-# name, email, password
-Don Fakarii, dfakarii@sinpf.org.sb, gavel@2026
-Lavinia Fineanganofo, lfineanganofo@sinpf.org.sb, gavel@2026
-George Junior Toaki, gjtoaki@sinpf.org.sb, gavel@2026
