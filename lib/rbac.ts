@@ -34,7 +34,14 @@ export type Operation =
   | "view_reports"
   | "view_audit"
   | "bulk_import"
-  | "manage_reference_data";
+  | "manage_reference_data"
+  // Module 2 — Contracts
+  | "view_contract"
+  | "create_contract"
+  | "update_contract"
+  | "terminate_contract"
+  | "upload_contract_document"
+  | "withdraw_contract_document";
 
 // Cell values: true = allowed, "own" = allowed only for own cases (BR-M1-06),
 // "request" = may only request via pending_decision. Undefined = refused.
@@ -100,6 +107,29 @@ const MATRIX: Record<Operation, Partial<Record<Role, Cell>>> = {
   },
   manage_reference_data: {
     system_admin: true,
+  },
+  // Module 2 — Contracts. §7 is silent on RBAC; mirroring §3's shape:
+  // Registry Clerk can view + create + upload. Legal Officers can update.
+  // Only MLS may terminate a contract (a significant legal decision) or
+  // withdraw a stored document.
+  view_contract: {
+    registry_clerk: true, legal_officer: true, mls: true,
+    external_auditor: true, system_admin: true,
+  },
+  create_contract: {
+    registry_clerk: true, legal_officer: true, mls: true,
+  },
+  update_contract: {
+    legal_officer: true, mls: true,
+  },
+  terminate_contract: {
+    mls: true,
+  },
+  upload_contract_document: {
+    registry_clerk: true, legal_officer: true, mls: true,
+  },
+  withdraw_contract_document: {
+    mls: true,
   },
 };
 

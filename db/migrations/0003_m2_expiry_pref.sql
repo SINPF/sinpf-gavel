@@ -1,0 +1,1 @@
+ALTER TABLE "user_notification_pref" ADD COLUMN "email_contract_expiry" boolean DEFAULT true NOT NULL;

@@ -15,6 +15,20 @@
       "when": 1786527214810,
       "tag": "0001_m1_legacy_ref",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786530450372,
+      "tag": "0002_m2_contracts",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786530778933,
+      "tag": "0003_m2_expiry_pref",
+      "breakpoints": true
     }
   ]
 }

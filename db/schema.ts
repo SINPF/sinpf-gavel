@@ -128,6 +128,7 @@ export const userNotificationPref = pgTable("user_notification_pref", {
   emailInactivity: boolean("email_inactivity").notNull().default(true),
   emailUnassigned: boolean("email_unassigned").notNull().default(true),
   emailMissedInstalment: boolean("email_missed_instalment").notNull().default(true),
+  emailContractExpiry: boolean("email_contract_expiry").notNull().default(true),
   digestMode: notificationDigestEnum("digest_mode").notNull().default("individual"),
 });
 
@@ -443,7 +444,102 @@ export const caseAttachments = pgTable(
   (t) => [index("ix_attachment_referral").on(t.caseReferralId)],
 );
 
+// ─── Contracts Register (Module 2) ───────────────────────────────────────────
+// Spec §7. Status is DERIVED (BR-M2-01) — never stored. Currency defaults to
+// SBD; foreign-currency contracts are permitted per Q-13.
+
+export const contractTypeEnum = pgEnum("contract_type", [
+  "lease",
+  "service_agreement",
+  "mou",
+  "supply",
+  "consultancy",
+  "other",
+]);
+
+export const currencyEnum = pgEnum("currency", ["sbd", "usd", "aud", "nzd", "eur", "other"]);
+
+export const contractDocumentTypeEnum = pgEnum("contract_document_type", [
+  "signed_contract",
+  "draft_contract",
+  "variation_addendum",
+  "termination_notice",
+  "other",
+]);
+
+export const contractRefSequence = pgTable("contract_ref_sequence", {
+  year: integer("year").primaryKey(),
+  nextNumber: integer("next_number").notNull().default(1),
+});
+
+export const contracts = pgTable(
+  "contracts",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    contractRef: text("contract_ref").notNull().unique(),
+
+    title: text("title").notNull(),
+    // Parties as a Postgres array — separately searchable per Q-12 (multiple
+    // parties permitted; the list is not a single free-text line).
+    parties: text("parties").array().notNull(),
+    contractType: contractTypeEnum("contract_type").notNull(),
+
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date").notNull(),
+
+    contractValue: numeric("contract_value", { precision: 15, scale: 2 }).notNull().default("0"),
+    currency: currencyEnum("currency").notNull().default("sbd"),
+
+    // Status is derived on read (BR-M2-01). The two termination fields drive it.
+    terminatedDate: date("terminated_date"),
+    terminationReason: text("termination_reason"),
+    terminatedBy: text("terminated_by").references(() => user.id, { onDelete: "set null" }),
+
+    owningDepartment: text("owning_department"),
+    // Nullable FK to a future Module 5 title. No constraint until Module 5 arrives.
+    linkedTitleId: text("linked_title_id"),
+
+    version: integer("version").notNull().default(1),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("ix_contract_title").on(t.title),
+    index("ix_contract_type").on(t.contractType),
+    index("ix_contract_end_date").on(t.endDate),
+    index("ix_contract_parties").using("gin", t.parties),
+    index("ix_contract_linked_title").on(t.linkedTitleId),
+  ],
+);
+
+export const contractAttachments = pgTable(
+  "contract_attachments",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    contractId: text("contract_id")
+      .notNull()
+      .references(() => contracts.id, { onDelete: "cascade" }),
+    fileName: text("file_name").notNull(),
+    fileType: text("file_type").notNull(),
+    fileUrl: text("file_url").notNull(),
+    documentType: contractDocumentTypeEnum("document_type").notNull().default("other"),
+    isWithdrawn: boolean("is_withdrawn").notNull().default(false),
+    withdrawnBy: text("withdrawn_by").references(() => user.id, { onDelete: "set null" }),
+    withdrawnAt: timestamp("withdrawn_at"),
+    withdrawalReason: text("withdrawal_reason"),
+    uploadedBy: text("uploaded_by").references(() => user.id, { onDelete: "set null" }),
+    uploadedAt: timestamp("uploaded_at").notNull().default(sql`now()`),
+  },
+  (t) => [index("ix_contract_attachment_contract").on(t.contractId)],
+);
+
 // ─── Alerts (§13) ────────────────────────────────────────────────────────────
+// Alerts are lightly polymorphic: exactly one of caseReferralId / contractId
+// is set, discriminated by alertType.
 
 export const alertTypeEnum = pgEnum("alert_type", [
   "new_referral",
@@ -452,17 +548,19 @@ export const alertTypeEnum = pgEnum("alert_type", [
   "inactivity",
   "unassigned",
   "missed_instalment",
+  "contract_expiry",
 ]);
 
 export const alerts = pgTable(
   "alerts",
   {
     id: text("id").primaryKey().default(sql`gen_random_uuid()`),
-    caseReferralId: text("case_referral_id")
-      .notNull()
-      .references(() => caseReferrals.id, { onDelete: "cascade" }),
+    caseReferralId: text("case_referral_id").references(() => caseReferrals.id, {
+      onDelete: "cascade",
+    }),
+    contractId: text("contract_id").references(() => contracts.id, { onDelete: "cascade" }),
     alertType: alertTypeEnum("alert_type").notNull(),
-    // idempotency key: same run for the same case+context should not duplicate
+    // idempotency key: same run for the same target+context does not duplicate
     dedupeKey: text("dedupe_key").notNull(),
     recipientId: text("recipient_id").references(() => user.id, { onDelete: "cascade" }),
     payload: text("payload"),
@@ -471,7 +569,12 @@ export const alerts = pgTable(
     emailedAt: timestamp("emailed_at"),
   },
   (t) => [
-    uniqueIndex("uq_alert_dedupe").on(t.caseReferralId, t.recipientId, t.dedupeKey),
+    uniqueIndex("uq_alert_dedupe").on(
+      t.caseReferralId,
+      t.contractId,
+      t.recipientId,
+      t.dedupeKey,
+    ),
     index("ix_alert_recipient").on(t.recipientId),
   ],
 );
@@ -522,6 +625,19 @@ export const accountRelations = relations(account, ({ one }) => ({
 
 export const employerRelations = relations(employers, ({ many }) => ({
   cases: many(caseReferrals),
+}));
+
+export const contractRelations = relations(contracts, ({ many, one }) => ({
+  attachments: many(contractAttachments),
+  creator: one(user, { fields: [contracts.createdBy], references: [user.id] }),
+}));
+
+export const contractAttachmentRelations = relations(contractAttachments, ({ one }) => ({
+  contract: one(contracts, {
+    fields: [contractAttachments.contractId],
+    references: [contracts.id],
+  }),
+  uploader: one(user, { fields: [contractAttachments.uploadedBy], references: [user.id] }),
 }));
 
 export const caseReferralRelations = relations(caseReferrals, ({ one, many }) => ({
