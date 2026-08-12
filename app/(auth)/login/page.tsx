@@ -1,33 +1,12 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { ExternalLink, LayoutGrid } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 export default function LoginPage() {
-  const [showLinksMenu, setShowLinksMenu] = useState(false);
   const [error, setError] = useState("");
   const [isSsoLoading, setIsSsoLoading] = useState(false);
-  const linksMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showLinksMenu) return;
-    const onDown = (e: MouseEvent) => {
-      if (linksMenuRef.current && !linksMenuRef.current.contains(e.target as Node)) {
-        setShowLinksMenu(false);
-      }
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setShowLinksMenu(false);
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [showLinksMenu]);
 
   const handleMicrosoftSignIn = async () => {
     setError("");
@@ -104,52 +83,6 @@ export default function LoginPage() {
 
         {/* Right — form panel */}
         <div className="relative flex flex-col justify-center px-10 py-12 bg-linear-to-br from-background via-blue-50 to-blue-100">
-          {/* External links menu */}
-          <div ref={linksMenuRef} className="absolute top-6 right-6">
-            <button
-              type="button"
-              onClick={() => setShowLinksMenu((v) => !v)}
-              aria-label="Open external links"
-              aria-haspopup="menu"
-              aria-expanded={showLinksMenu}
-              className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-highlight focus-visible:ring-offset-2
-                transition-colors"
-            >
-              <LayoutGrid className="w-5 h-5" aria-hidden="true" />
-            </button>
-
-            {showLinksMenu && (
-              <div
-                role="menu"
-                className="absolute right-0 top-full mt-2 min-w-40 rounded-md border bg-popover text-popover-foreground shadow-lg overflow-hidden z-10"
-              >
-                <a
-                  href="https://sinpf.org.sb"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  role="menuitem"
-                  onClick={() => setShowLinksMenu(false)}
-                  className="flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  Website
-                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
-                </a>
-                <a
-                  href="https://sinpfportal.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  role="menuitem"
-                  onClick={() => setShowLinksMenu(false)}
-                  className="flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  Portal
-                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
-                </a>
-              </div>
-            )}
-          </div>
-
           <div className="max-w-sm mx-auto w-full space-y-5">
             <p className="text-muted-foreground text-sm mb-6 pb-4 border-b">
               Welcome back. Sign in to Gavel.
