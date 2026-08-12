@@ -82,9 +82,8 @@ export default function LoginPage() {
             <h1 className="font-serif text-white text-5xl font-bold tracking-tight leading-none">
               Gavel
             </h1>
-            <span className="mt-6 h-px w-12 bg-highlight" aria-hidden="true" />
-            <p className="font-serif text-white/80 text-base mt-5 max-w-xs leading-relaxed">
-              SINPF&apos;s legal case management system.
+            <p className="font-serif text-white/80 text-base mt-6 max-w-xs leading-relaxed">
+              SINPF&apos;s legal case management and registry system.
             </p>
           </div>
 
