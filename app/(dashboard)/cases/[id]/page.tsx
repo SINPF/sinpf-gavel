@@ -33,6 +33,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     .select({
       id: caseReferrals.id,
       referralRef: caseReferrals.referralRef,
+      legacyRef: caseReferrals.legacyRef,
       employerId: caseReferrals.employerId,
       employerName: employers.name,
       employerCode: employers.code,

@@ -5,6 +5,7 @@ import {
   IconBuildings,
   IconReportAnalytics,
   IconBell,
+  IconFileImport,
 } from "@tabler/icons-react";
 import { Sidebar } from "@/components/ui/Sidebar";
 
@@ -24,6 +25,11 @@ const NAV_SECTIONS = [
         label: "Notifications",
         href: "/settings/notifications",
         icon: <IconBell className="w-4 h-4" />,
+      },
+      {
+        label: "Import referrals",
+        href: "/import",
+        icon: <IconFileImport className="w-4 h-4" />,
       },
     ],
   },

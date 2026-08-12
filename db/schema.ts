@@ -244,6 +244,8 @@ export const caseReferrals = pgTable(
   {
     id: text("id").primaryKey().default(sql`gen_random_uuid()`),
     referralRef: text("referral_ref").notNull().unique(),
+    // FR-M1-021.2 — pre-system legacy reference retained on migrated rows.
+    legacyRef: text("legacy_ref").unique(),
 
     employerId: text("employer_id")
       .notNull()
