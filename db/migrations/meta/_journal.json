@@ -36,6 +36,13 @@
       "when": 1786544286177,
       "tag": "0004_m3_insurance",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786546320731,
+      "tag": "0005_m4_legal_opinions",
+      "breakpoints": true
     }
   ]
 }

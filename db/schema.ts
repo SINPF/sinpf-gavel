@@ -698,6 +698,104 @@ export const auditLog = pgTable(
   (t) => [index("ix_audit_entity").on(t.entity, t.entityId)],
 );
 
+// ─── Legal Opinions Registry (Module 4) ──────────────────────────────────────
+// Spec §9. State is STORED (draft / finalised) because BR-M4-01 makes
+// finalisation an event with an author, a timestamp, and an irreversible
+// consequence. "Superseded" is not stored — it's derived from the existence
+// of a finalised successor pointing at this row via supersedes_opinion_id.
+
+export const legalOpinionStateEnum = pgEnum("legal_opinion_state", [
+  "draft",
+  "finalised",
+]);
+
+export const legalOpinionDocumentTypeEnum = pgEnum("legal_opinion_document_type", [
+  "signed_opinion",
+  "draft_opinion",
+  "supporting_material",
+  "other",
+]);
+
+export const legalOpinionRefSequence = pgTable("legal_opinion_ref_sequence", {
+  year: integer("year").primaryKey(),
+  nextNumber: integer("next_number").notNull().default(1),
+});
+
+export const legalOpinions = pgTable(
+  "legal_opinions",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    opinionRef: text("opinion_ref").notNull().unique(),
+
+    subjectMatter: text("subject_matter").notNull(),
+    requestingDepartment: text("requesting_department").notNull(),
+
+    dateRequested: date("date_requested"),
+    // Required — the date the opinion was issued. Must not be in the future
+    // (AC-M4-001.3); enforced at validation, not DB level.
+    opinionDate: date("opinion_date").notNull(),
+
+    // Defaults to the creating user at insert time (AC-M4-001.2). Nullable
+    // FK target is the user table; column itself is NOT NULL.
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+
+    summary: text("summary"),
+    // Keywords for CC-SRCH-01 keyword search. GIN-indexed below.
+    keywords: text("keywords").array().notNull().default(sql`ARRAY[]::text[]`),
+
+    state: legalOpinionStateEnum("state").notNull().default("draft"),
+
+    // Self-reference for the correction mechanism (AC-M4-004.2). Nullable —
+    // most opinions do not supersede anything. onDelete=set null keeps the
+    // successor row alive even if the original is soft-deleted; is_deleted
+    // is the soft-delete signal we actually rely on.
+    supersedesOpinionId: text("supersedes_opinion_id"),
+
+    finalisedAt: timestamp("finalised_at"),
+    finalisedBy: text("finalised_by").references(() => user.id, { onDelete: "set null" }),
+
+    version: integer("version").notNull().default(1),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("ix_legal_opinion_subject").on(t.subjectMatter),
+    index("ix_legal_opinion_dept").on(t.requestingDepartment),
+    index("ix_legal_opinion_author").on(t.authorId),
+    index("ix_legal_opinion_state").on(t.state),
+    index("ix_legal_opinion_opinion_date").on(t.opinionDate),
+    index("ix_legal_opinion_supersedes").on(t.supersedesOpinionId),
+    index("ix_legal_opinion_keywords").using("gin", t.keywords),
+  ],
+);
+
+export const legalOpinionAttachments = pgTable(
+  "legal_opinion_attachments",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    legalOpinionId: text("legal_opinion_id")
+      .notNull()
+      .references(() => legalOpinions.id, { onDelete: "cascade" }),
+    fileName: text("file_name").notNull(),
+    fileType: text("file_type").notNull(),
+    fileUrl: text("file_url").notNull(),
+    documentType: legalOpinionDocumentTypeEnum("document_type").notNull().default("other"),
+    isWithdrawn: boolean("is_withdrawn").notNull().default(false),
+    withdrawnBy: text("withdrawn_by").references(() => user.id, { onDelete: "set null" }),
+    withdrawnAt: timestamp("withdrawn_at"),
+    withdrawalReason: text("withdrawal_reason"),
+    uploadedBy: text("uploaded_by").references(() => user.id, { onDelete: "set null" }),
+    uploadedAt: timestamp("uploaded_at").notNull().default(sql`now()`),
+  },
+  (t) => [index("ix_legal_opinion_attachment_opinion").on(t.legalOpinionId)],
+);
+
 // ─── Relations ───────────────────────────────────────────────────────────────
 
 export const userRelations = relations(user, ({ many, one }) => ({
@@ -805,3 +903,27 @@ export const caseAttachmentRelations = relations(caseAttachments, ({ one }) => (
   }),
   uploader: one(user, { fields: [caseAttachments.uploadedBy], references: [user.id] }),
 }));
+
+export const legalOpinionRelations = relations(legalOpinions, ({ many, one }) => ({
+  attachments: many(legalOpinionAttachments),
+  author: one(user, { fields: [legalOpinions.authorId], references: [user.id] }),
+  supersedes: one(legalOpinions, {
+    fields: [legalOpinions.supersedesOpinionId],
+    references: [legalOpinions.id],
+    relationName: "supersede_chain",
+  }),
+}));
+
+export const legalOpinionAttachmentRelations = relations(
+  legalOpinionAttachments,
+  ({ one }) => ({
+    opinion: one(legalOpinions, {
+      fields: [legalOpinionAttachments.legalOpinionId],
+      references: [legalOpinions.id],
+    }),
+    uploader: one(user, {
+      fields: [legalOpinionAttachments.uploadedBy],
+      references: [user.id],
+    }),
+  }),
+);

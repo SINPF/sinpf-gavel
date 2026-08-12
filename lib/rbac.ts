@@ -47,7 +47,14 @@ export type Operation =
   | "create_insurance_policy"
   | "update_insurance_policy"
   | "upload_insurance_document"
-  | "withdraw_insurance_document";
+  | "withdraw_insurance_document"
+  // Module 4 — Legal Opinions Registry
+  | "view_legal_opinion"
+  | "create_legal_opinion"
+  | "update_legal_opinion"
+  | "finalise_legal_opinion"
+  | "upload_legal_opinion_document"
+  | "withdraw_legal_opinion_document";
 
 // Cell values: true = allowed, "own" = allowed only for own cases (BR-M1-06),
 // "request" = may only request via pending_decision. Undefined = refused.
@@ -153,6 +160,29 @@ const MATRIX: Record<Operation, Partial<Record<Role, Cell>>> = {
     registry_clerk: true, legal_officer: true, mls: true,
   },
   withdraw_insurance_document: {
+    mls: true,
+  },
+  // Module 4 — Legal Opinions. §9 is silent on RBAC; mirroring §3's shape.
+  // Legal officers own the opinions they author (BR-M4-01 makes finalisation
+  // an irreversible authorial act), so update / finalise / upload gate on
+  // author ownership for the officer role.
+  view_legal_opinion: {
+    registry_clerk: true, legal_officer: true, mls: true,
+    external_auditor: true, system_admin: true,
+  },
+  create_legal_opinion: {
+    registry_clerk: true, legal_officer: true, mls: true,
+  },
+  update_legal_opinion: {
+    legal_officer: "own", mls: true,
+  },
+  finalise_legal_opinion: {
+    legal_officer: "own", mls: true,
+  },
+  upload_legal_opinion_document: {
+    legal_officer: "own", mls: true,
+  },
+  withdraw_legal_opinion_document: {
     mls: true,
   },
 };
