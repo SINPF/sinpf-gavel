@@ -25,6 +25,7 @@ const NAV_SECTIONS = [
       { label: "Cases",             href: "/cases",     icon: <IconBriefcaseFilled className="w-4 h-4" /> },
       { label: "Employers",         href: "/employers", icon: <IconBuildings className="w-4 h-4" strokeWidth={2} /> },
       { label: "Import referrals",  href: "/import",    icon: <IconFileImport className="w-4 h-4" /> },
+      { label: "Reports",           href: "/reports",   icon: <IconReportAnalytics className="w-4 h-4" /> },
     ],
   },
   {
@@ -34,11 +35,6 @@ const NAV_SECTIONS = [
       { label: "Insurance",      href: "/insurance",      icon: <IconShieldCheckFilled className="w-4 h-4" /> },
       { label: "Legal opinions", href: "/legal-opinions", icon: <IconGavel className="w-4 h-4" /> },
       { label: "Titles",         href: "/titles",         icon: <IconCertificate className="w-4 h-4" /> },
-    ],
-  },
-  {
-    items: [
-      { label: "Reports", href: "/reports", icon: <IconReportAnalytics className="w-4 h-4" /> },
     ],
   },
   {
