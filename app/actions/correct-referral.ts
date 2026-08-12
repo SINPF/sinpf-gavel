@@ -8,11 +8,10 @@ import {
   auditLog,
   casePayments,
 } from "@/db/schema";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { refreshIntakeFlag } from "@/lib/intake";
 import { totalClaimed } from "@/lib/case-money";
+import { assertCan } from "@/lib/rbac";
 import { correctReferralSchema } from "@/db/validator";
 import caseEvents from "@/lib/case-events";
 
@@ -26,14 +25,15 @@ const TERMINAL = new Set(["closed", "withdrawn", "not_filed"]);
 //  - reducing claim below paid warns (returned to caller to confirm)
 export async function correctReferral(input: unknown) {
   const parsed = correctReferralSchema.parse(input);
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user.id) throw new Error("Not authenticated");
 
   const [current] = await db
     .select()
     .from(caseReferrals)
     .where(eq(caseReferrals.id, parsed.id));
   if (!current) throw new Error("Referral not found");
+  const session = await assertCan("correct_referral", {
+    ownedByUserId: current.assignedOfficerId,
+  });
   if (TERMINAL.has(current.status)) {
     throw new Error("This case is closed. Reopen it to make changes.");
   }
@@ -125,7 +125,7 @@ export async function correctReferral(input: unknown) {
         .update(caseReferrals)
         .set({
           ...setValues,
-          updatedBy: session.user.id,
+          updatedBy: session.id,
           updatedAt: now,
           version: sql`${caseReferrals.version} + 1`,
         })
@@ -155,7 +155,7 @@ export async function correctReferral(input: unknown) {
         entity: "case_referrals",
         entityId: parsed.id,
         action: "correct",
-        actorId: session.user.id,
+        actorId: session.id,
         oldValue: JSON.stringify(oldValues),
         newValue: JSON.stringify(newValues),
         reason: parsed.reason,

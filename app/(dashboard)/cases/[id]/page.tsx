@@ -17,6 +17,9 @@ import type { ReferralDetail } from "@/db/types";
 import { getDownloadUrl } from "@/lib/storage";
 import { paidToDate as computePaidToDate } from "@/lib/case-money";
 import { alias } from "drizzle-orm/pg-core";
+import { currentUser, activeLegalOfficers, can, canRequest } from "@/lib/rbac";
+import { availableTransitions } from "@/lib/available-transitions";
+import type { Status } from "@/lib/status-machine";
 
 const performerUser = alias(user, "performer_user");
 const statusChangerUser = alias(user, "status_changer_user");
@@ -179,5 +182,31 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     outstanding,
   };
 
-  return <CaseDetailClient referral={referralDetail} />;
+  const [me, officers, transitions] = await Promise.all([
+    currentUser(),
+    activeLegalOfficers(),
+    availableTransitions(id, row.status as Status),
+  ]);
+  const ownedByMe = !!me && me.id === row.assignedOfficerId;
+  const permissions = {
+    correct: !!me && can(me.role, "correct_referral", { ownedByUserId: row.assignedOfficerId }),
+    assign: !!me && can(me.role, "assign_referral"),
+    changeStatus: !!me && can(me.role, "change_status", { ownedByUserId: row.assignedOfficerId }),
+    requestTerminal: !!me && canRequest(me.role, "request_terminal") && ownedByMe,
+    closeReferral: !!me && can(me.role, "close_referral"),
+    reopenReferral: !!me && can(me.role, "reopen_referral"),
+    recordAction: !!me && can(me.role, "record_action", { ownedByUserId: row.assignedOfficerId }),
+    setRiskFlag: !!me && can(me.role, "set_risk_flag", { ownedByUserId: row.assignedOfficerId }),
+    uploadDocument: !!me && can(me.role, "upload_document"),
+  };
+
+  return (
+    <CaseDetailClient
+      referral={referralDetail}
+      transitions={transitions}
+      officers={officers}
+      permissions={permissions}
+      currentUserId={me?.id ?? null}
+    />
+  );
 }

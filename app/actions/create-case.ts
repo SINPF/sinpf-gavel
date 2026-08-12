@@ -10,13 +10,12 @@ import {
   documentTypeEnum,
 } from "@/db/schema";
 import { uploadFile } from "@/lib/storage";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import caseEvents from "@/lib/case-events";
 import { nextReferralRef } from "@/lib/referral-ref";
 import { refreshIntakeFlag } from "@/lib/intake";
 import { totalClaimed } from "@/lib/case-money";
+import { assertCan } from "@/lib/rbac";
 import { CASE_TYPE_VALUES } from "@/db/validator";
 import path from "path";
 
@@ -37,8 +36,7 @@ function coerceDocType(v: string | null | undefined): DocType {
 }
 
 export async function createCase(formData: FormData) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user.id) throw new Error("Not authenticated");
+  const session = await assertCan("create_referral");
 
   const employerId = String(formData.get("employerId") ?? "");
   if (!employerId) throw new Error("Employer is required");
@@ -89,8 +87,8 @@ export async function createCase(formData: FormData) {
         status: "received",
         statusChangedAt: now,
         lastActivityAt: now,
-        createdBy: session.user.id,
-        updatedBy: session.user.id,
+        createdBy: session.id,
+        updatedBy: session.id,
       })
       .returning({ id: caseReferrals.id, referralRef: caseReferrals.referralRef });
 
@@ -103,14 +101,14 @@ export async function createCase(formData: FormData) {
       caseReferralId: inserted.id,
       fromStatus: null,
       toStatus: "received",
-      changedBy: session.user.id,
+      changedBy: session.id,
     });
 
     await tx.insert(auditLog).values({
       entity: "case_referrals",
       entityId: inserted.id,
       action: "create",
-      actorId: session.user.id,
+      actorId: session.id,
       newValue: JSON.stringify({
         referralRef: inserted.referralRef,
         employerId,
@@ -140,7 +138,7 @@ export async function createCase(formData: FormData) {
         fileType: ext === "pdf" ? "pdf" : ext === "csv" ? "csv" : "excel",
         fileUrl: objectKey,
         documentType: coerceDocType(fileDocTypes[i]),
-        uploadedBy: session.user.id,
+        uploadedBy: session.id,
       });
     }
   }

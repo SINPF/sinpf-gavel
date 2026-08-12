@@ -10,6 +10,8 @@ import { DateField } from "@/components/ui/DateField";
 import { AmountInput } from "@/components/ui/AmountInput";
 import type { ReferralDetail } from "@/db/types";
 import { correctReferral } from "@/app/actions/correct-referral";
+import { CaseActions, type OfficerOption, type Permissions } from "./case-actions";
+import type { AvailableTransition } from "@/lib/available-transitions";
 
 const TYPE_LABELS: Record<string, string> = {
   unpaid_contribution: "Contribution",
@@ -210,7 +212,18 @@ function CorrectPanel({
   );
 }
 
-export default function CaseDetailClient({ referral }: { referral: ReferralDetail }) {
+export default function CaseDetailClient({
+  referral,
+  transitions,
+  officers,
+  permissions,
+}: {
+  referral: ReferralDetail;
+  transitions: AvailableTransition[];
+  officers: OfficerOption[];
+  permissions: Permissions;
+  currentUserId: string | null;
+}) {
   const [correcting, setCorrecting] = useState(false);
   const isTerminal = ["closed", "withdrawn", "not_filed"].includes(referral.status);
 
@@ -252,7 +265,7 @@ export default function CaseDetailClient({ referral }: { referral: ReferralDetai
               Intake incomplete
             </span>
           )}
-          {!isTerminal && (
+          {!isTerminal && permissions.correct && (
             <button
               onClick={() => setCorrecting((c) => !c)}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-border text-sm font-semibold text-foreground hover:border-primary hover:text-primary transition-colors"
@@ -267,6 +280,13 @@ export default function CaseDetailClient({ referral }: { referral: ReferralDetai
       {correcting && (
         <CorrectPanel referral={referral} onClose={() => setCorrecting(false)} />
       )}
+
+      <CaseActions
+        referral={referral}
+        transitions={transitions}
+        officers={officers}
+        permissions={permissions}
+      />
 
       {/* Money summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -3,10 +3,9 @@
 import { db } from "@/db";
 import { caseAttachments, caseReferrals, documentTypeEnum } from "@/db/schema";
 import { uploadFile } from "@/lib/storage";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { refreshIntakeFlag } from "@/lib/intake";
+import { assertCan } from "@/lib/rbac";
 import { eq } from "drizzle-orm";
 import path from "path";
 
@@ -17,8 +16,7 @@ function coerceDocType(v: string | null | undefined): DocType {
 }
 
 export async function uploadCaseDocument(formData: FormData) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user.id) throw new Error("Not authenticated");
+  const session = await assertCan("upload_document");
 
   const caseId = formData.get("caseId") as string;
   const docType = coerceDocType(formData.get("documentType") as string | null);
@@ -37,7 +35,7 @@ export async function uploadCaseDocument(formData: FormData) {
       fileType: ext === "pdf" ? "pdf" : ext === "csv" ? "csv" : "excel",
       fileUrl: objectKey,
       documentType: docType,
-      uploadedBy: session.user.id,
+      uploadedBy: session.id,
     });
   }
 
