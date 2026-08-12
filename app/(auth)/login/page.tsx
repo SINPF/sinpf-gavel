@@ -100,9 +100,6 @@ export default function LoginPage() {
             </a>
           </p>
 
-          <p className="absolute bottom-0 right-0 p-6 text-white/60 text-xs">
-            Honiara, Solomon Islands
-          </p>
         </div>
 
         {/* Right — form panel */}
