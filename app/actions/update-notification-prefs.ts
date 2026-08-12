@@ -15,6 +15,7 @@ export async function updateNotificationPrefs(input: {
   emailUnassigned?: boolean;
   emailMissedInstalment?: boolean;
   emailContractExpiry?: boolean;
+  emailInsuranceExpiry?: boolean;
   digestMode?: "individual" | "daily_digest";
 }) {
   const me = await requireUser();
@@ -25,6 +26,7 @@ export async function updateNotificationPrefs(input: {
     emailUnassigned: input.emailUnassigned ?? true,
     emailMissedInstalment: input.emailMissedInstalment ?? true,
     emailContractExpiry: input.emailContractExpiry ?? true,
+    emailInsuranceExpiry: input.emailInsuranceExpiry ?? true,
     digestMode: input.digestMode ?? "individual",
   } as const;
   await db

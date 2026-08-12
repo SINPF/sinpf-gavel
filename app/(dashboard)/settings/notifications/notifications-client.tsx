@@ -11,6 +11,7 @@ type Prefs = {
   emailUnassigned: boolean;
   emailMissedInstalment: boolean;
   emailContractExpiry: boolean;
+  emailInsuranceExpiry: boolean;
   digestMode: "individual" | "daily_digest";
 };
 
@@ -21,6 +22,7 @@ const ALERT_ROWS: { key: keyof Omit<Prefs, "digestMode">; label: string; descrip
   { key: "emailUnassigned", label: "Unassigned referral", description: "Received but unassigned for over 3 days (MLS only)." },
   { key: "emailMissedInstalment", label: "Missed settlement instalment", description: "Deed instalment due date passes without a matching payment." },
   { key: "emailContractExpiry", label: "Contract expiry approaching", description: "Contracts expiring in 90, 60, 30 days or on the day (MLS)." },
+  { key: "emailInsuranceExpiry", label: "Insurance policy expiry approaching", description: "Medical or property policies expiring in 60, 30 days or on the day (MLS)." },
 ];
 
 export default function NotificationPrefsClient({ initial }: { initial: Prefs }) {

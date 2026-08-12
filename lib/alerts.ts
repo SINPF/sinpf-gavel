@@ -8,6 +8,7 @@ import { db } from "@/db";
 import {
   caseReferrals,
   contracts,
+  insurancePolicies,
   settlementSchedule,
   alerts,
   alertJobRun,
@@ -40,6 +41,9 @@ const UNASSIGNED_DAYS = 3;
 // Contract expiry lead times per FR-M2-006 (spec §7). MLS & owning dept get
 // warnings well ahead of renewal windows.
 const CONTRACT_EXPIRY_LEADS = [90, 60, 30, 0];
+// Insurance policy expiry lead times per FR-M3-004 (spec §8). Default is
+// 60 and 30 days before, and on the expiry date.
+const INSURANCE_EXPIRY_LEADS = [60, 30, 0];
 
 function ymd(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -54,6 +58,7 @@ function daysBetween(a: string, b: string): number {
 async function insertAlert(row: {
   caseReferralId?: string | null;
   contractId?: string | null;
+  insurancePolicyId?: string | null;
   alertType: (typeof alerts.$inferInsert)["alertType"];
   dedupeKey: string;
   recipientId: string;
@@ -64,6 +69,7 @@ async function insertAlert(row: {
     .values({
       caseReferralId: row.caseReferralId ?? null,
       contractId: row.contractId ?? null,
+      insurancePolicyId: row.insurancePolicyId ?? null,
       alertType: row.alertType,
       dedupeKey: row.dedupeKey,
       recipientId: row.recipientId,
@@ -237,6 +243,42 @@ async function evaluateFor(today: Date): Promise<number> {
           dedupeKey: `expiry:${c.endDate}:d${delta}`,
           recipientId: rid,
           payload: JSON.stringify({ contractRef: c.contractRef, endDate: c.endDate, delta }),
+        })
+      )
+        raised++;
+    }
+  }
+
+  // ── Module 3: insurance policy expiry (FR-M3-004) ────────────────────────
+  const activePolicies = await db
+    .select({
+      id: insurancePolicies.id,
+      policyRef: insurancePolicies.policyRef,
+      insurerName: insurancePolicies.insurerName,
+      policyNumber: insurancePolicies.policyNumber,
+      coverageEnd: insurancePolicies.coverageEnd,
+    })
+    .from(insurancePolicies)
+    .where(eq(insurancePolicies.isDeleted, false));
+
+  for (const p of activePolicies) {
+    if (!p.coverageEnd) continue;
+    const delta = daysBetween(p.coverageEnd, todayYmd);
+    if (!INSURANCE_EXPIRY_LEADS.includes(delta)) continue;
+    for (const rid of mls) {
+      if (
+        await insertAlert({
+          insurancePolicyId: p.id,
+          alertType: "insurance_expiry",
+          dedupeKey: `expiry:${p.coverageEnd}:d${delta}`,
+          recipientId: rid,
+          payload: JSON.stringify({
+            policyRef: p.policyRef,
+            insurerName: p.insurerName,
+            policyNumber: p.policyNumber,
+            coverageEnd: p.coverageEnd,
+            delta,
+          }),
         })
       )
         raised++;

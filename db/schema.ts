@@ -129,6 +129,7 @@ export const userNotificationPref = pgTable("user_notification_pref", {
   emailUnassigned: boolean("email_unassigned").notNull().default(true),
   emailMissedInstalment: boolean("email_missed_instalment").notNull().default(true),
   emailContractExpiry: boolean("email_contract_expiry").notNull().default(true),
+  emailInsuranceExpiry: boolean("email_insurance_expiry").notNull().default(true),
   digestMode: notificationDigestEnum("digest_mode").notNull().default("individual"),
 });
 
@@ -537,9 +538,94 @@ export const contractAttachments = pgTable(
   (t) => [index("ix_contract_attachment_contract").on(t.contractId)],
 );
 
+// ─── Insurance Register (Module 3) ───────────────────────────────────────────
+// Spec §8. Status is DERIVED (BR-M3-01) — never stored. Policies cover a
+// person, a class of persons, or an asset. Property policies may link to a
+// Module 5 title once that module lands.
+
+export const insurancePolicyTypeEnum = pgEnum("insurance_policy_type", [
+  "medical",
+  "property",
+]);
+
+export const insurancePolicyDocumentTypeEnum = pgEnum("insurance_policy_document_type", [
+  "policy_schedule",
+  "renewal_notice",
+  "claim_document",
+  "other",
+]);
+
+export const insurancePolicyRefSequence = pgTable("insurance_policy_ref_sequence", {
+  year: integer("year").primaryKey(),
+  nextNumber: integer("next_number").notNull().default(1),
+});
+
+export const insurancePolicies = pgTable(
+  "insurance_policies",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    policyRef: text("policy_ref").notNull().unique(),
+
+    // Insurer's own policy number. AC-M3-001.3 wants a warning (not a hard
+    // reject) when it duplicates for the same insurer, so no unique constraint.
+    policyNumber: text("policy_number").notNull(),
+    insurerName: text("insurer_name").notNull(),
+    insurerContact: text("insurer_contact"),
+
+    policyType: insurancePolicyTypeEnum("policy_type").notNull(),
+    insuredSubject: text("insured_subject").notNull(),
+
+    // Nullable text FK to a future Module 5 title. No constraint until then.
+    linkedTitleId: text("linked_title_id"),
+
+    coverageStart: date("coverage_start").notNull(),
+    coverageEnd: date("coverage_end").notNull(),
+
+    policyValue: numeric("policy_value", { precision: 15, scale: 2 }).notNull().default("0"),
+    premiumAmount: numeric("premium_amount", { precision: 15, scale: 2 }),
+    currency: currencyEnum("currency").notNull().default("sbd"),
+
+    version: integer("version").notNull().default(1),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("ix_insurance_policy_insurer").on(t.insurerName),
+    index("ix_insurance_policy_type").on(t.policyType),
+    index("ix_insurance_policy_coverage_end").on(t.coverageEnd),
+    index("ix_insurance_policy_linked_title").on(t.linkedTitleId),
+    index("ix_insurance_policy_number").on(t.insurerName, t.policyNumber),
+  ],
+);
+
+export const insurancePolicyAttachments = pgTable(
+  "insurance_policy_attachments",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    insurancePolicyId: text("insurance_policy_id")
+      .notNull()
+      .references(() => insurancePolicies.id, { onDelete: "cascade" }),
+    fileName: text("file_name").notNull(),
+    fileType: text("file_type").notNull(),
+    fileUrl: text("file_url").notNull(),
+    documentType: insurancePolicyDocumentTypeEnum("document_type").notNull().default("other"),
+    isWithdrawn: boolean("is_withdrawn").notNull().default(false),
+    withdrawnBy: text("withdrawn_by").references(() => user.id, { onDelete: "set null" }),
+    withdrawnAt: timestamp("withdrawn_at"),
+    withdrawalReason: text("withdrawal_reason"),
+    uploadedBy: text("uploaded_by").references(() => user.id, { onDelete: "set null" }),
+    uploadedAt: timestamp("uploaded_at").notNull().default(sql`now()`),
+  },
+  (t) => [index("ix_insurance_policy_attachment_policy").on(t.insurancePolicyId)],
+);
+
 // ─── Alerts (§13) ────────────────────────────────────────────────────────────
-// Alerts are lightly polymorphic: exactly one of caseReferralId / contractId
-// is set, discriminated by alertType.
+// Alerts are lightly polymorphic: exactly one of caseReferralId / contractId /
+// insurancePolicyId is set, discriminated by alertType.
 
 export const alertTypeEnum = pgEnum("alert_type", [
   "new_referral",
@@ -549,6 +635,7 @@ export const alertTypeEnum = pgEnum("alert_type", [
   "unassigned",
   "missed_instalment",
   "contract_expiry",
+  "insurance_expiry",
 ]);
 
 export const alerts = pgTable(
@@ -559,6 +646,9 @@ export const alerts = pgTable(
       onDelete: "cascade",
     }),
     contractId: text("contract_id").references(() => contracts.id, { onDelete: "cascade" }),
+    insurancePolicyId: text("insurance_policy_id").references(() => insurancePolicies.id, {
+      onDelete: "cascade",
+    }),
     alertType: alertTypeEnum("alert_type").notNull(),
     // idempotency key: same run for the same target+context does not duplicate
     dedupeKey: text("dedupe_key").notNull(),
@@ -572,6 +662,7 @@ export const alerts = pgTable(
     uniqueIndex("uq_alert_dedupe").on(
       t.caseReferralId,
       t.contractId,
+      t.insurancePolicyId,
       t.recipientId,
       t.dedupeKey,
     ),
@@ -639,6 +730,25 @@ export const contractAttachmentRelations = relations(contractAttachments, ({ one
   }),
   uploader: one(user, { fields: [contractAttachments.uploadedBy], references: [user.id] }),
 }));
+
+export const insurancePolicyRelations = relations(insurancePolicies, ({ many, one }) => ({
+  attachments: many(insurancePolicyAttachments),
+  creator: one(user, { fields: [insurancePolicies.createdBy], references: [user.id] }),
+}));
+
+export const insurancePolicyAttachmentRelations = relations(
+  insurancePolicyAttachments,
+  ({ one }) => ({
+    policy: one(insurancePolicies, {
+      fields: [insurancePolicyAttachments.insurancePolicyId],
+      references: [insurancePolicies.id],
+    }),
+    uploader: one(user, {
+      fields: [insurancePolicyAttachments.uploadedBy],
+      references: [user.id],
+    }),
+  }),
+);
 
 export const caseReferralRelations = relations(caseReferrals, ({ one, many }) => ({
   employer: one(employers, { fields: [caseReferrals.employerId], references: [employers.id] }),

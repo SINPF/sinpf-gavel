@@ -22,6 +22,7 @@ export default async function NotificationPrefsPage() {
     emailUnassigned: true,
     emailMissedInstalment: true,
     emailContractExpiry: true,
+    emailInsuranceExpiry: true,
     digestMode: "individual" as const,
   };
 
@@ -44,6 +45,7 @@ export default async function NotificationPrefsPage() {
           emailUnassigned: initial.emailUnassigned,
           emailMissedInstalment: initial.emailMissedInstalment,
           emailContractExpiry: initial.emailContractExpiry,
+          emailInsuranceExpiry: initial.emailInsuranceExpiry,
           digestMode: initial.digestMode as "individual" | "daily_digest",
         }}
       />

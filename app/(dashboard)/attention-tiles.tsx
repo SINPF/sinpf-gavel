@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { and, eq, sql, count, inArray, isNotNull, lte, gte, or, isNull, notInArray } from "drizzle-orm";
 import { db } from "@/db";
-import { caseReferrals, contracts } from "@/db/schema";
-import { AlertTriangle, Gavel, Clock, ClipboardList, Inbox, FileWarning } from "lucide-react";
+import { caseReferrals, contracts, insurancePolicies } from "@/db/schema";
+import {
+  AlertTriangle,
+  Gavel,
+  Clock,
+  ClipboardList,
+  Inbox,
+  FileWarning,
+  ShieldAlert,
+} from "lucide-react";
 import { currentUser } from "@/lib/rbac";
 
 const OPEN_STATUSES = [
@@ -101,6 +109,19 @@ async function counts(userId: string | null, isMls: boolean) {
       ),
     );
 
+  // Insurance policies expiring in the next 60 days (FR-M3-004 default window).
+  const insuranceHorizon = new Date(Date.now() + 60 * 86_400_000).toISOString().slice(0, 10);
+  const [insuranceExpiring] = await db
+    .select({ n: count() })
+    .from(insurancePolicies)
+    .where(
+      and(
+        eq(insurancePolicies.isDeleted, false),
+        gte(insurancePolicies.coverageEnd, today),
+        lte(insurancePolicies.coverageEnd, insuranceHorizon),
+      ),
+    );
+
   return {
     overdue: overdue.n,
     courtSoon: courtSoon.n,
@@ -108,6 +129,7 @@ async function counts(userId: string | null, isMls: boolean) {
     intakeIncomplete: intakeIncomplete.n,
     unassigned: unassigned.n,
     contractsExpiring: contractExpiring.n,
+    insuranceExpiring: insuranceExpiring.n,
   };
 }
 
@@ -153,10 +175,17 @@ export default async function AttentionTiles() {
       icon: <FileWarning className="w-4 h-4" />,
       tone: "text-warning",
     },
+    {
+      label: "Policies expiring ≤ 60d",
+      value: c.insuranceExpiring,
+      href: "/insurance",
+      icon: <ShieldAlert className="w-4 h-4" />,
+      tone: "text-warning",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
       {tiles.map((t) => (
         <Link
           key={t.label}
@@ -173,7 +202,7 @@ export default async function AttentionTiles() {
       {isMls && (
         <Link
           href="/cases"
-          className="rounded-md border border-primary/30 bg-blue-50 p-4 hover:border-primary transition-colors md:col-span-5"
+          className="rounded-md border border-primary/30 bg-blue-50 p-4 hover:border-primary transition-colors md:col-span-6"
         >
           <div className="flex items-center gap-2 text-primary">
             <Inbox className="w-4 h-4" />

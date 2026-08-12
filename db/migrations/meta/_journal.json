@@ -29,6 +29,13 @@
       "when": 1786530778933,
       "tag": "0003_m2_expiry_pref",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786544286177,
+      "tag": "0004_m3_insurance",
+      "breakpoints": true
     }
   ]
 }

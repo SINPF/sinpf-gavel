@@ -41,7 +41,13 @@ export type Operation =
   | "update_contract"
   | "terminate_contract"
   | "upload_contract_document"
-  | "withdraw_contract_document";
+  | "withdraw_contract_document"
+  // Module 3 — Insurance Register
+  | "view_insurance_policy"
+  | "create_insurance_policy"
+  | "update_insurance_policy"
+  | "upload_insurance_document"
+  | "withdraw_insurance_document";
 
 // Cell values: true = allowed, "own" = allowed only for own cases (BR-M1-06),
 // "request" = may only request via pending_decision. Undefined = refused.
@@ -129,6 +135,24 @@ const MATRIX: Record<Operation, Partial<Record<Role, Cell>>> = {
     registry_clerk: true, legal_officer: true, mls: true,
   },
   withdraw_contract_document: {
+    mls: true,
+  },
+  // Module 3 — Insurance. §8 is silent on RBAC; mirroring the contract shape.
+  // Insurance has no termination lifecycle (BR-M3-01), so no equivalent op.
+  view_insurance_policy: {
+    registry_clerk: true, legal_officer: true, mls: true,
+    external_auditor: true, system_admin: true,
+  },
+  create_insurance_policy: {
+    registry_clerk: true, legal_officer: true, mls: true,
+  },
+  update_insurance_policy: {
+    legal_officer: true, mls: true,
+  },
+  upload_insurance_document: {
+    registry_clerk: true, legal_officer: true, mls: true,
+  },
+  withdraw_insurance_document: {
     mls: true,
   },
 };
