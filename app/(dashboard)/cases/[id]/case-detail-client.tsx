@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, AlertCircle, Pencil, Save, X, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, AlertCircle, Pencil, Save, X, CheckCircle2, Download } from "lucide-react";
 import { format, parse, isValid } from "date-fns";
 import { Badge, STATUS_LABELS, type BadgeStatus } from "@/components/ui/Badge";
 import { DateField } from "@/components/ui/DateField";
@@ -299,6 +299,15 @@ export default function CaseDetailClient({
               Correct
             </button>
           )}
+          <form action={`/api/cases/${referral.id}/export`} method="POST">
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-border text-sm font-semibold text-foreground hover:border-primary hover:text-primary transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export case file
+            </button>
+          </form>
         </div>
       </div>
 
