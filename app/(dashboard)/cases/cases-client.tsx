@@ -1,31 +1,47 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, ChevronDown, Check, ListFilter, UserCheck, X, Building2, Archive } from "lucide-react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Check,
+  ListFilter,
+  UserCheck,
+  X,
+  Building2,
+  Archive,
+} from "lucide-react";
 import Table from "./table";
 import type { CaseWithAssignee } from "@/db/types";
+import { STATUS_LABELS } from "@/components/ui/Badge";
 
 const PAGE_SIZE = 25;
 
-// Dot colors track the Badge status families defined in components/ui/Badge.tsx
 const STATUS_OPTIONS: { value: string; label: string; dot: string }[] = [
-  { value: "",              label: "All statuses",  dot: "bg-muted-foreground/40" },
-  { value: "registered",    label: "Referral Registered", dot: "bg-primary" },
-  { value: "assessment",    label: "Under Assessment", dot: "bg-primary" },
-  { value: "demand_issued", label: "Demand issued", dot: "bg-highlight" },
-  { value: "negotiation",   label: "Negotiation",   dot: "bg-highlight" },
-  { value: "prosecution",   label: "Prosecution",   dot: "bg-destructive" },
-  { value: "in_progress",   label: "In progress",   dot: "bg-highlight" },
-  { value: "resolved",      label: "Resolved",      dot: "bg-success" },
-  { value: "closed",        label: "Closed",        dot: "bg-muted-foreground/60" },
+  { value: "",                 label: "All statuses",                dot: "bg-muted-foreground/40" },
+  { value: "received",         label: STATUS_LABELS.received,         dot: "bg-primary" },
+  { value: "under_assessment", label: STATUS_LABELS.under_assessment, dot: "bg-primary" },
+  { value: "notice_served",    label: STATUS_LABELS.notice_served,    dot: "bg-highlight" },
+  { value: "settlement",       label: STATUS_LABELS.settlement,       dot: "bg-highlight" },
+  { value: "court_prep",       label: STATUS_LABELS.court_prep,       dot: "bg-destructive" },
+  { value: "in_court",         label: STATUS_LABELS.in_court,         dot: "bg-destructive" },
+  { value: "paid",             label: STATUS_LABELS.paid,             dot: "bg-success" },
+  { value: "wages_received",   label: STATUS_LABELS.wages_received,   dot: "bg-success" },
+  { value: "closed",           label: STATUS_LABELS.closed,           dot: "bg-muted-foreground/60" },
+  { value: "withdrawn",        label: STATUS_LABELS.withdrawn,        dot: "bg-muted-foreground/60" },
+  { value: "not_filed",        label: STATUS_LABELS.not_filed,        dot: "bg-muted-foreground/60" },
 ];
 
 const TYPE_OPTIONS: { value: string; label: string; dot: string }[] = [
-  { value: "",                     label: "All types",    dot: "bg-muted-foreground/40" },
-  { value: "unpaid_contributions", label: "Contributions", dot: "bg-primary" },
-  { value: "unpaid_surcharges",    label: "Surcharges",    dot: "bg-blue-400" },
-  { value: "wages_record",         label: "Wages record",  dot: "bg-highlight" },
+  { value: "",                    label: "All types",     dot: "bg-muted-foreground/40" },
+  { value: "unpaid_contribution", label: "Contributions", dot: "bg-primary" },
+  { value: "unpaid_surcharge",    label: "Surcharges",    dot: "bg-blue-400" },
+  { value: "wages_record",        label: "Wages record",  dot: "bg-highlight" },
 ];
+
+const TERMINAL_STATUSES = new Set(["closed", "withdrawn", "not_filed"]);
 
 function FilterDropdown({
   value,
@@ -69,7 +85,7 @@ function FilterDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-[calc(100%+6px)] z-50 w-48 rounded-md border border-border bg-background shadow-md overflow-hidden py-1">
+        <div className="absolute left-0 top-[calc(100%+6px)] z-50 w-56 rounded-md border border-border bg-background shadow-md overflow-hidden py-1 max-h-96 overflow-y-auto">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -187,7 +203,7 @@ export default function CasesClient({
   cases,
   employers,
   currentUserId,
-  initialMyCases  = false,
+  initialMyCases = false,
   initialCaseType = "",
 }: {
   cases: CaseWithAssignee[];
@@ -196,13 +212,13 @@ export default function CasesClient({
   initialMyCases?: boolean;
   initialCaseType?: string;
 }) {
-  const [query,      setQuery]      = useState("");
-  const [status,     setStatus]     = useState("");
-  const [caseType,   setCaseType]   = useState(initialCaseType);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("");
+  const [caseType, setCaseType] = useState(initialCaseType);
   const [employerId, setEmployerId] = useState("");
-  const [myCases,    setMyCases]    = useState(initialMyCases);
+  const [myCases, setMyCases] = useState(initialMyCases);
   const [showClosed, setShowClosed] = useState(false);
-  const [page,     setPage]     = useState(1);
+  const [page, setPage] = useState(1);
 
   const hasActiveFilters = !!query || !!status || !!caseType || !!employerId || myCases || showClosed;
 
@@ -210,54 +226,57 @@ export default function CasesClient({
     setQuery(""); setStatus(""); setCaseType(""); setEmployerId(""); setMyCases(false); setShowClosed(false); setPage(1);
   };
 
-  const closedCount = useMemo(() => cases.filter((c) => c.status === "closed").length, [cases]);
+  const closedCount = useMemo(
+    () => cases.filter((c) => TERMINAL_STATUSES.has(c.status)).length,
+    [cases],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return cases.filter((c) => {
-      if (!showClosed && status !== "closed" && c.status === "closed") return false;
-      const matchesQuery    = !q          || c.employerName.toLowerCase().includes(q) || c.employerCode.toLowerCase().includes(q) || c.id.toLowerCase().includes(q);
-      const matchesStatus   = !status     || c.status === status;
-      const matchesType     = !caseType   || c.types.includes(caseType);
+      if (!showClosed && !TERMINAL_STATUSES.has(status) && TERMINAL_STATUSES.has(c.status)) {
+        return false;
+      }
+      const matchesQuery =
+        !q ||
+        c.employerName.toLowerCase().includes(q) ||
+        c.employerCode.toLowerCase().includes(q) ||
+        c.referralRef.toLowerCase().includes(q) ||
+        c.id.toLowerCase().includes(q);
+      const matchesStatus = !status || c.status === status;
+      const matchesType = !caseType || c.types.includes(caseType);
       const matchesEmployer = !employerId || c.employerId === employerId;
-      const matchesMine     = !myCases    || c.assignedTo === currentUserId;
+      const matchesMine = !myCases || c.assignedOfficerId === currentUserId;
       return matchesQuery && matchesStatus && matchesType && matchesEmployer && matchesMine;
     });
   }, [cases, query, status, caseType, employerId, myCases, currentUserId, showClosed]);
 
-  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const start       = (currentPage - 1) * PAGE_SIZE;
-  const paginated   = filtered.slice(start, start + PAGE_SIZE);
-
-  const handleQuery      = (v: string) => { setQuery(v);           setPage(1); };
-  const handleStatus     = (v: string) => { setStatus(v);          setPage(1); };
-  const handleCaseType   = (v: string) => { setCaseType(v);        setPage(1); };
-  const handleEmployerId = (v: string) => { setEmployerId(v);      setPage(1); };
-  const handleMyCases    = ()          => { setMyCases((m) => !m); setPage(1); };
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const paginated = filtered.slice(start, start + PAGE_SIZE);
 
   return (
     <div className="space-y-4">
-      {/* Search + filter bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative group flex-1 min-w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
             value={query}
-            onChange={(e) => handleQuery(e.target.value)}
-            placeholder="Search by employer or case ID..."
+            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+            placeholder="Search by employer, reference, or case ID..."
             className="w-full pl-9 pr-4 h-10 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
 
-        <FilterDropdown value={status}   options={STATUS_OPTIONS} onChange={handleStatus}   />
-        <FilterDropdown value={caseType} options={TYPE_OPTIONS}   onChange={handleCaseType} />
-        <EmployerFilter value={employerId} employers={employers} onChange={handleEmployerId} />
+        <FilterDropdown value={status}   options={STATUS_OPTIONS} onChange={(v) => { setStatus(v); setPage(1); }}   />
+        <FilterDropdown value={caseType} options={TYPE_OPTIONS}   onChange={(v) => { setCaseType(v); setPage(1); }} />
+        <EmployerFilter value={employerId} employers={employers} onChange={(v) => { setEmployerId(v); setPage(1); }} />
 
         <button
           type="button"
-          onClick={handleMyCases}
+          onClick={() => { setMyCases((m) => !m); setPage(1); }}
           className={`flex items-center gap-2 h-10 px-3.5 rounded-md border text-sm font-medium transition-all ${
             myCases
               ? "border-primary bg-primary/5 text-primary"
@@ -290,10 +309,8 @@ export default function CasesClient({
             {showClosed && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
           </span>
         </button>
-
       </div>
 
-      {/* Filtered count + clear — only shown when filters are active */}
       {hasActiveFilters && (
         <div className="flex items-center gap-3 px-1">
           <p className="text-sm text-muted-foreground">
@@ -310,14 +327,12 @@ export default function CasesClient({
         </div>
       )}
 
-      {/* Closed-cases hidden notice — always visible when closed cases exist and are hidden */}
-      {!showClosed && status !== "closed" && closedCount > 0 && (
+      {!showClosed && !TERMINAL_STATUSES.has(status) && closedCount > 0 && (
         <p className="px-1 text-sm text-muted-foreground">
           {closedCount} closed {closedCount === 1 ? "case" : "cases"} hidden
         </p>
       )}
 
-      {/* Table + pagination (only when there are results) */}
       {filtered.length === 0 ? (
         <div className="py-16 text-center text-sm text-muted-foreground">No cases found.</div>
       ) : (

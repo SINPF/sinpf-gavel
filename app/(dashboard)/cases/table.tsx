@@ -6,17 +6,21 @@ import { format, parse, isValid } from "date-fns";
 import { DataTable } from "@/components/ui/DataTable";
 import { Badge, type BadgeStatus } from "@/components/ui/Badge";
 import type { Column } from "@/components/ui/DataTable";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, AlertCircle } from "lucide-react";
 import type { CaseWithAssignee } from "@/db/types";
 
 type CaseRow = CaseWithAssignee & Record<string, unknown>;
 
-// Mirrors TYPE_OPTIONS dot colors in cases-client.tsx so the table badges
-// share the visual vocabulary of the type filter dropdown.
 const TYPE_STYLES: Record<string, string> = {
-  unpaid_contributions: "border border-primary text-primary",
-  unpaid_surcharges:    "border border-blue-400 text-blue-500",
-  wages_record:         "border border-highlight text-highlight-foreground",
+  unpaid_contribution: "border border-primary text-primary",
+  unpaid_surcharge:    "border border-blue-400 text-blue-500",
+  wages_record:        "border border-highlight text-highlight-foreground",
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  unpaid_contribution: "Contribution",
+  unpaid_surcharge:    "Surcharge",
+  wages_record:        "Wages record",
 };
 
 function highlight(text: string, query: string) {
@@ -39,17 +43,37 @@ function highlight(text: string, query: string) {
   );
 }
 
-export default function Table({ cases, currentUserId, query = "" }: { cases: CaseWithAssignee[]; currentUserId?: string | null; query?: string }) {
+function formatSbd(v: string | number | null | undefined) {
+  const n = Number(v ?? 0);
+  return n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+export default function Table({
+  cases,
+  currentUserId,
+  query = "",
+}: {
+  cases: CaseWithAssignee[];
+  currentUserId?: string | null;
+  query?: string;
+}) {
   const router = useRouter();
 
   const columns: Column<CaseRow>[] = [
     {
-      key: "id",
-      header: "Case no.",
-      render: (v) => (
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {highlight(String(v).slice(0, 8).toUpperCase(), query)}
-        </span>
+      key: "referralRef",
+      header: "Reference",
+      render: (v, row) => (
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-foreground tabular-nums">
+            {highlight(String(v), query)}
+          </span>
+          {!row.isIntakeComplete && (
+            <span title="Intake incomplete">
+              <AlertCircle className="w-3.5 h-3.5 text-warning" />
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -80,12 +104,33 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
             {types.map((t) => (
               <span
                 key={t}
-                className={`inline-block px-2 py-0.5 rounded-sm text-xs font-semibold capitalize bg-transparent ${TYPE_STYLES[t] ?? "border border-border text-muted-foreground"}`}
+                className={`inline-block px-2 py-0.5 rounded-sm text-xs font-semibold ${TYPE_STYLES[t] ?? "border border-border text-muted-foreground"}`}
               >
-                {t.replace(/_/g, " ")}
+                {TYPE_LABELS[t] ?? t}
               </span>
             ))}
           </div>
+        );
+      },
+    },
+    {
+      key: "totalClaimed",
+      header: "Claimed",
+      align: "right",
+      render: (v) => (
+        <span className="text-sm text-foreground tabular-nums">SBD {formatSbd(v as string)}</span>
+      ),
+    },
+    {
+      key: "outstanding",
+      header: "Outstanding",
+      align: "right",
+      render: (v) => {
+        const n = Number(v ?? 0);
+        return (
+          <span className={`text-sm tabular-nums ${n > 0 ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
+            SBD {formatSbd(v as number)}
+          </span>
         );
       },
     },
@@ -98,12 +143,8 @@ export default function Table({ cases, currentUserId, query = "" }: { cases: Cas
       key: "assigneeEmail",
       header: "Assigned to",
       render: (_, row) => {
-        if (row.assignedTo && row.assignedTo === currentUserId) {
-          return (
-            <span className="text-sm text-muted-foreground">
-              Me
-            </span>
-          );
+        if (row.assignedOfficerId && row.assignedOfficerId === currentUserId) {
+          return <span className="text-sm text-muted-foreground">Me</span>;
         }
         const display = row.assigneeName || row.assigneeEmail;
         return display ? (

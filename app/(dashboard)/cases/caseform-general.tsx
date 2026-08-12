@@ -10,8 +10,7 @@ type EmployerOption = { id: string; name: string; code: string };
 
 const inputClasses =
   "w-full px-4 py-3 rounded-md border border-border bg-background text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-ring transition-colors placeholder:text-muted-foreground/30";
-const labelClasses =
-  "block text-sm font-medium text-foreground mb-2 ml-1";
+const labelClasses = "block text-sm font-medium text-foreground mb-2 ml-1";
 
 function EmployerCombobox({
   value,
@@ -121,8 +120,11 @@ export default function General({
   setValue: UseFormSetValue<CaseFormValues>;
   watch: (field: keyof CaseFormValues) => unknown;
 }) {
-  const employerId   = watch("employerId")   as string ?? "";
+  const employerId = watch("employerId") as string ?? "";
   const referralDate = watch("referralDate") as string ?? "";
+  const dateReceived = watch("dateReceived") as string ?? "";
+  const defaultFrom = watch("periodOfDefaultFrom") as string ?? "";
+  const defaultTo = watch("periodOfDefaultTo") as string ?? "";
 
   return (
     <div className="flex flex-col gap-5">
@@ -135,14 +137,46 @@ export default function General({
         />
       </div>
 
-      <div className="flex flex-col">
-        <label className={labelClasses}>Referral date</label>
-        <input type="hidden" {...register("referralDate")} />
-        <DateField
-          value={referralDate}
-          onChange={(d) => setValue("referralDate", d, { shouldValidate: true })}
-          placeholder="Select referral date…"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="flex flex-col">
+          <label className={labelClasses}>Referral date</label>
+          <input type="hidden" {...register("referralDate")} />
+          <DateField
+            value={referralDate}
+            onChange={(d) => setValue("referralDate", d, { shouldValidate: true })}
+            placeholder="Select referral date…"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className={labelClasses}>Date received</label>
+          <input type="hidden" {...register("dateReceived")} />
+          <DateField
+            value={dateReceived}
+            onChange={(d) => setValue("dateReceived", d, { shouldValidate: true })}
+            placeholder="When SINPF received the referral…"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="flex flex-col">
+          <label className={labelClasses}>Period of default — from</label>
+          <input type="hidden" {...register("periodOfDefaultFrom")} />
+          <DateField
+            value={defaultFrom}
+            onChange={(d) => setValue("periodOfDefaultFrom", d, { shouldValidate: true })}
+            placeholder="Start of the default period…"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className={labelClasses}>Period of default — to</label>
+          <input type="hidden" {...register("periodOfDefaultTo")} />
+          <DateField
+            value={defaultTo}
+            onChange={(d) => setValue("periodOfDefaultTo", d, { shouldValidate: true })}
+            placeholder="End of the default period…"
+          />
+        </div>
       </div>
     </div>
   );

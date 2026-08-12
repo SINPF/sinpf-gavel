@@ -1,29 +1,35 @@
 // Aligned with DESIGN-SYSTEM.md §5:
 //   Open (blue-100/navy) · In review (gold-100/gold-900) ·
 //   Urgent (red tint) · Resolved (green tint) · Closed (muted)
-// Domain statuses map onto these five semantic families.
+// Spec §6 statuses map onto these five semantic families.
 
 export type BadgeStatus =
-  | "filed" | "active" | "pending" | "hearing" | "closed" | "appeal"
-  | "registered" | "in_progress" | "resolved"
-  | "assessment" | "demand_issued" | "negotiation" | "prosecution";
+  | "received"
+  | "under_assessment"
+  | "notice_served"
+  | "settlement"
+  | "court_prep"
+  | "in_court"
+  | "paid"
+  | "wages_received"
+  | "closed"
+  | "withdrawn"
+  | "not_filed";
 
 type Family = "open" | "inReview" | "urgent" | "resolved" | "closed";
 
 const family: Record<BadgeStatus, Family> = {
-  registered:    "open",
-  filed:         "open",
-  active:        "open",
-  assessment:    "open",
-  pending:       "inReview",
-  demand_issued: "inReview",
-  negotiation:   "inReview",
-  hearing:       "inReview",
-  in_progress:   "inReview",
-  prosecution:   "urgent",
-  appeal:        "urgent",
-  resolved:      "resolved",
-  closed:        "closed",
+  received:         "open",
+  under_assessment: "open",
+  notice_served:    "inReview",
+  settlement:       "inReview",
+  court_prep:       "urgent",
+  in_court:         "urgent",
+  paid:             "resolved",
+  wages_received:   "resolved",
+  closed:           "closed",
+  withdrawn:        "closed",
+  not_filed:        "closed",
 };
 
 const familyClasses: Record<Family, string> = {
@@ -34,7 +40,6 @@ const familyClasses: Record<Family, string> = {
   closed:   "bg-muted text-muted-foreground",
 };
 
-// Solid variant — full-color fill matching the filter dropdown dot colors.
 const solidFamilyClasses: Record<Family, string> = {
   open:     "bg-primary text-white",
   inReview: "bg-highlight text-highlight-foreground",
@@ -51,20 +56,18 @@ const dotClasses: Record<Family, string> = {
   closed:   "bg-muted-foreground/60",
 };
 
-const labels: Record<BadgeStatus, string> = {
-  registered:    "Referral Registered",
-  filed:         "Filed",
-  active:        "Active",
-  assessment:    "Under Assessment",
-  pending:       "Pending",
-  demand_issued: "Demand issued",
-  negotiation:   "Negotiation",
-  hearing:       "Hearing",
-  in_progress:   "In progress",
-  prosecution:   "Prosecution",
-  appeal:        "Appeal",
-  resolved:      "Resolved",
-  closed:        "Closed",
+export const STATUS_LABELS: Record<BadgeStatus, string> = {
+  received:         "Received",
+  under_assessment: "Under assessment",
+  notice_served:    "Notice served",
+  settlement:       "Settlement",
+  court_prep:       "Court prep",
+  in_court:         "In court",
+  paid:             "Paid",
+  wages_received:   "Wages received",
+  closed:           "Closed",
+  withdrawn:        "Withdrawn",
+  not_filed:        "Not filed",
 };
 
 interface BadgeProps {
@@ -74,14 +77,14 @@ interface BadgeProps {
 }
 
 export function Badge({ status, className = "", solid = false }: BadgeProps) {
-  const fam     = family[status] ?? "closed";
-  const bgText  = solid ? solidFamilyClasses[fam] : familyClasses[fam];
+  const fam = family[status] ?? "closed";
+  const bgText = solid ? solidFamilyClasses[fam] : familyClasses[fam];
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-xs font-semibold ${bgText} ${className}`}
     >
       {!solid && <span aria-hidden className={`w-1.5 h-1.5 rounded-full ${dotClasses[fam]}`} />}
-      {labels[status] ?? status}
+      {STATUS_LABELS[status] ?? status}
     </span>
   );
 }

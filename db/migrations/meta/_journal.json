@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1776232756875,
-      "tag": "0000_mature_fabian_cortez",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1778562165325,
-      "tag": "0001_motionless_solo",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1785713606705,
-      "tag": "0002_sour_veda",
+      "when": 1786523907484,
+      "tag": "0000_m1_baseline",
       "breakpoints": true
     }
   ]

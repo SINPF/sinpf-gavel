@@ -147,14 +147,14 @@ export function StatsGridClient({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <SecondaryCard
           label="Contributions"
-          value={String(data.byType["unpaid_contributions"] ?? 0)}
-          href={`/cases${mineOnly}type=unpaid_contributions`}
+          value={String(data.byType["unpaid_contribution"] ?? 0)}
+          href={`/cases${mineOnly}type=unpaid_contribution`}
           accent="bg-primary"
         />
         <SecondaryCard
           label="Surcharges"
-          value={String(data.byType["unpaid_surcharges"] ?? 0)}
-          href={`/cases${mineOnly}type=unpaid_surcharges`}
+          value={String(data.byType["unpaid_surcharge"] ?? 0)}
+          href={`/cases${mineOnly}type=unpaid_surcharge`}
           accent="bg-blue-400"
         />
         <SecondaryCard

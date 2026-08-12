@@ -1,6 +1,19 @@
-import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, pgEnum, numeric, date } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  pgEnum,
+  numeric,
+  date,
+  integer,
+  serial,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -11,7 +24,7 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -23,7 +36,7 @@ export const session = pgTable(
     token: text("token").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -52,7 +65,7 @@ export const account = pgTable(
     password: text("password"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
@@ -68,17 +81,433 @@ export const verification = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
-      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
+// ─── Roles (RBAC) ────────────────────────────────────────────────────────────
+// Spec §3 permission matrix. `system_admin` is bootstrapped by admin promotion.
+
+export const userRoleEnum = pgEnum("user_role", [
+  "registry_clerk",
+  "legal_officer",
+  "mls",
+  "exec_board",
+  "external_auditor",
+  "system_admin",
+]);
+
+export const userProfile = pgTable("user_profile", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  role: userRoleEnum("role").notNull().default("legal_officer"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+// ─── Notification preferences (FR-M1-022) ────────────────────────────────────
+
+export const notificationDigestEnum = pgEnum("notification_digest", [
+  "individual",
+  "daily_digest",
+]);
+
+export const userNotificationPref = pgTable("user_notification_pref", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  emailNewReferral: boolean("email_new_referral").notNull().default(true),
+  emailDeadline: boolean("email_deadline").notNull().default(true),
+  emailInactivity: boolean("email_inactivity").notNull().default(true),
+  emailUnassigned: boolean("email_unassigned").notNull().default(true),
+  emailMissedInstalment: boolean("email_missed_instalment").notNull().default(true),
+  digestMode: notificationDigestEnum("digest_mode").notNull().default("individual"),
+});
+
+// ─── Spec enumerations (§6) ──────────────────────────────────────────────────
+
+export const caseTypeEnum = pgEnum("case_type", [
+  "unpaid_contribution",
+  "unpaid_surcharge",
+  "wages_record",
+]);
+
+export const caseStatusEnum = pgEnum("case_status", [
+  "received",
+  "under_assessment",
+  "notice_served",
+  "settlement",
+  "court_prep",
+  "in_court",
+  "paid",
+  "wages_received",
+  "closed",
+  "withdrawn",
+  "not_filed",
+]);
+
+export const caseOutcomeEnum = pgEnum("case_outcome", [
+  "paid_in_full",
+  "settled_by_deed",
+  "partially_recovered",
+  "wages_records_obtained",
+  "irrecoverable",
+  "withdrawn",
+  "not_filed",
+]);
+
+export const pendingDecisionEnum = pgEnum("pending_decision", [
+  "close",
+  "withdraw",
+  "not_file",
+]);
+
+export const actionTypeEnum = pgEnum("action_type", [
+  "demand_letter_issued",
+  "notice_served",
+  "employer_meeting",
+  "phone_follow_up",
+  "site_visit",
+  "affidavit_prepared",
+  "court_appearance",
+  "deed_executed",
+  "other",
+]);
+
+export const riskFlagEnum = pgEnum("risk_flag", [
+  "no_longer_operating",
+  "statute_barred",
+  "untraceable",
+  "in_liquidation",
+  "other",
+]);
+
+export const courtVenueEnum = pgEnum("court_venue", [
+  "magistrate_court",
+  "high_court",
+]);
+
+export const documentTypeEnum = pgEnum("document_type", [
+  "ems_referral_letter",
+  "contribution_statement",
+  "compliance_note",
+  "employer_correspondence",
+  "legal_notice",
+  "affidavit",
+  "deed_of_settlement",
+  "court_document",
+  "payment_evidence",
+  "wages_record",
+  "other",
+]);
+
+export const instalmentStateEnum = pgEnum("instalment_state", [
+  "due",
+  "met",
+  "missed",
+]);
+
+// ─── Employers ───────────────────────────────────────────────────────────────
+// Kept as a lookup so search/reporting stays reliable — see Q-05 in the spec.
+
+export const employers = pgTable("employers", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  code: text("code").notNull().unique(),
+  phone: text("phone"),
+  email: text("email"),
+  address: text("address"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+// ─── Referral reference sequence (BR-M1-04) ──────────────────────────────────
+// Per-year counter for LSD-REF-YYYY-NNNN. Rows are inserted lazily per year.
+
+export const referralRefSequence = pgTable("referral_ref_sequence", {
+  year: integer("year").primaryKey(),
+  nextNumber: integer("next_number").notNull().default(1),
+});
+
+// ─── Case referrals (§5.1) ───────────────────────────────────────────────────
+// The domain entity the spec calls "Referral". App/URL terminology remains "case".
+
+export const caseReferrals = pgTable(
+  "case_referrals",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    referralRef: text("referral_ref").notNull().unique(),
+
+    employerId: text("employer_id")
+      .notNull()
+      .references(() => employers.id, { onDelete: "restrict" }),
+
+    referralDate: date("referral_date").notNull().default(sql`CURRENT_DATE`),
+    dateReceived: date("date_received").notNull().default(sql`CURRENT_DATE`),
+
+    contributionAmount: numeric("contribution_amount", { precision: 15, scale: 2 }),
+    surchargeAmount: numeric("surcharge_amount", { precision: 15, scale: 2 }),
+    totalClaimed: numeric("total_claimed", { precision: 15, scale: 2 })
+      .notNull()
+      .default("0"),
+
+    wagesPeriods: text("wages_periods"),
+    periodOfDefaultFrom: date("period_of_default_from"),
+    periodOfDefaultTo: date("period_of_default_to"),
+
+    assignedOfficerId: text("assigned_officer_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    assignedAt: timestamp("assigned_at"),
+
+    status: caseStatusEnum("status").notNull().default("received"),
+    statusChangedAt: timestamp("status_changed_at").notNull().defaultNow(),
+    lastActivityAt: timestamp("last_activity_at").notNull().defaultNow(),
+
+    courtVenue: courtVenueEnum("court_venue"),
+    courtCaseNumber: text("court_case_number"),
+    dateFiled: date("date_filed"),
+    nextCourtDate: date("next_court_date"),
+    responseDueDate: date("response_due_date"),
+
+    riskFlags: riskFlagEnum("risk_flags").array(),
+    riskNote: text("risk_note"),
+
+    isIntakeComplete: boolean("is_intake_complete").notNull().default(false),
+
+    outcome: caseOutcomeEnum("outcome"),
+    closureReason: text("closure_reason"),
+    closedAt: date("closed_at"),
+    pendingDecision: pendingDecisionEnum("pending_decision"),
+    pendingDecisionBy: text("pending_decision_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    pendingDecisionReason: text("pending_decision_reason"),
+    pendingDecisionAt: timestamp("pending_decision_at"),
+
+    version: integer("version").notNull().default(1),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+
+    createdAt: timestamp("created_at").notNull().default(sql`now()`),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+    updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("ix_referral_employer").on(t.employerId),
+    index("ix_referral_status").on(t.status),
+    index("ix_referral_assigned").on(t.assignedOfficerId),
+    index("ix_referral_court_case_number").on(t.courtCaseNumber),
+    index("ix_referral_referral_date").on(t.referralDate),
+    index("ix_referral_closed_at").on(t.closedAt),
+    index("ix_referral_last_activity").on(t.lastActivityAt),
+    index("ix_referral_response_due").on(t.responseDueDate),
+    index("ix_referral_next_court_date").on(t.nextCourtDate),
+  ],
+);
+
+// ─── Case types (many-to-many, replaces text[]) ──────────────────────────────
+
+export const caseReferralTypes = pgTable(
+  "case_referral_types",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    caseReferralId: text("case_referral_id")
+      .notNull()
+      .references(() => caseReferrals.id, { onDelete: "cascade" }),
+    caseType: caseTypeEnum("case_type").notNull(),
+  },
+  (t) => [uniqueIndex("uq_case_type").on(t.caseReferralId, t.caseType)],
+);
+
+// ─── Status history (§5.2) ───────────────────────────────────────────────────
+
+export const referralStatusHistory = pgTable(
+  "referral_status_history",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    caseReferralId: text("case_referral_id")
+      .notNull()
+      .references(() => caseReferrals.id, { onDelete: "cascade" }),
+    fromStatus: caseStatusEnum("from_status"),
+    toStatus: caseStatusEnum("to_status").notNull(),
+    reason: text("reason"),
+    changedBy: text("changed_by").references(() => user.id, { onDelete: "set null" }),
+    changedAt: timestamp("changed_at").notNull().defaultNow(),
+    approvedBy: text("approved_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [index("ix_status_history_referral").on(t.caseReferralId)],
+);
+
+// ─── Actions (§5.3) ──────────────────────────────────────────────────────────
+
+export const referralAction = pgTable(
+  "referral_action",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    caseReferralId: text("case_referral_id")
+      .notNull()
+      .references(() => caseReferrals.id, { onDelete: "cascade" }),
+    actionType: actionTypeEnum("action_type").notNull(),
+    actionDate: date("action_date").notNull(),
+    notes: text("notes").notNull(),
+    performedBy: text("performed_by").references(() => user.id, { onDelete: "set null" }),
+    documentId: text("document_id"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("ix_action_referral").on(t.caseReferralId)],
+);
+
+// ─── Payments (§5.4) ─────────────────────────────────────────────────────────
+
+export const casePayments = pgTable(
+  "case_payments",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    caseReferralId: text("case_referral_id")
+      .notNull()
+      .references(() => caseReferrals.id, { onDelete: "cascade" }),
+    paymentDate: date("payment_date").notNull(),
+    amountContribution: numeric("amount_contribution", { precision: 15, scale: 2 })
+      .notNull()
+      .default("0"),
+    amountSurcharge: numeric("amount_surcharge", { precision: 15, scale: 2 })
+      .notNull()
+      .default("0"),
+    receiptReference: text("receipt_reference"),
+    scheduleId: text("schedule_id"),
+    isReversed: boolean("is_reversed").notNull().default(false),
+    reversalReason: text("reversal_reason"),
+    reversedBy: text("reversed_by").references(() => user.id, { onDelete: "set null" }),
+    reversedAt: timestamp("reversed_at"),
+    notes: text("notes"),
+    recordedBy: text("recorded_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("ix_payment_referral").on(t.caseReferralId),
+    index("ix_payment_date").on(t.paymentDate),
+  ],
+);
+
+// ─── Settlement schedule (§5.5) ──────────────────────────────────────────────
+
+export const settlementSchedule = pgTable(
+  "settlement_schedule",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    caseReferralId: text("case_referral_id")
+      .notNull()
+      .references(() => caseReferrals.id, { onDelete: "cascade" }),
+    instalmentNo: integer("instalment_no").notNull(),
+    dueDate: date("due_date").notNull(),
+    amountDue: numeric("amount_due", { precision: 15, scale: 2 }).notNull(),
+    state: instalmentStateEnum("state").notNull().default("due"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uq_schedule_instalment").on(t.caseReferralId, t.instalmentNo),
+    index("ix_schedule_due_date").on(t.dueDate),
+  ],
+);
+
+// ─── Attachments / documents (spec: DocumentLink) ────────────────────────────
+
+export const caseAttachments = pgTable(
+  "case_attachments",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    caseReferralId: text("case_referral_id")
+      .notNull()
+      .references(() => caseReferrals.id, { onDelete: "cascade" }),
+    fileName: text("file_name").notNull(),
+    fileType: text("file_type").notNull(),
+    fileUrl: text("file_url").notNull(),
+    documentType: documentTypeEnum("document_type").notNull().default("other"),
+    isWithdrawn: boolean("is_withdrawn").notNull().default(false),
+    withdrawnBy: text("withdrawn_by").references(() => user.id, { onDelete: "set null" }),
+    withdrawnAt: timestamp("withdrawn_at"),
+    withdrawalReason: text("withdrawal_reason"),
+    uploadedBy: text("uploaded_by").references(() => user.id, { onDelete: "set null" }),
+    uploadedAt: timestamp("uploaded_at").notNull().default(sql`now()`),
+  },
+  (t) => [index("ix_attachment_referral").on(t.caseReferralId)],
+);
+
+// ─── Alerts (§13) ────────────────────────────────────────────────────────────
+
+export const alertTypeEnum = pgEnum("alert_type", [
+  "new_referral",
+  "deadline_lead",
+  "deadline_overdue",
+  "inactivity",
+  "unassigned",
+  "missed_instalment",
+]);
+
+export const alerts = pgTable(
+  "alerts",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    caseReferralId: text("case_referral_id")
+      .notNull()
+      .references(() => caseReferrals.id, { onDelete: "cascade" }),
+    alertType: alertTypeEnum("alert_type").notNull(),
+    // idempotency key: same run for the same case+context should not duplicate
+    dedupeKey: text("dedupe_key").notNull(),
+    recipientId: text("recipient_id").references(() => user.id, { onDelete: "cascade" }),
+    payload: text("payload"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    readAt: timestamp("read_at"),
+    emailedAt: timestamp("emailed_at"),
+  },
+  (t) => [
+    uniqueIndex("uq_alert_dedupe").on(t.caseReferralId, t.recipientId, t.dedupeKey),
+    index("ix_alert_recipient").on(t.recipientId),
+  ],
+);
+
+export const alertJobRun = pgTable("alert_job_run", {
+  id: serial("id").primaryKey(),
+  ranAt: timestamp("ran_at").notNull().defaultNow(),
+  forDate: date("for_date").notNull(),
+  success: boolean("success").notNull().default(true),
+  notes: text("notes"),
+});
+
+// ─── Audit trail (CC-AUD-01) ─────────────────────────────────────────────────
+// Field-level edits and other significant events, keyed by entity type + id.
+
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    entity: text("entity").notNull(),
+    entityId: text("entity_id").notNull(),
+    action: text("action").notNull(),
+    field: text("field"),
+    oldValue: text("old_value"),
+    newValue: text("new_value"),
+    reason: text("reason"),
+    actorId: text("actor_id").references(() => user.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("ix_audit_entity").on(t.entity, t.entityId)],
+);
+
+// ─── Relations ───────────────────────────────────────────────────────────────
+
+export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
-  activities: many(caseActivities, { relationName: "performer" }),
-  proceedings: many(caseProceedings, { relationName: "proceedingPerformer" }),
+  profile: one(userProfile, { fields: [user.id], references: [userProfile.userId] }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -89,219 +518,62 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
 }));
 
-
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
-export const caseTypeEnum = pgEnum("case_type", [
-  "unpaid_contributions",
-  "unpaid_surcharges",
-  "wages_record",
-]);
-
-export const caseStatusEnum = pgEnum("case_status", [
-  "registered",
-  "assessment",
-  "demand_issued",
-  "negotiation",
-  "prosecution",
-  "in_progress",
-  "resolved",
-  "closed",
-]);
-
-export const activityTypeEnum = pgEnum("activity_type", [
-  "stage_changed",
-  "assessment_completed",
-  "demand_letter_issued",
-  "negotiation_entered",
-  "negotiation_completed",
-  "prosecution_filed",
-  "hearing_scheduled",
-  "consent_order_entered",
-  "default_judgment_filed",
-  "enforcement_filed",
-  "case_discontinued",
-  "case_closed",
-  "document_added",
-  "note_added",
-  "payment_recorded",
-  "action_undone",
-]);
-
-export const courtTypeEnum = pgEnum("court_type", [
-  "high_court",
-  "magistrates_court",
-]);
-
-export const proceedingTypeEnum = pgEnum("proceeding_type", [
-  "trial",
-  "hearing",
-  "mention",
-  "consent_order",
-  "default_judgment",
-  "enforcement",
-  "discontinued",
-]);
-
-export const closureTypeEnum = pgEnum("closure_type", [
-  "prosecution_completed",
-  "settlement_completed",
-  "other",
-]);
-
-export const closureReasonEnum = pgEnum("closure_reason", [
-  "statute_barred",
-  "incomplete_for_prosecution",
-  "employer_complied",
-  "withdrawn_by_sinpf",
-  "settled_out_of_court",
-  "other",
-]);
-
-
-// ─── Employers ────────────────────────────────────────────────────────────────
-
-export const employers = pgTable("employers", {
-  id:        text("id").primaryKey().default(sql`gen_random_uuid()`),
-  name:      text("name").notNull().unique(),
-  code:      text("code").notNull().unique(),
-  phone:     text("phone"),
-  email:     text("email"),
-  address:   text("address"),
-  createdAt: timestamp("created_at").notNull().default(sql`now()`),
-  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
-});
-
 export const employerRelations = relations(employers, ({ many }) => ({
   cases: many(caseReferrals),
 }));
 
-
-// ─── Case Referrals ───────────────────────────────────────────────────────────
-
-export const caseReferrals = pgTable("case_referrals", {
-  id:                 text("id").primaryKey().default(sql`gen_random_uuid()`),
-
-  employerId:         text("employer_id").notNull().references(() => employers.id, { onDelete: "restrict" }),
-  referralDate:       date("referral_date").notNull().default(sql`CURRENT_DATE`),
-
-  totalContributions: numeric("total_contributions", { precision: 15, scale: 2 }).notNull().default("0"),
-  totalSurcharges:    numeric("total_surcharges",    { precision: 15, scale: 2 }).notNull().default("0"),
-  wagesRecord:        numeric("wages_record",        { precision: 15, scale: 2 }).notNull().default("0"),
-  grandTotalClaim:    numeric("grand_total_claim",   { precision: 15, scale: 2 }).notNull().default("0"),
-
-  status:             caseStatusEnum("status").notNull().default("registered"),
-  assignedTo:         text("assigned_to").references(() => user.id, { onDelete: "set null" }),
-
-  createdAt:          timestamp("created_at").notNull().default(sql`now()`),
-  updatedAt:          timestamp("updated_at").notNull().default(sql`now()`),
-});
-
 export const caseReferralRelations = relations(caseReferrals, ({ one, many }) => ({
-  employer:    one(employers, { fields: [caseReferrals.employerId], references: [employers.id] }),
-  assignee:    one(user, { fields: [caseReferrals.assignedTo], references: [user.id] }),
-  types:       many(caseReferralTypes),
+  employer: one(employers, { fields: [caseReferrals.employerId], references: [employers.id] }),
+  assignee: one(user, { fields: [caseReferrals.assignedOfficerId], references: [user.id] }),
+  types: many(caseReferralTypes),
   attachments: many(caseAttachments),
-  activities:  many(caseActivities),
-  proceedings: many(caseProceedings),
-  closure:     one(caseClosure),
+  actions: many(referralAction),
+  statusHistory: many(referralStatusHistory),
+  payments: many(casePayments),
+  schedule: many(settlementSchedule),
 }));
 
-
-// ─── Case Types (many-to-many) ────────────────────────────────────────────────
-
-export const caseReferralTypes = pgTable("case_referral_types", {
-  id:             text("id").primaryKey().default(sql`gen_random_uuid()`),
-  caseReferralId: text("case_referral_id").notNull().references(() => caseReferrals.id, { onDelete: "cascade" }),
-  caseType:       caseTypeEnum("case_type").notNull(),
-});
-
-
-// ─── Attachments ──────────────────────────────────────────────────────────────
-
-export const caseAttachments = pgTable("case_attachments", {
-  id:             text("id").primaryKey().default(sql`gen_random_uuid()`),
-  caseReferralId: text("case_referral_id").notNull().references(() => caseReferrals.id, { onDelete: "cascade" }),
-  fileName:       text("file_name").notNull(),
-  fileType:       text("file_type").notNull(),
-  fileUrl:        text("file_url").notNull(),
-  stage:          text("stage"),
-  uploadedBy:     text("uploaded_by").references(() => user.id, { onDelete: "set null" }),
-  uploadedAt:     timestamp("uploaded_at").notNull().default(sql`now()`),
-});
-
-
-// ─── Activity Log ─────────────────────────────────────────────────────────────
-
-export const caseActivities = pgTable("case_activities", {
-  id:             text("id").primaryKey().default(sql`gen_random_uuid()`),
-  caseReferralId: text("case_referral_id").notNull().references(() => caseReferrals.id, { onDelete: "cascade" }),
-  activityType:   activityTypeEnum("activity_type").notNull(),
-  notes:          text("notes"),
-  performedBy:    text("performed_by").references(() => user.id, { onDelete: "set null" }),
-  createdAt:      timestamp("created_at").notNull().default(sql`now()`),
-});
-
-export const caseActivityRelations = relations(caseActivities, ({ one }) => ({
-  case:      one(caseReferrals, { fields: [caseActivities.caseReferralId], references: [caseReferrals.id] }),
-  performer: one(user, { fields: [caseActivities.performedBy], references: [user.id], relationName: "performer" }),
+export const referralActionRelations = relations(referralAction, ({ one }) => ({
+  case: one(caseReferrals, {
+    fields: [referralAction.caseReferralId],
+    references: [caseReferrals.id],
+  }),
+  performer: one(user, { fields: [referralAction.performedBy], references: [user.id] }),
 }));
 
-
-// ─── Court Proceedings ────────────────────────────────────────────────────────
-
-export const caseProceedings = pgTable("case_proceedings", {
-  id:             text("id").primaryKey().default(sql`gen_random_uuid()`),
-  caseReferralId: text("case_referral_id").notNull().references(() => caseReferrals.id, { onDelete: "cascade" }),
-  proceedingType: proceedingTypeEnum("proceeding_type").notNull(),
-  court:          courtTypeEnum("court").notNull(),
-  hearingDate:    date("hearing_date"),
-  nextDate:       date("next_date"),
-  outcomeNotes:   text("outcome_notes"),
-  performedBy:    text("performed_by").references(() => user.id, { onDelete: "set null" }),
-  createdAt:      timestamp("created_at").notNull().default(sql`now()`),
-});
-
-export const caseProceedingRelations = relations(caseProceedings, ({ one }) => ({
-  case:      one(caseReferrals, { fields: [caseProceedings.caseReferralId], references: [caseReferrals.id] }),
-  performer: one(user, { fields: [caseProceedings.performedBy], references: [user.id], relationName: "proceedingPerformer" }),
-}));
-
-
-// ─── Case Closure ─────────────────────────────────────────────────────────────
-
-export const caseClosure = pgTable("case_closure", {
-  id:             text("id").primaryKey().default(sql`gen_random_uuid()`),
-  caseReferralId: text("case_referral_id").notNull().unique().references(() => caseReferrals.id, { onDelete: "cascade" }),
-  closureType:    closureTypeEnum("closure_type").notNull(),
-  closureReason:  closureReasonEnum("closure_reason"),
-  notes:          text("notes"),
-  closedBy:       text("closed_by").references(() => user.id, { onDelete: "set null" }),
-  closedAt:       timestamp("closed_at").notNull().default(sql`now()`),
-});
-
-export const caseClosureRelations = relations(caseClosure, ({ one }) => ({
-  case:     one(caseReferrals, { fields: [caseClosure.caseReferralId], references: [caseReferrals.id] }),
-  closedBy: one(user, { fields: [caseClosure.closedBy], references: [user.id] }),
-}));
-
-
-// ─── Payments ─────────────────────────────────────────────────────────────────
-
-export const casePayments = pgTable("case_payments", {
-  id:                text("id").primaryKey().default(sql`gen_random_uuid()`),
-  caseReferralId:    text("case_referral_id").notNull().references(() => caseReferrals.id, { onDelete: "cascade" }),
-  paymentDate:       date("payment_date").notNull(),
-  contributionsPaid: numeric("contributions_paid", { precision: 15, scale: 2 }).notNull().default("0"),
-  surchargesPaid:    numeric("surcharges_paid",    { precision: 15, scale: 2 }).notNull().default("0"),
-  wagesPaid:         numeric("wages_paid",         { precision: 15, scale: 2 }).notNull().default("0"),
-  reference:         text("reference"),
-  notes:             text("notes"),
-  recordedBy:        text("recorded_by").references(() => user.id, { onDelete: "set null" }),
-  createdAt:         timestamp("created_at").notNull().default(sql`now()`),
-});
+export const referralStatusHistoryRelations = relations(
+  referralStatusHistory,
+  ({ one }) => ({
+    case: one(caseReferrals, {
+      fields: [referralStatusHistory.caseReferralId],
+      references: [caseReferrals.id],
+    }),
+    changer: one(user, {
+      fields: [referralStatusHistory.changedBy],
+      references: [user.id],
+    }),
+  }),
+);
 
 export const casePaymentRelations = relations(casePayments, ({ one }) => ({
-  case:       one(caseReferrals, { fields: [casePayments.caseReferralId], references: [caseReferrals.id] }),
+  case: one(caseReferrals, {
+    fields: [casePayments.caseReferralId],
+    references: [caseReferrals.id],
+  }),
   recordedBy: one(user, { fields: [casePayments.recordedBy], references: [user.id] }),
+}));
+
+export const settlementScheduleRelations = relations(settlementSchedule, ({ one }) => ({
+  case: one(caseReferrals, {
+    fields: [settlementSchedule.caseReferralId],
+    references: [caseReferrals.id],
+  }),
+}));
+
+export const caseAttachmentRelations = relations(caseAttachments, ({ one }) => ({
+  case: one(caseReferrals, {
+    fields: [caseAttachments.caseReferralId],
+    references: [caseReferrals.id],
+  }),
+  uploader: one(user, { fields: [caseAttachments.uploadedBy], references: [user.id] }),
 }));

@@ -14,7 +14,7 @@ import UploadFiles from "./caseform-upload-files";
 import Assignment from "./caseform-assignment";
 
 const TABS = [
-  { step: "1", label: "Employer and Referral Date" },
+  { step: "1", label: "Employer and Referral Details" },
   { step: "2", label: "Case Type and Claim Amount" },
   { step: "3", label: "Supporting Documents" },
   { step: "4", label: "Assignment" },
@@ -42,9 +42,7 @@ function CaseFormHeader({
           aria-label={isMaximized ? "Restore" : "Maximize"}
           className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
         >
-          {isMaximized
-            ? <Minimize2 className="w-4 h-4" />
-            : <Maximize2 className="w-4 h-4" />}
+          {isMaximized ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
         </button>
         <button
           type="button"
@@ -71,7 +69,7 @@ function TabBar({
   return (
     <div className="shrink-0 flex border-b border-border bg-background">
       {TABS.map(({ step, label }, i) => {
-        const isActive  = activeTab === i;
+        const isActive = activeTab === i;
         const isEnabled = canNavigateTo(i);
         return (
           <button
@@ -102,7 +100,7 @@ function GrandTotalBanner({ total }: { total: number }) {
       <div className="relative flex items-center justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">
-            Grand total claim
+            Total claimed
           </p>
           <p className="text-xs text-muted-foreground/70 mt-0.5">Auto-calculated · SBD</p>
         </div>
@@ -120,9 +118,9 @@ function GrandTotalBanner({ total }: { total: number }) {
 
 export default function CaseForm({ onClose }: { onClose: () => void }) {
   const [isMaximized, setIsMaximized] = useState(false);
-  const [activeTab,   setActiveTab]   = useState(0);
-  const [files,       setFiles]       = useState<File[]>([]);
-  const [error,       setError]       = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [files, setFiles] = useState<File[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -134,57 +132,52 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   } = useForm<CaseFormValues>({
     resolver: zodResolver(insertCaseSchema) as Resolver<CaseFormValues>,
     defaultValues: {
-      employerId:         "",
-      referralDate:       format(new Date(), "yyyy-MM-dd"),
-      selectedTypes:      [],
-      // Amount fields start empty rather than at 0 so the placeholder shows
-      // and the user doesn't have to clear a "0" before typing.
-      totalContributions: undefined as unknown as number,
-      totalSurcharges:    undefined as unknown as number,
-      wagesRecord:        undefined as unknown as number,
-      grandTotalClaim:    0,
-      assignedTo:         "",
+      employerId: "",
+      referralDate: format(new Date(), "yyyy-MM-dd"),
+      dateReceived: format(new Date(), "yyyy-MM-dd"),
+      selectedTypes: [],
+      contributionAmount: null,
+      surchargeAmount: null,
+      wagesPeriods: null,
+      periodOfDefaultFrom: null,
+      periodOfDefaultTo: null,
+      assignedOfficerId: null,
     },
   });
 
   const { data: sessionData } = authClient.useSession();
   const currentUserId = sessionData?.user?.id ?? null;
 
-  const selectedTypes   = watch("selectedTypes") ?? [];
-  const employerId      = watch("employerId")         as string ?? "";
-  const referralDate    = watch("referralDate")       as string ?? "";
-  const contributions   = watch("totalContributions") as number || 0;
-  const surcharges      = watch("totalSurcharges")    as number || 0;
-  const wages           = watch("wagesRecord")        as number || 0;
-  const assignedTo      = watch("assignedTo")         as string ?? "";
+  const selectedTypes = watch("selectedTypes") ?? [];
+  const employerId = watch("employerId") as string ?? "";
+  const referralDate = watch("referralDate") as string ?? "";
+  const contribution = (watch("contributionAmount") as number | null) ?? 0;
+  const surcharge = (watch("surchargeAmount") as number | null) ?? 0;
+  const assignedOfficerId = watch("assignedOfficerId") as string | null;
 
-  // Default the assignee to the current user once the session resolves.
   useEffect(() => {
-    if (currentUserId && !assignedTo) {
-      setValue("assignedTo", currentUserId);
+    if (currentUserId && !assignedOfficerId) {
+      setValue("assignedOfficerId", currentUserId);
     }
-  }, [currentUserId, assignedTo, setValue]);
+  }, [currentUserId, assignedOfficerId, setValue]);
 
-  const grandTotal = contributions + surcharges + wages;
+  const total = Number(contribution || 0) + Number(surcharge || 0);
 
-  // Tab 1 gate: employer selected + date set
   const tab1Valid = !!employerId && !!referralDate;
 
-  // Tab 2 gate: at least one type, and every monetary type has a positive amount.
-  // "Wages record" is evidence-only (no claim amount), so it has no amount requirement.
-  const isContributionsSelected  = selectedTypes.includes("Unpaid contributions");
-  const isSurchargesSelected     = selectedTypes.includes("Unpaid surcharges");
+  const isContribSelected = selectedTypes.includes("unpaid_contribution");
+  const isSurchargeSelected = selectedTypes.includes("unpaid_surcharge");
+  const isWagesSelected = selectedTypes.includes("wages_record");
 
-  const contributionsOk = !isContributionsSelected || contributions > 0;
-  const surchargesOk    = !isSurchargesSelected    || surcharges    > 0;
+  const contribOk = !isContribSelected || (Number(contribution) > 0);
+  const surchargeOk = !isSurchargeSelected || (Number(surcharge) > 0);
+  const wagesOk =
+    !isWagesSelected ||
+    (((watch("wagesPeriods") as string | null)?.trim().length ?? 0) > 0);
 
-  const tab2Valid = selectedTypes.length > 0 && contributionsOk && surchargesOk;
-
-  // Tab 3: documents are optional across the whole referral
+  const tab2Valid = selectedTypes.length > 0 && contribOk && surchargeOk && wagesOk;
   const tab3Valid = true;
-
-  // Tab 4: an assignee must be selected (defaults to current user)
-  const tab4Valid = !!assignedTo;
+  const tab4Valid = !!assignedOfficerId;
 
   const canNavigateTo = (i: number) =>
     i === 0 ||
@@ -193,36 +186,34 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
     (i === 3 && tab1Valid && tab2Valid);
 
   const isLastTab = activeTab === TABS.length - 1;
-
-  // Guard for the "Next" button — checks the *current* tab is valid before advancing
   const canAdvance =
-    activeTab === 0 ? tab1Valid :
-    activeTab === 1 ? tab2Valid :
-    activeTab === 2 ? tab3Valid :
-    false;
+    activeTab === 0 ? tab1Valid : activeTab === 1 ? tab2Valid : activeTab === 2 ? tab3Valid : false;
 
   const onSubmit = async (data: CaseFormValues) => {
-    // Only accept submission from the final tab — blocks Enter-key implicit
-    // submits and any other stray submit triggers on earlier tabs.
     if (activeTab !== TABS.length - 1) return;
-    if (!tab2Valid || !tab3Valid || !tab4Valid) return;
+    if (!tab2Valid || !tab4Valid) return;
     setError(null);
     try {
       const formData = new FormData();
-      formData.append("employerId",          data.employerId);
-      formData.append("referralDate",        data.referralDate ?? "");
-      const amt = (v: unknown) => (Number.isFinite(Number(v)) ? String(Number(v)) : "0");
-      formData.append("totalContributions",  amt(data.totalContributions));
-      formData.append("totalSurcharges",     amt(data.totalSurcharges));
-      formData.append("wagesRecord",         amt(data.wagesRecord));
-      formData.append("grandTotalClaim",     String(grandTotal));
-      formData.append("assignedTo",          data.assignedTo ?? "");
+      formData.append("employerId", data.employerId);
+      formData.append("referralDate", data.referralDate ?? "");
+      formData.append("dateReceived", (data.dateReceived as string) ?? data.referralDate ?? "");
+      if (data.contributionAmount != null) {
+        formData.append("contributionAmount", String(data.contributionAmount));
+      }
+      if (data.surchargeAmount != null) {
+        formData.append("surchargeAmount", String(data.surchargeAmount));
+      }
+      if (data.wagesPeriods) formData.append("wagesPeriods", data.wagesPeriods);
+      if (data.periodOfDefaultFrom) formData.append("periodOfDefaultFrom", data.periodOfDefaultFrom);
+      if (data.periodOfDefaultTo) formData.append("periodOfDefaultTo", data.periodOfDefaultTo);
+      if (data.assignedOfficerId) formData.append("assignedTo", data.assignedOfficerId);
       data.selectedTypes.forEach((t) => formData.append("selectedTypes", t));
       files.forEach((f) => formData.append("files", f));
       await createCase(formData);
       onClose();
-    } catch {
-      setError("Failed to save case. Please try again.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save case. Please try again.");
     }
   };
 
@@ -242,31 +233,21 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
 
       <form onSubmit={(e) => e.preventDefault()} className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-linear-to-br from-background via-blue-50 to-blue-100">
         <div className="flex-1 p-6 animate-in fade-in duration-200 space-y-6">
-          {activeTab === 0 && (
-            <General register={register} setValue={setValue} watch={watch} />
-          )}
+          {activeTab === 0 && <General register={register} setValue={setValue} watch={watch} />}
 
           {activeTab === 1 && (
             <>
-              <CaseTypes
-                control={control}
-                register={register}
-                setValue={setValue}
-              />
-              {selectedTypes.length > 0 && (
-                <GrandTotalBanner total={grandTotal} />
-              )}
+              <CaseTypes control={control} register={register} setValue={setValue} />
+              {selectedTypes.length > 0 && total > 0 && <GrandTotalBanner total={total} />}
             </>
           )}
 
-          {activeTab === 2 && (
-            <UploadFiles files={files} setFiles={setFiles} />
-          )}
+          {activeTab === 2 && <UploadFiles files={files} setFiles={setFiles} />}
 
           {activeTab === 3 && (
             <Assignment
-              value={assignedTo}
-              onChange={(id) => setValue("assignedTo", id, { shouldValidate: true })}
+              value={assignedOfficerId ?? ""}
+              onChange={(id) => setValue("assignedOfficerId", id, { shouldValidate: true })}
               currentUserId={currentUserId}
             />
           )}
@@ -278,7 +259,6 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex justify-end items-center gap-4">
           <div className="flex items-center gap-2">
             {activeTab > 0 && (
