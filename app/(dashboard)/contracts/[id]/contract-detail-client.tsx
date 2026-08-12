@@ -46,6 +46,7 @@ type Contract = {
   terminatedByName: string | null;
   owningDepartment: string | null;
   linkedTitleId: string | null;
+  linkedTitleNumber: string | null;
   version: number;
   createdAt: Date;
   updatedAt: Date;
@@ -625,7 +626,18 @@ export default function ContractDetailClient({
           <Field label="End date">{fmtDate(contract.endDate)}</Field>
           <Field label="Value">{fmtMoney(contract.contractValue, contract.currency)}</Field>
           <Field label="Owning department">{contract.owningDepartment ?? "—"}</Field>
-          <Field label="Linked title">{contract.linkedTitleId ?? "—"}</Field>
+          <Field label="Linked title">
+            {contract.linkedTitleId && contract.linkedTitleNumber ? (
+              <Link
+                href={`/titles/${contract.linkedTitleId}`}
+                className="font-semibold text-primary hover:underline tabular-nums"
+              >
+                {contract.linkedTitleNumber}
+              </Link>
+            ) : (
+              contract.linkedTitleId ?? "—"
+            )}
+          </Field>
           <Field label="Created">{fmtDateTime(contract.createdAt)}</Field>
         </div>
         <div className="mt-4">

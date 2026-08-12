@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { contracts, contractAttachments, user } from "@/db/schema";
+import { contracts, contractAttachments, titles, user } from "@/db/schema";
 import { currentUser, can } from "@/lib/rbac";
 import { getDownloadUrl } from "@/lib/storage";
 import ContractDetailClient from "./contract-detail-client";
@@ -12,6 +12,9 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
   if (!me) redirect("/login");
   if (!can(me.role, "view_contract")) redirect("/contracts");
 
+  // FR-M5-004 — bidirectional link. LEFT JOIN titles on linked_title_id so
+  // the client can render "Linked title" as a navigable link when it matches
+  // a real title, or fall back to plain text (e.g. legacy free-text values).
   const [row] = await db
     .select({
       id: contracts.id,
@@ -29,12 +32,14 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
       terminatedByName: user.name,
       owningDepartment: contracts.owningDepartment,
       linkedTitleId: contracts.linkedTitleId,
+      linkedTitleNumber: titles.titleNumber,
       version: contracts.version,
       createdAt: contracts.createdAt,
       updatedAt: contracts.updatedAt,
     })
     .from(contracts)
     .leftJoin(user, eq(user.id, contracts.terminatedBy))
+    .leftJoin(titles, eq(titles.id, contracts.linkedTitleId))
     .where(eq(contracts.id, id));
   if (!row) notFound();
 

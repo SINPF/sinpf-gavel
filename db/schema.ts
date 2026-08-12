@@ -796,6 +796,146 @@ export const legalOpinionAttachments = pgTable(
   (t) => [index("ix_legal_opinion_attachment_opinion").on(t.legalOpinionId)],
 );
 
+// ─── Title Register (Module 5) ───────────────────────────────────────────────
+// Spec §10. Titles have no LSD-XXX system reference — the user-supplied
+// title_number is the primary key from the user's perspective. Encumbrances
+// are a child entity because one title can carry several, each with its own
+// lifecycle. Discharge is one-way (like BR-M4-01 finalisation) and requires
+// both a date and a supporting document per AC-M5-002.2.
+
+// Q-17 flagged in the SRS: these ownership types await confirmation of
+// Solomon Islands land tenure conventions. Reflecting the SRS values as-is.
+export const titleOwnershipTypeEnum = pgEnum("title_ownership_type", [
+  "perpetual_estate",
+  "fixed_term_estate",
+  "leasehold_interest",
+  "other",
+]);
+
+export const encumbranceTypeEnum = pgEnum("encumbrance_type", [
+  "lease",
+  "mortgage",
+  "caveat",
+  "easement",
+  "other",
+]);
+
+export const encumbranceStateEnum = pgEnum("encumbrance_state", [
+  "active",
+  "discharged",
+]);
+
+export const titleDocumentTypeEnum = pgEnum("title_document_type", [
+  "title_deed",
+  "certificate_of_title",
+  "survey_plan",
+  "encumbrance_document",
+  "discharge_document",
+  "other",
+]);
+
+export const titles = pgTable(
+  "titles",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    titleNumber: text("title_number").notNull().unique(),
+    location: text("location").notNull(),
+    ownershipType: titleOwnershipTypeEnum("ownership_type").notNull(),
+    // Registered proprietor — may differ from SINPF when held via a subsidiary
+    // or trustee. Nullable per SRS.
+    registeredOwner: text("registered_owner"),
+    // Required when ownership_type = fixed_term_estate. Enforced in validator
+    // + server action rather than as a DB check.
+    termStart: date("term_start"),
+    termEnd: date("term_end"),
+    notes: text("notes"),
+
+    version: integer("version").notNull().default(1),
+    isDeleted: boolean("is_deleted").notNull().default(false),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("ix_title_number").on(t.titleNumber),
+    index("ix_title_location").on(t.location),
+    index("ix_title_ownership").on(t.ownershipType),
+    index("ix_title_term_end").on(t.termEnd),
+  ],
+);
+
+// Q-18 blocks the "linked disputes" half of FR-M5-004: no dispute record
+// exists anywhere in the SRS. Skipped intentionally. Contract links are
+// wired via encumbrances.linked_contract_id (bare text, matches the
+// contracts.linked_title_id pattern at line 500).
+export const encumbrances = pgTable(
+  "encumbrances",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    titleId: text("title_id")
+      .notNull()
+      .references(() => titles.id, { onDelete: "restrict" }),
+    encumbranceType: encumbranceTypeEnum("encumbrance_type").notNull(),
+    holderName: text("holder_name").notNull(),
+    registeredDate: date("registered_date").notNull(),
+    expiryDate: date("expiry_date"),
+    state: encumbranceStateEnum("state").notNull().default("active"),
+
+    dischargedDate: date("discharged_date"),
+    dischargedBy: text("discharged_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    dischargeReason: text("discharge_reason"),
+
+    linkedContractId: text("linked_contract_id"),
+
+    version: integer("version").notNull().default(1),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (t) => [
+    index("ix_encumbrance_title").on(t.titleId),
+    index("ix_encumbrance_state").on(t.state),
+    index("ix_encumbrance_expiry").on(t.expiryDate),
+    index("ix_encumbrance_linked_contract").on(t.linkedContractId),
+  ],
+);
+
+// Single attachment table for the title itself and any of its encumbrances.
+// encumbrance_id nullable lets a discharge_document (AC-M5-002.2) scope to a
+// specific encumbrance rather than the parent title.
+export const titleAttachments = pgTable(
+  "title_attachments",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+    titleId: text("title_id")
+      .notNull()
+      .references(() => titles.id, { onDelete: "cascade" }),
+    encumbranceId: text("encumbrance_id").references(() => encumbrances.id, {
+      onDelete: "set null",
+    }),
+    fileName: text("file_name").notNull(),
+    fileType: text("file_type").notNull(),
+    fileUrl: text("file_url").notNull(),
+    documentType: titleDocumentTypeEnum("document_type").notNull().default("other"),
+    isWithdrawn: boolean("is_withdrawn").notNull().default(false),
+    withdrawnBy: text("withdrawn_by").references(() => user.id, { onDelete: "set null" }),
+    withdrawnAt: timestamp("withdrawn_at"),
+    withdrawalReason: text("withdrawal_reason"),
+    uploadedBy: text("uploaded_by").references(() => user.id, { onDelete: "set null" }),
+    uploadedAt: timestamp("uploaded_at").notNull().default(sql`now()`),
+  },
+  (t) => [
+    index("ix_title_attachment_title").on(t.titleId),
+    index("ix_title_attachment_encumbrance").on(t.encumbranceId),
+  ],
+);
+
 // ─── Relations ───────────────────────────────────────────────────────────────
 
 export const userRelations = relations(user, ({ many, one }) => ({
@@ -927,3 +1067,33 @@ export const legalOpinionAttachmentRelations = relations(
     }),
   }),
 );
+
+export const titleRelations = relations(titles, ({ many, one }) => ({
+  encumbrances: many(encumbrances),
+  attachments: many(titleAttachments),
+  creator: one(user, { fields: [titles.createdBy], references: [user.id] }),
+}));
+
+export const encumbranceRelations = relations(encumbrances, ({ one, many }) => ({
+  title: one(titles, { fields: [encumbrances.titleId], references: [titles.id] }),
+  discharger: one(user, {
+    fields: [encumbrances.dischargedBy],
+    references: [user.id],
+  }),
+  attachments: many(titleAttachments),
+}));
+
+export const titleAttachmentRelations = relations(titleAttachments, ({ one }) => ({
+  title: one(titles, {
+    fields: [titleAttachments.titleId],
+    references: [titles.id],
+  }),
+  encumbrance: one(encumbrances, {
+    fields: [titleAttachments.encumbranceId],
+    references: [encumbrances.id],
+  }),
+  uploader: one(user, {
+    fields: [titleAttachments.uploadedBy],
+    references: [user.id],
+  }),
+}));

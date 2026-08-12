@@ -54,7 +54,16 @@ export type Operation =
   | "update_legal_opinion"
   | "finalise_legal_opinion"
   | "upload_legal_opinion_document"
-  | "withdraw_legal_opinion_document";
+  | "withdraw_legal_opinion_document"
+  // Module 5 — Title Register
+  | "view_title"
+  | "create_title"
+  | "update_title"
+  | "record_encumbrance"
+  | "update_encumbrance"
+  | "discharge_encumbrance"
+  | "upload_title_document"
+  | "withdraw_title_document";
 
 // Cell values: true = allowed, "own" = allowed only for own cases (BR-M1-06),
 // "request" = may only request via pending_decision. Undefined = refused.
@@ -183,6 +192,34 @@ const MATRIX: Record<Operation, Partial<Record<Role, Cell>>> = {
     legal_officer: "own", mls: true,
   },
   withdraw_legal_opinion_document: {
+    mls: true,
+  },
+  // Module 5 — Titles. §10 is silent on RBAC; mirroring §3's shape.
+  // Discharge is MLS-only because it's an irreversible legal event, on the
+  // same footing as terminating a contract.
+  view_title: {
+    registry_clerk: true, legal_officer: true, mls: true,
+    external_auditor: true, system_admin: true,
+  },
+  create_title: {
+    registry_clerk: true, legal_officer: true, mls: true,
+  },
+  update_title: {
+    legal_officer: true, mls: true,
+  },
+  record_encumbrance: {
+    legal_officer: true, mls: true,
+  },
+  update_encumbrance: {
+    legal_officer: true, mls: true,
+  },
+  discharge_encumbrance: {
+    mls: true,
+  },
+  upload_title_document: {
+    registry_clerk: true, legal_officer: true, mls: true,
+  },
+  withdraw_title_document: {
     mls: true,
   },
 };
