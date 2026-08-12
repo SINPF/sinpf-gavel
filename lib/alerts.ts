@@ -3,7 +3,7 @@
 // every day since the last successful run — a missed court-date warning
 // is exactly the failure the spec exists to prevent.
 
-import { and, eq, sql, isNull, isNotNull, lte, gte, inArray, notInArray } from "drizzle-orm";
+import { and, eq, sql, isNull, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   caseReferrals,

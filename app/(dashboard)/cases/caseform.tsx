@@ -148,6 +148,11 @@ export default function CaseForm({ onClose }: { onClose: () => void }) {
   const { data: sessionData } = authClient.useSession();
   const currentUserId = sessionData?.user?.id ?? null;
 
+  // react-hook-form's watch() returns a function that can't be memoized by
+  // React Compiler; the whole component skips compilation. Switching to
+  // useWatch per-field would change re-render semantics, so we accept the
+  // skip here and disable the rule at the call sites.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const selectedTypes = watch("selectedTypes") ?? [];
   const employerId = watch("employerId") as string ?? "";
   const referralDate = watch("referralDate") as string ?? "";

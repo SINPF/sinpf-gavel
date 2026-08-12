@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { Plus, Trash2, Save, UploadCloud } from "lucide-react";
+import { Plus, Trash2, Save } from "lucide-react";
 import { DateField } from "@/components/ui/DateField";
 import { AmountInput } from "@/components/ui/AmountInput";
 import { createContract } from "@/app/actions/create-contract";

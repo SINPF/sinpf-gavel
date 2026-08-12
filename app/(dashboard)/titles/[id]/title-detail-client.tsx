@@ -107,12 +107,6 @@ const ENC_STATE_STYLES: Record<EncumbranceState, string> = {
   discharged: "bg-muted-foreground text-background",
 };
 
-const ENC_DOC_TYPES: { value: string; label: string }[] = [
-  { value: "encumbrance_document", label: "Encumbrance document" },
-  { value: "discharge_document", label: "Discharge document" },
-  { value: "other", label: "Other" },
-];
-
 const TITLE_DOC_TYPES: { value: string; label: string }[] = [
   { value: "title_deed", label: "Title deed" },
   { value: "certificate_of_title", label: "Certificate of title" },
@@ -1130,13 +1124,18 @@ export default function TitleDetailClient({
   const isFixedTerm = ownership === "fixed_term_estate";
   const activeEncCount = encumbrancesData.filter((e) => e.state === "active").length;
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Snapshot "today" and the 90-day expiring horizon at mount. useState's lazy
+  // initializer keeps the impure Date calls out of the render body so React
+  // Compiler doesn't skip memoization.
+  const [today] = useState(() => new Date().toISOString().slice(0, 10));
+  const [expiringHorizon] = useState(() =>
+    new Date(Date.now() + 90 * 86_400_000).toISOString().slice(0, 10),
+  );
   const expiring =
     isFixedTerm &&
     title.termEnd &&
     title.termEnd >= today &&
-    title.termEnd <=
-      new Date(Date.now() + 90 * 86_400_000).toISOString().slice(0, 10);
+    title.termEnd <= expiringHorizon;
   const expired = isFixedTerm && title.termEnd && title.termEnd < today;
 
   return (

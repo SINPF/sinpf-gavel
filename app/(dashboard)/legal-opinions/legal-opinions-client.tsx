@@ -196,7 +196,7 @@ export default function LegalOpinionsClient({
             Legal opinions
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            LSD's institutional advice, searchable and immutable once finalised.
+            LSD&apos;s institutional advice, searchable and immutable once finalised.
           </p>
         </div>
         {canCreate && (

@@ -1,7 +1,7 @@
 "use server";
 
 import * as XLSX from "xlsx";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   caseReferrals,

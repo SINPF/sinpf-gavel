@@ -1,7 +1,7 @@
 // Six reports per spec §14. Every report names one governing date and
 // point-in-time evaluates values as at period_end (BR-M1-11).
 
-import { and, eq, sql, inArray, gte, lte, isNotNull, notInArray, count } from "drizzle-orm";
+import { and, eq, sql, inArray, gte, lte, isNotNull, notInArray } from "drizzle-orm";
 import { db } from "@/db";
 import {
   caseReferrals,
@@ -454,7 +454,7 @@ export async function rpt06(period: Period): Promise<Rpt06Row[]> {
   }
 
   const byAge = new Map<string, Rpt06Row>();
-  for (const [label, low, high] of AGE_BANDS) {
+  for (const [label] of AGE_BANDS) {
     byAge.set(label, {
       breakdown: "age",
       bucket: label,

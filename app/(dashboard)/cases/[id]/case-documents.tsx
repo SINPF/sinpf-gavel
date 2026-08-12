@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Upload, Download, X, Trash2 } from "lucide-react";
+import { FileText, Upload, Download, Trash2 } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { uploadCaseDocument } from "@/app/actions/upload-case-document";
 import { withdrawDocument } from "@/app/actions/withdraw-document";

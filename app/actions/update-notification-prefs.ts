@@ -1,6 +1,5 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { userNotificationPref } from "@/db/schema";
 import { requireUser } from "@/lib/rbac";

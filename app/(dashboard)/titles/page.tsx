@@ -5,7 +5,7 @@ import {
   titleAttachments,
   contracts,
 } from "@/db/schema";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { currentUser, can } from "@/lib/rbac";
 import TitlesClient from "./titles-client";

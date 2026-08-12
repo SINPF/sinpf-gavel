@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import { format, parse, isValid } from "date-fns";
 import { STATUS_LABELS, type BadgeStatus } from "@/components/ui/Badge";
 import type { ReferralDetail } from "@/db/types";
-import { FileText, Gavel, ArrowRight, DollarSign, XCircle, Undo2 } from "lucide-react";
+import { FileText, Gavel, ArrowRight, DollarSign } from "lucide-react";
 
 type EventKind = "status" | "action" | "payment" | "document";
 

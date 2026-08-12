@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { contracts, contractAttachments } from "@/db/schema";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { currentUser, can } from "@/lib/rbac";
 import ContractsClient from "./contracts-client";

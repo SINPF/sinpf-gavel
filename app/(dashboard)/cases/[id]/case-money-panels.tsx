@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format, parse, isValid } from "date-fns";
-import { DollarSign, Plus, RotateCcw, Calendar, Trash2 } from "lucide-react";
+import { Plus, RotateCcw, Calendar, Trash2 } from "lucide-react";
 import { DateField } from "@/components/ui/DateField";
 import { AmountInput } from "@/components/ui/AmountInput";
 import { recordPayment, reversePayment } from "@/app/actions/record-payment";
@@ -11,7 +11,7 @@ import {
   replaceSettlementSchedule,
   type ScheduleInstalment,
 } from "@/app/actions/settlement-schedule";
-import type { ReferralDetail, SettlementInstalment } from "@/db/types";
+import type { ReferralDetail } from "@/db/types";
 
 const inputCls =
   "w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-ring transition-colors placeholder:text-muted-foreground/40";
@@ -335,7 +335,11 @@ export function SettlementSchedulePanel({
     try {
       await replaceSettlementSchedule({
         caseId: referral.id,
-        instalments: drafts.map(({ key, ...rest }) => rest),
+        instalments: drafts.map((d) => ({
+          instalmentNo: d.instalmentNo,
+          dueDate: d.dueDate,
+          amountDue: d.amountDue,
+        })),
         agreedLesserSum,
       });
       setEditing(false);

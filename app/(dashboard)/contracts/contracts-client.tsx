@@ -7,14 +7,10 @@ import { format, parse, isValid } from "date-fns";
 import {
   Plus,
   Search,
-  ListFilter,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Check,
   X,
   AlertCircle,
-  FileText,
 } from "lucide-react";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { contractStatus, CONTRACT_STATUS_LABELS, type ContractStatus } from "@/lib/contract-status";

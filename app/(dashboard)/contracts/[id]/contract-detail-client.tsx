@@ -405,7 +405,6 @@ function DocumentsPanel({
   const [docType, setDocType] = useState("signed_contract");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileRef = useState<HTMLInputElement | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
 
   async function submit() {

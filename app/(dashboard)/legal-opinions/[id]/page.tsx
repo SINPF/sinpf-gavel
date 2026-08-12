@@ -6,7 +6,6 @@ import {
   legalOpinions,
   legalOpinionAttachments,
   user,
-  userProfile,
 } from "@/db/schema";
 import { currentUser, can } from "@/lib/rbac";
 import { getDownloadUrl } from "@/lib/storage";
