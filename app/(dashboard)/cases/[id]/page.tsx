@@ -20,6 +20,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { currentUser, activeLegalOfficers, can, canRequest } from "@/lib/rbac";
 import { availableTransitions } from "@/lib/available-transitions";
 import type { Status } from "@/lib/status-machine";
+import { computeIntakeCompleteness } from "@/lib/intake";
 
 const performerUser = alias(user, "performer_user");
 const statusChangerUser = alias(user, "status_changer_user");
@@ -182,10 +183,11 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     outstanding,
   };
 
-  const [me, officers, transitions] = await Promise.all([
+  const [me, officers, transitions, intakeChecklist] = await Promise.all([
     currentUser(),
     activeLegalOfficers(),
     availableTransitions(id, row.status as Status),
+    computeIntakeCompleteness(id),
   ]);
   const ownedByMe = !!me && me.id === row.assignedOfficerId;
   const permissions = {
@@ -198,6 +200,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     recordAction: !!me && can(me.role, "record_action", { ownedByUserId: row.assignedOfficerId }),
     setRiskFlag: !!me && can(me.role, "set_risk_flag", { ownedByUserId: row.assignedOfficerId }),
     uploadDocument: !!me && can(me.role, "upload_document"),
+    withdrawDocument: !!me && can(me.role, "withdraw_document"),
   };
 
   return (
@@ -207,6 +210,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
       officers={officers}
       permissions={permissions}
       currentUserId={me?.id ?? null}
+      intakeChecklist={intakeChecklist}
     />
   );
 }

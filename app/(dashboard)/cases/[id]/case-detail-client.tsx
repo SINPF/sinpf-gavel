@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText, AlertCircle, Pencil, Save, X, Download } from "lucide-react";
+import { ArrowLeft, AlertCircle, Pencil, Save, X, CheckCircle2 } from "lucide-react";
 import { format, parse, isValid } from "date-fns";
 import { Badge, STATUS_LABELS, type BadgeStatus } from "@/components/ui/Badge";
 import { DateField } from "@/components/ui/DateField";
@@ -11,43 +11,29 @@ import { AmountInput } from "@/components/ui/AmountInput";
 import type { ReferralDetail } from "@/db/types";
 import { correctReferral } from "@/app/actions/correct-referral";
 import { CaseActions, type OfficerOption, type Permissions } from "./case-actions";
+import { CaseTimeline } from "./case-timeline";
+import { CaseDocuments } from "./case-documents";
 import type { AvailableTransition } from "@/lib/available-transitions";
+import type { IntakeChecklist } from "@/lib/intake";
 
 const TYPE_LABELS: Record<string, string> = {
   unpaid_contribution: "Contribution",
-  unpaid_surcharge:    "Surcharge",
-  wages_record:        "Wages record",
-};
-
-const ACTION_LABELS: Record<string, string> = {
-  demand_letter_issued: "Demand letter issued",
-  notice_served:        "Notice served",
-  employer_meeting:     "Employer meeting",
-  phone_follow_up:      "Phone follow-up",
-  site_visit:           "Site visit",
-  affidavit_prepared:   "Affidavit prepared",
-  court_appearance:     "Court appearance",
-  deed_executed:        "Deed executed",
-  other:                "Other",
+  unpaid_surcharge: "Surcharge",
+  wages_record: "Wages record",
 };
 
 const RISK_LABELS: Record<string, string> = {
   no_longer_operating: "No longer operating",
-  statute_barred:      "Statute barred",
-  untraceable:         "Untraceable",
-  in_liquidation:      "In liquidation",
-  other:               "Other",
+  statute_barred: "Statute barred",
+  untraceable: "Untraceable",
+  in_liquidation: "In liquidation",
+  other: "Other",
 };
 
 function fmtDate(v: string | Date | null | undefined) {
   if (!v) return "—";
   const d = typeof v === "string" ? parse(v, "yyyy-MM-dd", new Date()) : v;
   return isValid(d) ? format(d, "d MMM yyyy") : String(v);
-}
-function fmtDateTime(v: string | Date | null | undefined) {
-  if (!v) return "—";
-  const d = typeof v === "string" ? new Date(v) : v;
-  return isValid(d) ? format(d, "d MMM yyyy · HH:mm") : String(v);
 }
 function fmtSbd(v: string | number | null | undefined) {
   const n = Number(v ?? 0);
@@ -61,6 +47,44 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         {label}
       </p>
       <p className="mt-1 text-sm text-foreground">{children}</p>
+    </div>
+  );
+}
+
+function IntakeChecklistPanel({ checklist }: { checklist: IntakeChecklist }) {
+  const items = [
+    { label: "EMS referral letter", ok: checklist.hasEmsLetter },
+    { label: "Contribution statement", ok: checklist.hasContributionStatement },
+    { label: "Compliance notes", ok: checklist.hasComplianceNote },
+    { label: "Period of default", ok: checklist.hasDefaultPeriod },
+    { label: "Wage periods (when applicable)", ok: checklist.hasWagesPeriods },
+  ];
+  const missingCount = items.filter((i) => !i.ok).length;
+  const bg = missingCount === 0 ? "bg-success/5 border-success/30" : "bg-warning/5 border-warning/30";
+  return (
+    <div className={`rounded-md border p-4 ${bg}`}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-semibold text-foreground">
+          Intake checklist
+        </p>
+        <span className="text-xs text-muted-foreground">
+          {items.length - missingCount} / {items.length} complete
+        </span>
+      </div>
+      <ul className="space-y-1.5">
+        {items.map((i) => (
+          <li key={i.label} className="flex items-center gap-2 text-sm">
+            {i.ok ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
+            ) : (
+              <AlertCircle className="w-3.5 h-3.5 text-warning shrink-0" />
+            )}
+            <span className={i.ok ? "text-muted-foreground line-through" : "text-foreground"}>
+              {i.label}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -217,19 +241,20 @@ export default function CaseDetailClient({
   transitions,
   officers,
   permissions,
+  intakeChecklist,
 }: {
   referral: ReferralDetail;
   transitions: AvailableTransition[];
   officers: OfficerOption[];
   permissions: Permissions;
   currentUserId: string | null;
+  intakeChecklist: IntakeChecklist;
 }) {
   const [correcting, setCorrecting] = useState(false);
   const isTerminal = ["closed", "withdrawn", "not_filed"].includes(referral.status);
 
   return (
     <div className="space-y-6">
-      {/* Back link */}
       <Link
         href="/cases"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
@@ -238,7 +263,6 @@ export default function CaseDetailClient({
         Back to cases
       </Link>
 
-      {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">
@@ -281,13 +305,6 @@ export default function CaseDetailClient({
         <CorrectPanel referral={referral} onClose={() => setCorrecting(false)} />
       )}
 
-      <CaseActions
-        referral={referral}
-        transitions={transitions}
-        officers={officers}
-        permissions={permissions}
-      />
-
       {/* Money summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="rounded-md border border-border bg-card p-4">
@@ -315,6 +332,17 @@ export default function CaseDetailClient({
           </p>
         </div>
       </div>
+
+      {!referral.isIntakeComplete && (
+        <IntakeChecklistPanel checklist={intakeChecklist} />
+      )}
+
+      <CaseActions
+        referral={referral}
+        transitions={transitions}
+        officers={officers}
+        permissions={permissions}
+      />
 
       {/* Overview grid */}
       <div className="rounded-md border border-border bg-card p-5">
@@ -392,139 +420,14 @@ export default function CaseDetailClient({
         )}
       </div>
 
-      {/* Documents */}
-      <div className="rounded-md border border-border bg-card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-serif text-lg font-semibold text-foreground">Documents</h2>
-          <span className="text-xs text-muted-foreground">{referral.documents.length} file(s)</span>
-        </div>
-        {referral.documents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No documents uploaded.</p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {referral.documents.map((d) => (
-              <li key={d.id} className="py-3 flex items-center gap-3">
-                <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-medium text-foreground truncate">
-                    {d.fileName}
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {d.documentType} · {fmtDateTime(d.uploadedAt)}
-                  </span>
-                </span>
-                {d.presignedUrl && (
-                  <a
-                    href={d.presignedUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Download
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <CaseDocuments
+        caseId={referral.id}
+        documents={referral.documents}
+        canUpload={permissions.uploadDocument}
+        canWithdraw={permissions.withdrawDocument}
+      />
 
-      {/* Status history */}
-      <div className="rounded-md border border-border bg-card p-5">
-        <h2 className="font-serif text-lg font-semibold text-foreground mb-4">Status history</h2>
-        {referral.statusHistory.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No status changes yet.</p>
-        ) : (
-          <ul className="space-y-3">
-            {referral.statusHistory.map((h) => (
-              <li key={h.id} className="flex items-start gap-3 text-sm">
-                <span className="mt-1 shrink-0 w-2 h-2 rounded-full bg-primary" />
-                <span className="flex-1 min-w-0">
-                  <span className="block text-foreground">
-                    {h.fromStatus ? (
-                      <>
-                        {STATUS_LABELS[h.fromStatus as BadgeStatus] ?? h.fromStatus}{" "}
-                        →{" "}
-                        <span className="font-semibold">
-                          {STATUS_LABELS[h.toStatus as BadgeStatus] ?? h.toStatus}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="font-semibold">Referral created</span>
-                    )}
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {fmtDateTime(h.changedAt)}
-                    {h.changedByName ? ` · by ${h.changedByName}` : ""}
-                    {h.reason ? ` · ${h.reason}` : ""}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="rounded-md border border-border bg-card p-5">
-        <h2 className="font-serif text-lg font-semibold text-foreground mb-4">Actions</h2>
-        {referral.actions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No actions recorded.</p>
-        ) : (
-          <ul className="space-y-3">
-            {referral.actions.map((a) => (
-              <li key={a.id} className="text-sm">
-                <p className="font-semibold text-foreground">
-                  {ACTION_LABELS[a.actionType] ?? a.actionType}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {fmtDate(a.actionDate)}
-                  {a.performerName ? ` · by ${a.performerName}` : ""}
-                </p>
-                <p className="mt-1 text-foreground">{a.notes}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Payments */}
-      <div className="rounded-md border border-border bg-card p-5">
-        <h2 className="font-serif text-lg font-semibold text-foreground mb-4">Payments</h2>
-        {referral.payments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No payments recorded.</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-muted-foreground border-b border-border">
-                <th className="py-2 font-medium">Date</th>
-                <th className="py-2 font-medium text-right">Contribution</th>
-                <th className="py-2 font-medium text-right">Surcharge</th>
-                <th className="py-2 font-medium">Receipt</th>
-                <th className="py-2 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {referral.payments.map((p) => (
-                <tr key={p.id} className={p.isReversed ? "text-muted-foreground line-through" : ""}>
-                  <td className="py-2 tabular-nums">{fmtDate(p.paymentDate)}</td>
-                  <td className="py-2 tabular-nums text-right">{fmtSbd(p.amountContribution)}</td>
-                  <td className="py-2 tabular-nums text-right">{fmtSbd(p.amountSurcharge)}</td>
-                  <td className="py-2 text-xs">{p.receiptReference ?? "—"}</td>
-                  <td className="py-2 text-xs">
-                    {p.isReversed ? (
-                      <span className="text-destructive font-semibold">Reversed</span>
-                    ) : (
-                      "Active"
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <CaseTimeline referral={referral} />
     </div>
   );
 }
