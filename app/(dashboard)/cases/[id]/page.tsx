@@ -201,6 +201,8 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
     setRiskFlag: !!me && can(me.role, "set_risk_flag", { ownedByUserId: row.assignedOfficerId }),
     uploadDocument: !!me && can(me.role, "upload_document"),
     withdrawDocument: !!me && can(me.role, "withdraw_document"),
+    recordPayment: !!me && can(me.role, "record_payment", { ownedByUserId: row.assignedOfficerId }),
+    reversePayment: !!me && can(me.role, "reverse_payment"),
   };
 
   return (

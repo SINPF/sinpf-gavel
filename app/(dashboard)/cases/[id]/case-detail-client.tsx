@@ -13,6 +13,7 @@ import { correctReferral } from "@/app/actions/correct-referral";
 import { CaseActions, type OfficerOption, type Permissions } from "./case-actions";
 import { CaseTimeline } from "./case-timeline";
 import { CaseDocuments } from "./case-documents";
+import { PaymentsPanel, SettlementSchedulePanel } from "./case-money-panels";
 import type { AvailableTransition } from "@/lib/available-transitions";
 import type { IntakeChecklist } from "@/lib/intake";
 
@@ -425,6 +426,18 @@ export default function CaseDetailClient({
         documents={referral.documents}
         canUpload={permissions.uploadDocument}
         canWithdraw={permissions.withdrawDocument}
+      />
+
+      <PaymentsPanel
+        referral={referral}
+        canRecord={permissions.recordPayment}
+        canReverse={permissions.reversePayment}
+      />
+
+      <SettlementSchedulePanel
+        referral={referral}
+        canEdit={permissions.recordAction}
+        totalClaimed={Number(referral.totalClaimed ?? 0)}
       />
 
       <CaseTimeline referral={referral} />

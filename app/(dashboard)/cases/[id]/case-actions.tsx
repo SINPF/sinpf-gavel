@@ -25,6 +25,8 @@ export type Permissions = {
   setRiskFlag: boolean;
   uploadDocument: boolean;
   withdrawDocument: boolean;
+  recordPayment: boolean;
+  reversePayment: boolean;
 };
 
 const TERMINAL: BadgeStatus[] = ["closed", "withdrawn", "not_filed"];
