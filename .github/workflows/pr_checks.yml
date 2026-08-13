@@ -1,0 +1,56 @@
+# Job name "PR checks" is referenced by ruleset "main-protection".
+# Renaming it will break the required status check.
+
+name: PR checks
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: PR checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1"
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Build
+        # next build reads DATABASE_URL for schema-typed queries. Any value
+        # parseable as a Postgres URL is enough — nothing connects at build.
+        env:
+          DATABASE_URL: postgres://build:build@localhost:5432/build
+        run: bun run build
+
+      # ---------- image ----------
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha,scope=lcms
+          cache-to: type=gha,mode=max,scope=lcms

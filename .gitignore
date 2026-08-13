@@ -10,6 +10,13 @@
 !.yarn/releases
 !.yarn/versions
 
+# lockfiles — this project uses bun; keep bun.lock, ignore the rest so a
+# stray `npm install` or `yarn install` doesn't check in a second lockfile
+# that will silently drift from bun.lock.
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
 # testing
 /coverage
 
