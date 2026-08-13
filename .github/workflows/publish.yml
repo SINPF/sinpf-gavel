@@ -1,0 +1,65 @@
+# Publishes the app image to ghcr.io on every merge to main.
+#
+# Not a required status check — this runs after the merge (PR checks
+# already gated the code). No lint/typecheck/build here; the Dockerfile
+# runs `bun install` + `bun run build` internally so the image itself is
+# the build artefact.
+
+name: Publish
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: publish-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publish image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # ghcr requires lowercase image names; metadata-action lowercases
+          # automatically. Publishes to ghcr.io/<owner>/<repo>.
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=lcms
+          cache-to: type=gha,mode=max,scope=lcms
+
+      - name: Summary
+        run: |
+          echo "### Published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
