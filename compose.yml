@@ -64,22 +64,6 @@ services:
     networks:
       - internal
 
-  # ── DB migrations (on-demand, `--profile migrate`) ──────────────────────────
-  migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: migrate
-    profiles: ["migrate"]
-    command: ["bun", "run", "db:migrate"]
-    environment:
-      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - internal
-
   # ── Wipe users + cases (on-demand, `--profile wipe`) ────────────────────────
   # Truncates auth + case data. Preserves employers.
   # Usage: docker compose --profile wipe run --rm wipe
