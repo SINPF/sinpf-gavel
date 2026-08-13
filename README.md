@@ -120,7 +120,7 @@ employers
 
 ```bash
 git clone <repository-url>
-cd sinpf-lcms
+cd sinpf-gavel
 bun install
 ```
 

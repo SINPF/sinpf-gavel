@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "sinpf-lcms",
+      "name": "sinpf-gavel",
       "dependencies": {
         "@better-auth/drizzle-adapter": "^1.6.3",
         "@hookform/resolvers": "^5.2.2",
