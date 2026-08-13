@@ -16,7 +16,6 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:build": "docker compose up -d --build",
-    "docker:migrate": "docker compose --profile migrate run --rm migrate",
     "docker:wipe": "docker compose --profile wipe run --rm wipe"
   },
   "dependencies": {
@@ -38,7 +37,7 @@
     "react-day-picker": "^10.0.1",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.75.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

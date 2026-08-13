@@ -36,11 +36,3 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]
-
-# ── DB migrations (compose profile: migrate) ─────────────────────────────────
-FROM base AS migrate
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json bun.lock tsconfig.json drizzle.config.ts ./
-COPY db ./db
-CMD ["bun", "run", "db:migrate"]
