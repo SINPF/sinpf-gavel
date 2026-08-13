@@ -119,7 +119,7 @@ const MATRIX: Record<Operation, Partial<Record<Role, Cell>>> = {
     legal_officer: true, mls: true, external_auditor: true,
   },
   view_reports: {
-    legal_officer: "own", mls: true, exec_board: true, external_auditor: true,
+    legal_officer: true, mls: true, exec_board: true, external_auditor: true,
   },
   view_audit: {
     mls: true, external_auditor: true, system_admin: true,
