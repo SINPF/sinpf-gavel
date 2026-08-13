@@ -21,28 +21,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: package-lock.json
+          bun-version: "1"
 
       - name: Install deps
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: bun run lint
 
       - name: Typecheck
-        run: npm run typecheck
+        run: bun run typecheck
 
       - name: Build
         # next build reads DATABASE_URL for schema-typed queries. Any value
         # parseable as a Postgres URL is enough — nothing connects at build.
         env:
           DATABASE_URL: postgres://build:build@localhost:5432/build
-        run: npm run build
+        run: bun run build
 
       # ---------- image ----------
 
