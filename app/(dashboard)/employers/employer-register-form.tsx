@@ -58,7 +58,7 @@ export default function EmployerRegisterForm({ onClose }: { onClose: () => void 
           </div>
           <div>
             <label className={labelCls} htmlFor="er-code">Employer code</label>
-            <input id="er-code" name="code" required placeholder="6-char code" maxLength={6} className={`${inputCls} tabular-nums`} />
+            <input id="er-code" name="code" required placeholder="up to 10 chars" maxLength={10} className={`${inputCls} tabular-nums`} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

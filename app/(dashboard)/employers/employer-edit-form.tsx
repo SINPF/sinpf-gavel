@@ -77,7 +77,7 @@ export default function EmployerEditForm({
   };
 
   return (
-    <div className="w-full max-w-[560px] bg-card rounded-md border border-border shadow-lg overflow-hidden">
+    <div className="w-full max-w-140 bg-card rounded-md border border-border shadow-lg overflow-hidden">
       <header className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-border bg-muted/30">
         <h2 className="font-serif text-xl font-semibold text-foreground tracking-tight">
           Edit employer
@@ -100,7 +100,7 @@ export default function EmployerEditForm({
           </div>
           <div>
             <label className={labelCls} htmlFor="ee-code">Employer code</label>
-            <input id="ee-code" required value={fields.code} onChange={set("code")} maxLength={6} placeholder="6-char code" className={`${inputCls} tabular-nums`} />
+            <input id="ee-code" required value={fields.code} onChange={set("code")} maxLength={10} placeholder="up to 10 chars" className={`${inputCls} tabular-nums`} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
