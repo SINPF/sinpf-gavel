@@ -59,7 +59,7 @@ function parseFile(file: File): Promise<ParsedRow[]> {
           });
 
           if (!row.name || !row.code) row._error = "Missing name or code";
-          else if ((row.code ?? "").length > 6) row._error = "Code exceeds 6 characters";
+          else if ((row.code ?? "").length > 10) row._error = "Code exceeds 10 characters";
 
           rows.push(row);
         }
@@ -271,7 +271,7 @@ export default function EmployerImportForm({ onClose }: { onClose: () => void })
               </div>
               {invalidCount > 0 && (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Invalid rows will be skipped. Only rows with a name and a code (max 6 chars) will be imported.
+                  Invalid rows will be skipped. Only rows with a name and a code (max 10 chars) will be imported.
                 </p>
               )}
             </div>
