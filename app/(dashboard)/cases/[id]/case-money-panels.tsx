@@ -40,8 +40,8 @@ export function PaymentsPanel({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
-  const [contribution, setContribution] = useState<number | "">("");
-  const [surcharge, setSurcharge] = useState<number | "">("");
+  const [contribution, setContribution] = useState("");
+  const [surcharge, setSurcharge] = useState("");
   const [receiptReference, setReceiptReference] = useState("");
   const [scheduleId, setScheduleId] = useState("");
   const [notes, setNotes] = useState("");
@@ -140,9 +140,7 @@ export function PaymentsPanel({
               <label className={labelCls}>Contribution amount (SBD)</label>
               <AmountInput
                 value={contribution}
-                onChange={(e) =>
-                  setContribution(e.target.value === "" ? "" : Number(e.target.value))
-                }
+                onChange={(e) => setContribution(e.target.value)}
                 placeholder="0.00"
                 className={inputCls}
               />
@@ -151,9 +149,7 @@ export function PaymentsPanel({
               <label className={labelCls}>Surcharge amount (SBD)</label>
               <AmountInput
                 value={surcharge}
-                onChange={(e) =>
-                  setSurcharge(e.target.value === "" ? "" : Number(e.target.value))
-                }
+                onChange={(e) => setSurcharge(e.target.value)}
                 placeholder="0.00"
                 className={inputCls}
               />
