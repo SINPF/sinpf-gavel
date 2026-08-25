@@ -19,13 +19,10 @@ export type ScheduleInstalment = {
 };
 
 // FR-M1-023 — replace the case's deed instalment schedule.
-// VR-M1-31 — total must equal total_claimed unless MLS approves a lesser sum.
-// Legal Officers can create; MLS can approve less-than-claimed via
-// `agreedLesserSum: true`.
+// VR-M1-31 — total must equal total_claimed.
 export async function replaceSettlementSchedule(input: {
   caseId: string;
   instalments: ScheduleInstalment[];
-  agreedLesserSum?: boolean;
 }) {
   const [current] = await db
     .select({
@@ -58,14 +55,9 @@ export async function replaceSettlementSchedule(input: {
   const total = input.instalments.reduce((sum, i) => sum + Number(i.amountDue), 0);
   const claimed = Number(current.totalClaimed ?? 0);
   if (Math.abs(total - claimed) > 0.005) {
-    if (total < claimed && input.agreedLesserSum) {
-      // MLS approval required for lesser sum.
-      await assertCan("close_referral"); // MLS proxy — no dedicated permission slot
-    } else {
-      throw new Error(
-        `Instalments total SBD ${total.toFixed(2)}, which does not match the claim of SBD ${claimed.toFixed(2)}.`,
-      );
-    }
+    throw new Error(
+      `Instalments total SBD ${total.toFixed(2)}, which does not match the claim of SBD ${claimed.toFixed(2)}.`,
+    );
   }
 
   const now = new Date();

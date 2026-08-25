@@ -310,12 +310,10 @@ export function SettlementSchedulePanel({
         }))
       : [{ key: "new", instalmentNo: 1, dueDate: "", amountDue: 0 }],
   );
-  const [agreedLesserSum, setAgreedLesserSum] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const total = drafts.reduce((s, d) => s + Number(d.amountDue || 0), 0);
-  const totalDiffers = Math.abs(total - totalClaimed) > 0.005;
 
   async function submit() {
     setError(null);
@@ -336,7 +334,6 @@ export function SettlementSchedulePanel({
           dueDate: d.dueDate,
           amountDue: d.amountDue,
         })),
-        agreedLesserSum,
       });
       setEditing(false);
       router.refresh();
@@ -464,16 +461,6 @@ export function SettlementSchedulePanel({
               Total: <span className="tabular-nums font-semibold">{fmtSbd(total)}</span> ·
               Claimed: <span className="tabular-nums">{fmtSbd(totalClaimed)}</span>
             </span>
-            {totalDiffers && total < totalClaimed && (
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={agreedLesserSum}
-                  onChange={(e) => setAgreedLesserSum(e.target.checked)}
-                />
-                MLS-approved lesser sum
-              </label>
-            )}
           </div>
 
           {error && <p className="text-sm text-destructive font-medium">{error}</p>}
