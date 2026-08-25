@@ -27,6 +27,8 @@ const ACTION_LABELS: Record<string, string> = {
   site_visit: "Site visit",
   affidavit_prepared: "Affidavit prepared",
   court_appearance: "Court appearance",
+  directions: "Directions",
+  consent_order: "Consent order",
   deed_executed: "Deed executed",
   other: "Other action",
 };

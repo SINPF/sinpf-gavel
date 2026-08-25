@@ -179,6 +179,8 @@ export const actionTypeEnum = pgEnum("action_type", [
   "site_visit",
   "affidavit_prepared",
   "court_appearance",
+  "directions",
+  "consent_order",
   "deed_executed",
   "other",
 ]);

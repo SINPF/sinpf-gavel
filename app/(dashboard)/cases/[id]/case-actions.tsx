@@ -46,6 +46,8 @@ const ACTION_TYPES = [
   { value: "site_visit", label: "Site visit" },
   { value: "affidavit_prepared", label: "Affidavit prepared" },
   { value: "court_appearance", label: "Court appearance" },
+  { value: "directions", label: "Directions" },
+  { value: "consent_order", label: "Consent order" },
   { value: "deed_executed", label: "Deed executed" },
   { value: "other", label: "Other" },
 ] as const;
