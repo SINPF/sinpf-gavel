@@ -3,10 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format, parse, isValid } from "date-fns";
-import { Plus, RotateCcw, Calendar, Trash2 } from "lucide-react";
+import { Plus, RotateCcw, Calendar, Trash2, Pencil } from "lucide-react";
 import { DateField } from "@/components/ui/DateField";
 import { AmountInput } from "@/components/ui/AmountInput";
-import { recordPayment, reversePayment } from "@/app/actions/record-payment";
+import {
+  recordPayment,
+  reversePayment,
+  editPayment,
+  deletePayment,
+} from "@/app/actions/record-payment";
 import {
   replaceSettlementSchedule,
   type ScheduleInstalment,
@@ -39,6 +44,7 @@ export function PaymentsPanel({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
   const [contribution, setContribution] = useState("");
   const [surcharge, setSurcharge] = useState("");
@@ -48,6 +54,36 @@ export function PaymentsPanel({
   const [ackOverpayment, setAckOverpayment] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  function resetForm() {
+    setPaymentDate(new Date().toISOString().slice(0, 10));
+    setContribution("");
+    setSurcharge("");
+    setReceiptReference("");
+    setScheduleId("");
+    setNotes("");
+    setAckOverpayment(false);
+    setError(null);
+  }
+
+  function closeForm() {
+    setOpen(false);
+    setEditingId(null);
+    resetForm();
+  }
+
+  function startEdit(p: ReferralDetail["payments"][number]) {
+    setEditingId(p.id);
+    setPaymentDate(p.paymentDate);
+    setContribution(String(Number(p.amountContribution)));
+    setSurcharge(String(Number(p.amountSurcharge)));
+    setReceiptReference(p.receiptReference ?? "");
+    setScheduleId(p.scheduleId ?? "");
+    setNotes(p.notes ?? "");
+    setAckOverpayment(false);
+    setError(null);
+    setOpen(true);
+  }
 
   async function submit() {
     setError(null);
@@ -59,23 +95,30 @@ export function PaymentsPanel({
     }
     setSubmitting(true);
     try {
-      await recordPayment({
-        caseId: referral.id,
-        paymentDate,
-        amountContribution: c,
-        amountSurcharge: s,
-        receiptReference: receiptReference || null,
-        scheduleId: scheduleId || null,
-        notes: notes || null,
-        acknowledgeOverpayment: ackOverpayment,
-      });
-      setOpen(false);
-      setContribution("");
-      setSurcharge("");
-      setReceiptReference("");
-      setScheduleId("");
-      setNotes("");
-      setAckOverpayment(false);
+      if (editingId) {
+        await editPayment({
+          paymentId: editingId,
+          paymentDate,
+          amountContribution: c,
+          amountSurcharge: s,
+          receiptReference: receiptReference || null,
+          scheduleId: scheduleId || null,
+          notes: notes || null,
+          acknowledgeOverpayment: ackOverpayment,
+        });
+      } else {
+        await recordPayment({
+          caseId: referral.id,
+          paymentDate,
+          amountContribution: c,
+          amountSurcharge: s,
+          receiptReference: receiptReference || null,
+          scheduleId: scheduleId || null,
+          notes: notes || null,
+          acknowledgeOverpayment: ackOverpayment,
+        });
+      }
+      closeForm();
       router.refresh();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed";
@@ -91,6 +134,16 @@ export function PaymentsPanel({
     if (!reason || reason.trim().length < 10) return;
     try {
       await reversePayment({ paymentId: id, reason });
+      router.refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!window.confirm("Delete this payment entry? This cannot be undone.")) return;
+    try {
+      await deletePayment({ paymentId: id });
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
@@ -198,7 +251,7 @@ export function PaymentsPanel({
           {error && <p className="text-sm text-destructive font-medium">{error}</p>}
           <div className="flex justify-end gap-2">
             <button
-              onClick={() => setOpen(false)}
+              onClick={closeForm}
               className="px-3 py-1.5 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Cancel
@@ -208,7 +261,7 @@ export function PaymentsPanel({
               disabled={submitting}
               className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-blue-600 disabled:opacity-50 transition-colors"
             >
-              {submitting ? "Saving…" : "Record"}
+              {submitting ? "Saving…" : editingId ? "Save changes" : "Record"}
             </button>
           </div>
         </div>
@@ -250,15 +303,37 @@ export function PaymentsPanel({
                   )}
                 </td>
                 <td className="py-2 text-right">
-                  {canReverse && !p.isReversed && (
-                    <button
-                      onClick={() => handleReverse(p.id)}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      Reverse
-                    </button>
-                  )}
+                  <div className="inline-flex items-center gap-1">
+                    {canRecord && !p.isReversed && (
+                      <button
+                        onClick={() => startEdit(p)}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        Edit
+                      </button>
+                    )}
+                    {canRecord && (
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
+                    )}
+                    {canReverse && !p.isReversed && (
+                      <button
+                        onClick={() => handleReverse(p.id)}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        Reverse
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
