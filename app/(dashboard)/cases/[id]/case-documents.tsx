@@ -47,14 +47,24 @@ export function CaseDocuments({
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [docType, setDocType] = useState("other");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("");
 
+  function openPicker() {
+    setError(null);
+    fileRef.current?.click();
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files) setSelectedFiles(Array.from(e.target.files));
+    e.target.value = "";
+  }
+
   async function submitUpload() {
-    const files = fileRef.current?.files;
-    if (!files || files.length === 0) {
-      setError("Choose at least one file.");
+    if (selectedFiles.length === 0) {
+      openPicker();
       return;
     }
     setError(null);
@@ -63,9 +73,9 @@ export function CaseDocuments({
       const formData = new FormData();
       formData.append("caseId", caseId);
       formData.append("documentType", docType);
-      Array.from(files).forEach((f) => formData.append("files", f));
+      selectedFiles.forEach((f) => formData.append("files", f));
       await uploadCaseDocument(formData);
-      if (fileRef.current) fileRef.current.value = "";
+      setSelectedFiles([]);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed.");
@@ -122,16 +132,36 @@ export function CaseDocuments({
                 </option>
               ))}
             </select>
-            <input ref={fileRef} type="file" multiple className="text-sm" />
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+            />
             <button
-              onClick={submitUpload}
+              type="button"
+              onClick={openPicker}
               disabled={uploading}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-border bg-background text-sm font-semibold text-foreground hover:border-primary hover:text-primary disabled:opacity-50 transition-colors"
+            >
+              Choose files
+            </button>
+            <button
+              type="button"
+              onClick={submitUpload}
+              disabled={uploading || selectedFiles.length === 0}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-blue-600 disabled:opacity-50 transition-colors"
             >
               <Upload className="w-3.5 h-3.5" />
               {uploading ? "Uploading…" : "Upload"}
             </button>
           </div>
+          {selectedFiles.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {selectedFiles.length} file(s) selected: {selectedFiles.map((f) => f.name).join(", ")}
+            </p>
+          )}
           {error && (
             <p className="text-xs text-destructive font-medium">{error}</p>
           )}
