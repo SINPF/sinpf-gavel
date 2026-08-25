@@ -50,6 +50,13 @@
       "when": 1786547973426,
       "tag": "0006_m5_titles",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787618357353,
+      "tag": "0007_add_action_types",
+      "breakpoints": true
     }
   ]
 }
