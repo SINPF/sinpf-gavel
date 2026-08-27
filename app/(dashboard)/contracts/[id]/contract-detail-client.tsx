@@ -29,6 +29,7 @@ import {
   uploadContractDocument,
   withdrawContractDocument,
 } from "@/app/actions/upload-contract-document";
+import { financialYearOptions, formatFinancialYear } from "@/lib/financial-year";
 
 type Contract = {
   id: string;
@@ -38,6 +39,7 @@ type Contract = {
   contractType: string;
   startDate: string;
   endDate: string;
+  financialYear: number;
   contractValue: string;
   currency: string;
   terminatedDate: string | null;
@@ -133,6 +135,7 @@ function EditPanel({ contract, onClose }: { contract: Contract; onClose: () => v
   const [contractType, setContractType] = useState(contract.contractType);
   const [startDate, setStartDate] = useState(contract.startDate);
   const [endDate, setEndDate] = useState(contract.endDate);
+  const [financialYear, setFinancialYear] = useState<number>(contract.financialYear);
   const [contractValue, setContractValue] = useState<number | "">(Number(contract.contractValue));
   const [currency, setCurrency] = useState(contract.currency);
   const [owningDepartment, setOwningDepartment] = useState(contract.owningDepartment ?? "");
@@ -156,6 +159,7 @@ function EditPanel({ contract, onClose }: { contract: Contract; onClose: () => v
         contractType,
         startDate,
         endDate,
+        financialYear,
         contractValue: contractValue === "" ? 0 : Number(contractValue),
         currency,
         owningDepartment: owningDepartment.trim() || null,
@@ -249,6 +253,20 @@ function EditPanel({ contract, onClose }: { contract: Contract; onClose: () => v
         <div>
           <label className={labelCls}>End date</label>
           <DateField value={endDate} onChange={setEndDate} />
+        </div>
+        <div>
+          <label className={labelCls}>Financial year</label>
+          <select
+            value={financialYear}
+            onChange={(e) => setFinancialYear(Number(e.target.value))}
+            className={inputCls}
+          >
+            {financialYearOptions().map((y) => (
+              <option key={y} value={y}>
+                FY {formatFinancialYear(y)}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className={labelCls}>Value</label>
@@ -623,6 +641,7 @@ export default function ContractDetailClient({
           <Field label="Status">{CONTRACT_STATUS_LABELS[status]}</Field>
           <Field label="Start date">{fmtDate(contract.startDate)}</Field>
           <Field label="End date">{fmtDate(contract.endDate)}</Field>
+          <Field label="Financial year">FY {formatFinancialYear(contract.financialYear)}</Field>
           <Field label="Value">{fmtMoney(contract.contractValue, contract.currency)}</Field>
           <Field label="Owning department">{contract.owningDepartment ?? "—"}</Field>
           <Field label="Linked title">
