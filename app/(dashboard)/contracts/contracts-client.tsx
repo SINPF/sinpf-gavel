@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { contractStatus, CONTRACT_STATUS_LABELS, type ContractStatus } from "@/lib/contract-status";
+import { formatFinancialYear } from "@/lib/financial-year";
 
 const PAGE_SIZE = 25;
 
@@ -25,6 +26,7 @@ type Row = {
   contractType: string;
   startDate: string;
   endDate: string;
+  financialYear: number;
   contractValue: string;
   currency: string;
   terminatedDate: string | null;
@@ -75,7 +77,14 @@ export default function ContractsClient({
   const [statusFilter, setStatusFilter] = useState<"" | ContractStatus>("");
   const [typeFilter, setTypeFilter] = useState("");
   const [expiryFilter, setExpiryFilter] = useState<"" | "30" | "60" | "90">("");
+  const [fyFilter, setFyFilter] = useState<string>("");
   const [page, setPage] = useState(1);
+
+  const fyOptions = useMemo(() => {
+    const set = new Set<number>();
+    for (const c of contracts) set.add(c.financialYear);
+    return Array.from(set).sort((a, b) => b - a);
+  }, [contracts]);
 
   const withStatus = useMemo(
     () =>
@@ -91,6 +100,7 @@ export default function ContractsClient({
     return withStatus.filter((c) => {
       if (statusFilter && c._status !== statusFilter) return false;
       if (typeFilter && c.contractType !== typeFilter) return false;
+      if (fyFilter && String(c.financialYear) !== fyFilter) return false;
       if (expiryFilter && c._status !== "expired") {
         const days = daysUntil(c.endDate);
         if (days < 0 || days > Number(expiryFilter)) return false;
@@ -103,9 +113,9 @@ export default function ContractsClient({
       }
       return true;
     });
-  }, [withStatus, query, statusFilter, typeFilter, expiryFilter]);
+  }, [withStatus, query, statusFilter, typeFilter, expiryFilter, fyFilter]);
 
-  const hasActiveFilters = !!query || !!statusFilter || !!typeFilter || !!expiryFilter;
+  const hasActiveFilters = !!query || !!statusFilter || !!typeFilter || !!expiryFilter || !!fyFilter;
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const start = (currentPage - 1) * PAGE_SIZE;
@@ -171,6 +181,15 @@ export default function ContractsClient({
           </span>
         );
       },
+    },
+    {
+      key: "financialYear",
+      header: "FY",
+      render: (v) => (
+        <span className="text-sm text-muted-foreground tabular-nums">
+          {formatFinancialYear(v as number)}
+        </span>
+      ),
     },
     {
       key: "contractValue",
@@ -281,6 +300,21 @@ export default function ContractsClient({
           <option value="60">Expiring ≤ 60 days</option>
           <option value="90">Expiring ≤ 90 days</option>
         </select>
+        <select
+          value={fyFilter}
+          onChange={(e) => {
+            setFyFilter(e.target.value);
+            setPage(1);
+          }}
+          className="h-10 px-3 rounded-md border border-border bg-background text-sm font-medium text-foreground"
+        >
+          <option value="">All financial years</option>
+          {fyOptions.map((y) => (
+            <option key={y} value={String(y)}>
+              FY {formatFinancialYear(y)}
+            </option>
+          ))}
+        </select>
       </div>
 
       {hasActiveFilters && (
@@ -295,6 +329,7 @@ export default function ContractsClient({
               setStatusFilter("");
               setTypeFilter("");
               setExpiryFilter("");
+              setFyFilter("");
               setPage(1);
             }}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors"

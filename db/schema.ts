@@ -490,6 +490,12 @@ export const contracts = pgTable(
     startDate: date("start_date").notNull(),
     endDate: date("end_date").notNull(),
 
+    // Australian FY convention (Jul–Jun) stored as the starting calendar year:
+    // 2024 ⇒ FY 2024/25. Captured explicitly so back-dated or renewal contracts
+    // can be attributed to the FY they were actually made in, independent of
+    // start_date.
+    financialYear: integer("financial_year").notNull(),
+
     contractValue: numeric("contract_value", { precision: 15, scale: 2 }).notNull().default("0"),
     currency: currencyEnum("currency").notNull().default("sbd"),
 
@@ -516,6 +522,7 @@ export const contracts = pgTable(
     index("ix_contract_end_date").on(t.endDate),
     index("ix_contract_parties").using("gin", t.parties),
     index("ix_contract_linked_title").on(t.linkedTitleId),
+    index("ix_contract_financial_year").on(t.financialYear),
   ],
 );
 

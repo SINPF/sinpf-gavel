@@ -41,6 +41,7 @@ export default async function ContractsPage() {
       contractType: contracts.contractType,
       startDate: contracts.startDate,
       endDate: contracts.endDate,
+      financialYear: contracts.financialYear,
       contractValue: contracts.contractValue,
       currency: contracts.currency,
       terminatedDate: contracts.terminatedDate,

@@ -20,6 +20,19 @@ const amount = z.preprocess(
   z.number().min(0),
 );
 
+const financialYear = z.preprocess(
+  (v) => {
+    if (v === undefined || v === null || v === "") return undefined;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  },
+  z
+    .number()
+    .int()
+    .min(2000, "Financial year is out of range.")
+    .max(new Date().getFullYear() + 1, "Financial year is out of range."),
+);
+
 const contractShape = z.object({
   title: z.string().trim().min(2, "Title is required.").max(200),
   parties: z
@@ -28,6 +41,7 @@ const contractShape = z.object({
   contractType: z.enum(CONTRACT_TYPE_VALUES),
   startDate: z.string().min(1, "Start date is required."),
   endDate: z.string().min(1, "End date is required."),
+  financialYear,
   contractValue: amount,
   currency: z.enum(CURRENCY_VALUES).default("sbd"),
   owningDepartment: z.string().trim().max(100).optional().nullable(),

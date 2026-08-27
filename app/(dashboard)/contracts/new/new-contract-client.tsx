@@ -7,6 +7,11 @@ import { Plus, Trash2, Save } from "lucide-react";
 import { DateField } from "@/components/ui/DateField";
 import { AmountInput } from "@/components/ui/AmountInput";
 import { createContract } from "@/app/actions/create-contract";
+import {
+  financialYearOfDate,
+  financialYearOptions,
+  formatFinancialYear,
+} from "@/lib/financial-year";
 
 const inputCls =
   "w-full px-3.5 py-2.5 rounded-md border border-border bg-background text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:border-ring transition-colors placeholder:text-muted-foreground/40";
@@ -43,8 +48,11 @@ export default function NewContractClient() {
   const [title, setTitle] = useState("");
   const [parties, setParties] = useState<string[]>([""]);
   const [contractType, setContractType] = useState("service_agreement");
-  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const initialStart = format(new Date(), "yyyy-MM-dd");
+  const [startDate, setStartDate] = useState(initialStart);
   const [endDate, setEndDate] = useState("");
+  const [financialYear, setFinancialYear] = useState<number>(financialYearOfDate(initialStart));
+  const [fyTouched, setFyTouched] = useState(false);
   const [contractValue, setContractValue] = useState<number | "">("");
   const [currency, setCurrency] = useState("sbd");
   const [owningDepartment, setOwningDepartment] = useState("");
@@ -70,6 +78,7 @@ export default function NewContractClient() {
       formData.append("contractType", contractType);
       formData.append("startDate", startDate);
       formData.append("endDate", endDate);
+      formData.append("financialYear", String(financialYear));
       formData.append("contractValue", contractValue === "" ? "0" : String(contractValue));
       formData.append("currency", currency);
       if (owningDepartment.trim()) formData.append("owningDepartment", owningDepartment.trim());
@@ -159,11 +168,36 @@ export default function NewContractClient() {
         </div>
         <div>
           <label className={labelCls}>Start date <span className="text-destructive">*</span></label>
-          <DateField value={startDate} onChange={setStartDate} />
+          <DateField
+            value={startDate}
+            onChange={(v) => {
+              setStartDate(v);
+              if (!fyTouched && v) setFinancialYear(financialYearOfDate(v));
+            }}
+          />
         </div>
         <div>
           <label className={labelCls}>End date <span className="text-destructive">*</span></label>
           <DateField value={endDate} onChange={setEndDate} />
+        </div>
+        <div>
+          <label className={labelCls}>
+            Financial year <span className="text-destructive">*</span>
+          </label>
+          <select
+            value={financialYear}
+            onChange={(e) => {
+              setFinancialYear(Number(e.target.value));
+              setFyTouched(true);
+            }}
+            className={inputCls}
+          >
+            {financialYearOptions().map((y) => (
+              <option key={y} value={y}>
+                FY {formatFinancialYear(y)}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className={labelCls}>Contract value</label>

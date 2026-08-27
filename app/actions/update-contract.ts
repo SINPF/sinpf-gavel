@@ -49,6 +49,7 @@ export async function updateContract(input: unknown) {
   if (parsed.contractType !== undefined) track("contractType", parsed.contractType);
   if (parsed.startDate !== undefined) track("startDate", parsed.startDate);
   if (parsed.endDate !== undefined) track("endDate", parsed.endDate);
+  if (parsed.financialYear !== undefined) track("financialYear", parsed.financialYear);
   if (parsed.contractValue !== undefined) {
     track("contractValue", String(parsed.contractValue) as unknown as never);
   }

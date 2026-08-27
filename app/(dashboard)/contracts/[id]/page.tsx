@@ -24,6 +24,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
       contractType: contracts.contractType,
       startDate: contracts.startDate,
       endDate: contracts.endDate,
+      financialYear: contracts.financialYear,
       contractValue: contracts.contractValue,
       currency: contracts.currency,
       terminatedDate: contracts.terminatedDate,
